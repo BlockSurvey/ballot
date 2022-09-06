@@ -70,7 +70,7 @@ export function signOut() {
  * @param {*} options
  * @returns
  */
-export function putFileToGaia(fileName, file, options) {
+export function putFileToGaia(fileName, file, options = {}) {
   return storage.putFile(fileName, file, options);
 }
 
@@ -83,6 +83,10 @@ export function putFileToGaia(fileName, file, options) {
  */
 export function getFileFromGaia(fileName, options) {
   return storage.getFile(fileName, options);
+}
+
+export function deleteFileToGaia(fileName) {
+  return storage.deleteFile(fileName);
 }
 
 /**

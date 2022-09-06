@@ -1,14 +1,12 @@
+import Router from 'next/router';
 import { useEffect, useState } from "react";
-import { Col, Container, Row, Button, Form } from "react-bootstrap";
-import styles from "../../styles/Builder.module.css";
-import { getFileFromGaia, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js"
+import { Button, Col, Container, Form, Row } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
-import { nanoid } from 'nanoid';
-import Link from "next/link";
-import Router from 'next/router'
+import { deployContract } from "../../services/contract"
+import { getRecentBlock } from "../../services/utils";
+import { getFileFromGaia, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
+import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
-import { getRecentBlock } from "../../common/utils";
-import { deployContract } from "../../common/contract";
 
 export default function BuilderComponent(props) {
     // Variables
@@ -92,11 +90,6 @@ export default function BuilderComponent(props) {
                             setPollObject(initializeNewPoll());
                         }
                     });
-            } else if (pollId) {
-                // Fetch from IPFS
-                fetch(`https://owllink.mypinata.cloud/ipfs/${pollId}`)
-                    .then(response => response.json())
-                    .then(data => setPollObject(data));
             }
         }
     }, [pathParams, pollId, mode]);

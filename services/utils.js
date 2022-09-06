@@ -1,5 +1,5 @@
+import { Constants } from "../common/constants";
 import { getStacksAPIPrefix } from "../services/auth";
-import { Constants } from "./constants";
 
 export async function getRecentBlock() {
     // Get btc domain for logged in user

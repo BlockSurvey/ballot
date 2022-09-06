@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button, Col, Container, Form, Modal, Row, Table } from "react-bootstrap";
-import { castMyVoteContractCall } from "../../common/contract";
-import { formStacksExplorerUrl } from "../../common/utils";
+import { castMyVoteContractCall } from "../../services/contract";
+import { formStacksExplorerUrl } from "../../services/utils";
 import { authenticate, userSession } from "../../services/auth";
 import styles from "../../styles/Poll.module.css";
 import HeaderComponent from "../common/HeaderComponent";

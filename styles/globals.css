@@ -5,3 +5,12 @@
     align-items: center;
     justify-content: center;
 }
+
+.btn {
+    border-radius: 0px;
+}
+
+.btn_big {
+    padding-left: 2rem;
+    padding-right: 2rem;
+}

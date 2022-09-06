@@ -4,6 +4,7 @@ import {
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
+import { Constants } from "../../common/constants";
 import DashboardMenuComponent from "../../components/dashboard/DashboardMenuComponent";
 import PollComponent from "../../components/poll/PollComponent";
 import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../../services/auth";
@@ -52,10 +53,8 @@ export default function Poll() {
 
         // Fetch from Gaia
         if (pollId && gaiaAddress) {
-            // Form gaia url
-            let gaiaUrlPrefix = "https://gaia.blockstack.org/hub/";
-            let gaiaUrlFromCurrentLogin =
-                gaiaUrlPrefix + gaiaAddress + "/" + pollId + ".json";
+            // Form gaia url            
+            let gaiaUrlFromCurrentLogin = Constants.GAIA_HUB_PREFIX + gaiaAddress + "/" + pollId + ".json";
 
             fetch(gaiaUrlFromCurrentLogin)
                 .then(response => response.json())
@@ -69,7 +68,7 @@ export default function Poll() {
                     setOptionsMap(optionsMap);
 
                     // Fetch BTC domain
-                    // getBTCDomainFromBlockchain(data);
+                    getBTCDomainFromBlockchain(data);
 
                     // Fetch NFT holdings
                     getNFTHoldingInformation(data);
@@ -113,10 +112,19 @@ export default function Poll() {
 
             // Check does BTC dns is available
             if (btcDNS && btcDNS.length > 0) {
+                // BTC holder
                 const _dns = btcDNS[0];
 
                 // Take the btc dns name
                 setDns(_dns);
+            } else {
+                // Not a BTC holder
+
+                // Turn flag on
+                if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
+                    // No holdings to vote
+                    setNoHoldingToken(true);
+                }
             }
         }
     };
@@ -130,25 +138,30 @@ export default function Poll() {
             return;
         }
 
-        if (pollObject?.strategyContractName && pollObject?.strategyNFTName) {
-            // Get btc domain for logged in user
-            const response = await fetch(
-                getStacksAPIPrefix() + "/extended/v1/tokens/nft/holdings?principal=" + getMyStxAddress() +
-                "&asset_identifiers=" + pollObject?.strategyContractName + "::" + pollObject?.strategyNFTName
-            );
-            const responseObject = await response.json();
+        if (pollObject?.votingStrategyFlag) {
+            // BTC holders check
+            if (pollObject?.votingStrategyTemplate === "btcholders") {
+                // Don't do anything here
+            } else if (pollObject?.strategyContractName && pollObject?.strategyNFTName) {
+                // Get btc domain for logged in user
+                const response = await fetch(
+                    getStacksAPIPrefix() + "/extended/v1/tokens/nft/holdings?principal=" + getMyStxAddress() +
+                    "&asset_identifiers=" + pollObject?.strategyContractName + "::" + pollObject?.strategyNFTName
+                );
+                const responseObject = await response.json();
 
-            if (responseObject?.total > 0) {
-                setHoldingTokenArr(responseObject?.results);
-                setVotingPower(responseObject?.total);
+                if (responseObject?.total > 0) {
+                    setHoldingTokenArr(responseObject?.results);
+                    setVotingPower(responseObject?.total);
 
-                responseObject?.results.forEach(eachNFT => {
-                    holdingTokenIdArr.push(cvToValue(hexToCV(eachNFT.value.hex)));
-                });
-                setHoldingTokenIdArr(holdingTokenIdArr);
-            } else {
-                // No holdings to vote
-                setNoHoldingToken(true);
+                    responseObject?.results.forEach(eachNFT => {
+                        holdingTokenIdArr.push(cvToValue(hexToCV(eachNFT.value.hex)));
+                    });
+                    setHoldingTokenIdArr(holdingTokenIdArr);
+                } else {
+                    // No holdings to vote
+                    setNoHoldingToken(true);
+                }
             }
         } else {
             // Allow anybody to vote

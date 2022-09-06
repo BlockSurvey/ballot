@@ -1,4 +1,4 @@
-import { convertToDisplayDateFormat, formStacksExplorerUrl } from "../../common/utils";
+import { convertToDisplayDateFormat, formStacksExplorerUrl } from "../../services/utils";
 
 
 export default function InformationComponent(props) {
