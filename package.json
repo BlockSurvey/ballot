@@ -1,0 +1,29 @@
+{
+  "name": "ballot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@stacks/connect": "^6.10.0",
+    "@stacks/network": "^4.3.5",
+    "@stacks/storage": "^4.3.5",
+    "@stacks/transactions": "^4.3.5",
+    "bootstrap": "^5.2.0",
+    "lodash": "^4.17.21",
+    "nanoid": "^4.0.0",
+    "next": "12.2.5",
+    "react": "18.2.0",
+    "react-bootstrap": "^2.5.0",
+    "react-dom": "18.2.0",
+    "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "eslint": "8.22.0",
+    "eslint-config-next": "12.2.5"
+  }
+}

@@ -1,0 +1,7 @@
+@import url("bootstrap/dist/css/bootstrap.min.css");
+
+.flex_align_item_center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
