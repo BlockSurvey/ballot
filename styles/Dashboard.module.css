@@ -1,3 +1,81 @@
 .dashboard_container {
     padding-top: 10px;
 }
+
+/* Modal */
+.dashboard_modal_header_box {
+    position: relative;
+    padding: 20px;
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.dashboard_modal_close_icon_btn_box {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s all ease;
+}
+
+.dashboard_modal_body_box {
+    padding: 14px 20px;
+}
+
+.dashboard_transactions_modal_body_box {
+    max-height: 360px;
+    overflow: auto;
+}
+
+/* My transactions */
+.dashboard_my_transactions_box {
+    display: flex;
+    align-items: center;
+    column-gap: 16px;
+    padding: 14px 20px;
+    background-color: transparent;
+    cursor: pointer;
+    transition: 0.3s all ease;
+    text-decoration: none;
+}
+
+.dashboard_my_transactions_box:hover {
+    background-color: rgba(30, 39, 46, 0.05);
+}
+
+.dashboard_my_transactions_round_box {
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ff793f;
+}
+
+.dashboard_transactions_id {
+    font-size: 14px;
+    font-weight: 400;
+    color: #1e272e;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.dashboard_transactions_date {
+    margin-top: 2px;
+    font-size: 14px;
+    font-weight: 400;
+    color: rgba(30, 39, 46, 0.6);
+}
+
+.dashboard_transactions_modal_body_box {
+    max-height: 360px;
+    overflow: auto;
+}

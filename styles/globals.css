@@ -24,3 +24,7 @@
 .ballot_link:hover {
     color: black;
 }
+
+.dropdown-menu {
+    border-radius: 0px;
+}

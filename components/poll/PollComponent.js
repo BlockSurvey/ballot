@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Button, Col, Container, Form, Modal, Row, Table } from "react-bootstrap";
+import { Button, Form, Modal, Table } from "react-bootstrap";
+import { authenticate, getFileFromGaia, putFileToGaia, userSession } from "../../services/auth";
 import { castMyVoteContractCall } from "../../services/contract";
 import { formStacksExplorerUrl } from "../../services/utils";
-import { authenticate, userSession } from "../../services/auth";
 import styles from "../../styles/Poll.module.css";
 import HeaderComponent from "../common/HeaderComponent";
 import InformationComponent from "../common/InformationComponent";
@@ -38,6 +38,9 @@ export default function PollComponent(props) {
     const handleShow = () => setShow(true);
     const handleClose = () => setShow(false);
 
+    // Loading
+    const [isLoading, setIsLoading] = useState(false);
+
     // Functions
     useEffect(() => {
         if (userSession && userSession.isUserSignedIn()) {
@@ -65,12 +68,62 @@ export default function PollComponent(props) {
     const callbackFunction = (data) => {
         if (data?.txId) {
             setTxId(data.txId);
+
+            // Store transaction to Gaia
+            getFileFromGaia("transactions_ballot.json").then(
+                (response) => {
+                    if (response) {
+                        const transactionsObj = JSON.parse(response);
+
+                        if (transactionsObj && transactionsObj.transactions) {
+                            transactionsObj.transactions.push({
+                                txId: data.txId,
+                                txRaw: data.txRaw,
+                                date: Date.now(),
+                            });
+
+                            // Store on gaia
+                            putFileToGaia(
+                                "transactions_ballot.json",
+                                JSON.stringify(transactionsObj),
+                                { dangerouslyIgnoreEtag: true }
+                            );
+                        }
+                    }
+                },
+                (error) => {
+                    // File does not exit in gaia
+                    if (error && error.code == "does_not_exist") {
+                        const transactionsObj = {
+                            transactions: [
+                                {
+                                    txId: data.txId,
+                                    txRaw: data.txRaw,
+                                    date: Date.now(),
+                                },
+                            ],
+                        };
+
+                        // Store on gaia
+                        putFileToGaia(
+                            "transactions_ballot.json",
+                            JSON.stringify(transactionsObj),
+                            { dangerouslyIgnoreEtag: true }
+                        );
+                    }
+                }
+            );
+
+            // Show information popup
             handleShow();
         }
     }
 
     const castMyVote = () => {
         if (pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName) {
+            // Start processing
+            setIsLoading(true);
+
             const contractAddress = pollObject?.publishedInfo?.contractAddress;
             const contractName = pollObject?.publishedInfo?.contractName;
             castMyVoteContractCall(contractAddress, contractName, voteObject, dns, holdingTokenIdArr?.[0], callbackFunction);
@@ -109,7 +162,7 @@ export default function PollComponent(props) {
 
                                                     {/* Voting Criteria */}
                                                     {pollObject?.votingStrategyFlag &&
-                                                        <div style={{ margin: "10px 0" }}>
+                                                        <div style={{ marginTop: "30px" }}>
                                                             <h5>Voting Criteria</h5>
                                                             <span>
                                                                 {pollObject?.votingStrategyTemplate == "btcholders" ?
@@ -124,13 +177,13 @@ export default function PollComponent(props) {
 
                                                     {/* Vote button */}
                                                     {isUserSignedIn ?
-                                                        <Button variant="dark" style={{ marginTop: "10px" }}
+                                                        <Button variant="dark" style={{ marginTop: "30px" }}
                                                             disabled={(isPreview || !holdingTokenArr || alreadyVoted) ? true : false}
                                                             onClick={() => { castMyVote() }}>
                                                             Vote
                                                         </Button>
                                                         :
-                                                        <Button variant="dark" style={{ marginTop: "10px" }}
+                                                        <Button variant="dark" style={{ marginTop: "30px" }}
                                                             onClick={() => { authenticate(window?.location?.href) }}>
                                                             Login to Vote
                                                         </Button>
