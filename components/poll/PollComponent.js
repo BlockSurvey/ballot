@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Col, Container, Form, Modal, Row, Table } from "react-bootstrap";
 import { castMyVoteContractCall } from "../../services/contract";
 import { formStacksExplorerUrl } from "../../services/utils";
@@ -31,12 +31,20 @@ export default function PollComponent(props) {
 
     const [txId, setTxId] = useState();
 
+    const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+
     // Show popup
     const [show, setShow] = useState(false);
     const handleShow = () => setShow(true);
     const handleClose = () => setShow(false);
 
     // Functions
+    useEffect(() => {
+        if (userSession && userSession.isUserSignedIn()) {
+            setIsUserSignedIn(true)
+        }
+    }, []);
+
     const handleChange = e => {
         const { name, value } = e.target;
 
@@ -99,7 +107,23 @@ export default function PollComponent(props) {
                                                         />
                                                     ))}
 
-                                                    {userSession && userSession.isUserSignedIn() ?
+                                                    {/* Voting Criteria */}
+                                                    {pollObject?.votingStrategyFlag &&
+                                                        <div style={{ margin: "10px 0" }}>
+                                                            <h5>Voting Criteria</h5>
+                                                            <span>
+                                                                {pollObject?.votingStrategyTemplate == "btcholders" ?
+                                                                    "You should hold .btc Namespace to vote." :
+                                                                    (pollObject?.strategyNFTName &&
+                                                                        `You should hold ${pollObject?.strategyNFTName} to vote.`
+                                                                    )
+                                                                }
+                                                            </span>
+                                                        </div>
+                                                    }
+
+                                                    {/* Vote button */}
+                                                    {isUserSignedIn ?
                                                         <Button variant="dark" style={{ marginTop: "10px" }}
                                                             disabled={(isPreview || !holdingTokenArr || alreadyVoted) ? true : false}
                                                             onClick={() => { castMyVote() }}>
@@ -114,14 +138,14 @@ export default function PollComponent(props) {
 
                                                     {/* Holdings Required */}
                                                     {noHoldingToken &&
-                                                        <div style={{ fontSize: "14px", color: "red" }}>
-                                                            Holdings required to vote this poll.
+                                                        <div style={{ fontSize: "14px", color: "red", marginTop: "10px" }}>
+                                                            You should have the "strategy name" to vote.
                                                         </div>
                                                     }
 
                                                     {/* Already voted */}
                                                     {alreadyVoted &&
-                                                        <div style={{ fontSize: "14px", color: "red" }}>
+                                                        <div style={{ fontSize: "14px", color: "red", marginTop: "10px" }}>
                                                             Your vote has already been cast.
                                                         </div>
                                                     }
@@ -199,14 +223,14 @@ export default function PollComponent(props) {
                     <Modal.Title>Information</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    Voted successfully! Your vote has been cast. Here is a link to your transaction status
+                    Voted successfully! Your vote has been cast. Here is a link to your transaction status{" "}
                     <a
                         style={{ textDecoration: "underline", color: "#000" }}
                         href={formStacksExplorerUrl(txId)}
                         target="_blank"
                         rel="noreferrer"
                     >
-                        {" here "}
+                        {"here"}
                         <svg
                             width="10"
                             height="10"

@@ -1,23 +1,19 @@
 import {
     cvToHex, cvToValue, hexToCV, parseReadOnlyResponse, standardPrincipalCV, uintCV
 } from "@stacks/transactions";
-import { useRouter } from "next/router";
+import Head from "next/head";
 import { useEffect, useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import { Constants } from "../../common/constants";
 import { DashboardNavBarComponent } from "../../components/common/DashboardNavBarComponent";
 import PollComponent from "../../components/poll/PollComponent";
 import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../../services/auth";
-import styles from "../../styles/Poll.module.css";
 
-export default function Poll() {
-    // Variables
-    const router = useRouter();
-    const pathParams = router.query.id;
+export default function Poll(props) {
+    const { pollObject, pollId, gaiaAddress } = props;
 
+    // const [pollObject, setPollObject] = useState();
     const [publicUrl, setPublicUrl] = useState();
-
-    const [pollObject, setPollObject] = useState();
     const [optionsMap, setOptionsMap] = useState({});
     const [resultsByOption, setResultsByOption] = useState({});
     const [resultsByPosition, setResultsByPosition] = useState({});
@@ -35,54 +31,41 @@ export default function Poll() {
     // Voting power
     const [votingPower, setVotingPower] = useState();
 
+    const title = `${pollObject?.title} | Ballot`;
+    const description = pollObject?.description;
+    const metaImage = "https://ballot.gg/images/ballot-meta.png";
+    const displayURL = "";
+
     // Function
     useEffect(() => {
-        let pollId, gaiaAddress;
-        if (pathParams && pathParams?.[0]) {
-            pollId = pathParams[0];
-        }
-
-        if (pathParams && pathParams?.[1]) {
-            gaiaAddress = pathParams[1];
-        }
+        // Set poll object
+        // setPollObject(data);
 
         // Set shareable public URL
         setPublicUrl(`https://ballot.gg/p/${pollId}/${gaiaAddress}`);
 
         // Fetch from Gaia
         if (pollId && gaiaAddress) {
-            // Form gaia url            
-            let gaiaUrlFromCurrentLogin = Constants.GAIA_HUB_PREFIX + gaiaAddress + "/" + pollId + ".json";
+            // Parse poll options
+            pollObject?.options.forEach(option => {
+                optionsMap[option.id] = option.value;
+            });
+            setOptionsMap(optionsMap);
 
-            fetch(gaiaUrlFromCurrentLogin)
-                .then(response => response.json())
-                .then(data => {
-                    setPollObject(data);
+            // Fetch BTC domain
+            getBTCDomainFromBlockchain(pollObject);
 
-                    // Parse poll options
-                    data?.options.forEach(option => {
-                        optionsMap[option.id] = option.value;
-                    });
-                    setOptionsMap(optionsMap);
+            // Fetch NFT holdings
+            getNFTHoldingInformation(pollObject);
 
-                    // Fetch BTC domain
-                    getBTCDomainFromBlockchain(data);
+            // Fetch results
+            getPollResults(pollObject);
 
-                    // Fetch NFT holdings
-                    getNFTHoldingInformation(data);
-
-                    // Fetch results
-                    getPollResults(data);
-
-                    // Fetch result by user
-                    getResultByUser(data);
-                });
+            // Fetch result by user
+            getResultByUser(pollObject);
         }
-    }, [pathParams]);
+    }, [pollObject, pollId, gaiaAddress]);
 
-    /**
-      * Get BTC domain from blockchain
-      */
     const getBTCDomainFromBlockchain = async (pollObject) => {
         // If user is not signed in, just return
         if (!userSession.isUserSignedIn()) {
@@ -129,12 +112,14 @@ export default function Poll() {
                     setNoHoldingToken(true);
                 }
             }
+        } else {
+            // Not a BTC holder
+
+            // No holdings to vote
+            setNoHoldingToken(true);
         }
     };
 
-    /**
-     * Get BTC domain from blockchain
-     */
     const getNFTHoldingInformation = async (pollObject) => {
         // If user is not signed in, just return
         if (!userSession.isUserSignedIn()) {
@@ -304,6 +289,32 @@ export default function Poll() {
     // Return
     return (
         <>
+            <Head>
+                <title>{title}</title>
+                <meta name="description" content={description} />
+
+                <meta name="robots" content="index,follow" />
+
+                {/* Favicon */}
+                <link rel="icon" href={"/favicon.ico"} />
+
+                {/* Facebook Meta Tags */}
+                <meta property="og:type" content="website" />
+                <meta property="og:title" content={title} />
+                <meta property="og:description" content={description} />
+                <meta property="og:url" content={displayURL} />
+                <meta property="og:image" content={metaImage} />
+                <meta property="og:site_name" content="ballot.gg" />
+
+                {/* Twitter Meta Tags */}
+                <meta name="twitter:card" content="summary" />
+                <meta name="twitter:title" content={title} />
+                <meta name="twitter:description" content={description} />
+                <meta name="twitter:url" content={displayURL} />
+                <meta name="twitter:image" content={metaImage} />
+                <meta name="twitter:site" content="@ballot_gg" />
+            </Head>
+
             {/* Outer layer */}
             <Container>
                 <Row>
@@ -322,4 +333,38 @@ export default function Poll() {
             </Container>
         </>
     );
+}
+
+// This gets called on every request
+export async function getServerSideProps(context) {
+    // Get path param
+    const { params } = context;
+    const { id: pathParams } = params;
+    let pollObject;
+    let pollId, gaiaAddress;
+
+    if (pathParams && pathParams?.[0]) {
+        pollId = pathParams[0];
+    }
+    if (pathParams && pathParams?.[1]) {
+        gaiaAddress = pathParams[1];
+    }
+
+    // Fetch from Gaia
+    if (pollId && gaiaAddress) {
+        // Form gaia url            
+        let pollGaiaUrl = Constants.GAIA_HUB_PREFIX + gaiaAddress + "/" + pollId + ".json";
+
+        const response = await fetch(pollGaiaUrl)
+        pollObject = await response.json();
+    }
+
+    // Pass data to the page via props
+    return {
+        props: {
+            pollObject,
+            pollId,
+            gaiaAddress
+        },
+    };
 }

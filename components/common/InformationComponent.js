@@ -13,7 +13,7 @@ export default function InformationComponent(props) {
         <>
             {pollObject && pollObject.id &&
                 <>
-                    <div style={{ padding: "10px", border: "1px solid #cccccc", borderRadius: "5px", width: "100%", overflow: "auto" }}>
+                    <div style={{ padding: "10px", border: "1px solid #cccccc", width: "100%", overflow: "auto" }}>
                         {/* Title */}
                         <h6>Information</h6>
 
@@ -111,7 +111,7 @@ export default function InformationComponent(props) {
                         </div>
                     </div>
 
-                    <div style={{ padding: "10px", marginTop: "10px", border: "1px solid #cccccc", borderRadius: "5px", width: "100%" }}>
+                    <div style={{ padding: "10px", marginTop: "10px", border: "1px solid #cccccc", width: "100%" }}>
                         {/* Title */}
                         <h6>Current results</h6>
 

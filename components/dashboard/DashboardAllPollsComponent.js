@@ -91,20 +91,23 @@ export default function DashboardAllPollsComponent() {
     return (
         <>
             <div className={styles.dashboard_container}>
-                {/* Title */}
-                <h5>All Polls</h5>
-
                 {/* List of all polls */}
                 <div style={{ padding: "10px 0" }}>
                     {allPolls?.list && allPolls?.ref ?
                         allPolls?.list?.length > 0 ?
-                            allPolls?.list.map(
-                                (pollId, i) => (
-                                    <div key={i}>
-                                        {getEachRow(allPolls.ref[pollId])}
-                                    </div>
-                                )
-                            )
+                            <>
+                                {/* Title */}
+                                <h5>All Polls</h5>
+
+                                {/* List of polls */}
+                                {allPolls?.list.map(
+                                    (pollId, i) => (
+                                        <div key={i}>
+                                            {getEachRow(allPolls.ref[pollId])}
+                                        </div>
+                                    )
+                                )}
+                            </>
                             :
                             <div className="row">
                                 <div className="col-md-12">

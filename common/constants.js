@@ -23,7 +23,7 @@ export const Constants = {
     },
     {
       question: "Is Ballot.gg open source?",
-      answer: `Yes. The source of the smart contact is available here.`,
+      answer: `Yes. The source of the <a href="https://github.com/BlockSurvey/ballot" target="_blank" rel="noreferrer">UI and Smart Contract ↗</a> is available here.`,
     },
     {
       question: "Is Ballot.gg free?",

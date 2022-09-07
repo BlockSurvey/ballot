@@ -401,165 +401,167 @@ export default function BuilderComponent(props) {
     return (
         <>
             <div className={styles.builder_container}>
-
-                {/* Title */}
-                <h5>{pollId && pollId === "new" ? "New" : "Edit"} Poll</h5>
-
                 {pollObject && pollObject.id ?
-                    <Form style={{ margin: "20px 0 50px 0" }}>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Title</Form.Label>
-                            <Form.Control type="text" name="title" value={pollObject.title} onChange={handleChange} />
-                        </Form.Group>
+                    <>
+                        {/* Title */}
+                        <h5>{pollId && pollId === "new" ? "New" : "Edit"} Poll</h5>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label>Description</Form.Label>
-                            <Form.Control as="textarea" name="description" value={pollObject.description} rows={5} onChange={handleChange} />
-                        </Form.Group>
+                        <Form style={{ margin: "20px 0 50px 0" }}>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label>Voting system</Form.Label>
+                            <Form.Group className="mb-3">
+                                <Form.Label>Title</Form.Label>
+                                <Form.Control type="text" name="title" value={pollObject.title} onChange={handleChange} />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Description</Form.Label>
+                                <Form.Control as="textarea" name="description" value={pollObject.description} rows={5} onChange={handleChange} />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Label>Voting system</Form.Label>
+                                <div>
+                                    {['Single', 'Multiple'].map((option, index) => (
+                                        <Form.Check
+                                            inline
+                                            key={index}
+                                            type='radio'
+                                            name="votingSystem"
+                                            value={option.toLowerCase()}
+                                            checked={pollObject.votingSystem === option.toLowerCase()}
+                                            id={`voting_system_${option}`}
+                                            label={option}
+                                            onChange={handleChange}
+                                        />
+                                    ))}
+                                </div>
+
+                                {/* List of options */}
+                                <div style={{ margin: "10px 0 0 10px" }}>
+                                    {pollObject?.options &&
+                                        pollObject.options.map((option, index) => (
+                                            <div key={index} style={{ margin: "5px 0", display: "flex", alignItems: "center" }}>
+
+                                                {pollObject?.votingSystem === "single" ?
+                                                    <Form.Check style={{ marginRight: "10px" }}
+                                                        type='radio'
+                                                        disabled
+                                                    />
+                                                    :
+                                                    <Form.Check style={{ marginRight: "10px" }}
+                                                        type='checkbox'
+                                                        disabled
+                                                    />
+                                                }
+
+                                                <Form.Control type="text" placeholder="" value={option?.value} onChange={e => handleOptionChange(e, option)} />
+
+                                                <Button variant="secondary" style={{ marginLeft: "10px", width: "80px" }} onClick={() => { deleteOption(index); }}>Delete</Button>
+                                            </div>
+                                        ))
+                                    }
+                                </div>
+
+                                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                    <Button variant="secondary" style={{ width: "75px" }} onClick={() => { addOption(); }}>Add</Button>
+                                </div>
+                            </Form.Group>
+
+                            {/* Voting Period */}
                             <div>
-                                {['Single', 'Multiple'].map((option, index) => (
-                                    <Form.Check
-                                        inline
-                                        key={index}
-                                        type='radio'
-                                        name="votingSystem"
-                                        value={option.toLowerCase()}
-                                        checked={pollObject.votingSystem === option.toLowerCase()}
-                                        id={`voting_system_${option}`}
-                                        label={option}
-                                        onChange={handleChange}
-                                    />
-                                ))}
+                                <Form.Label>Voting period</Form.Label>
+                                <Form.Group className="mb-3" style={{ display: "flex", alignItems: "center" }}>
+                                    <Form.Label style={{ marginRight: "10px", width: "50px" }}>Start</Form.Label>
+                                    <Form.Control type="datetime-local" name="startAtDate" value={pollObject.startAtDate} style={{ width: "250px" }}
+                                        min={new Date().toISOString().slice(0, 16)}
+                                        onChange={handleChange} />
+                                </Form.Group>
+
+                                <Form.Group className="mb-3" style={{ display: "flex", alignItems: "center" }}>
+                                    <Form.Label style={{ marginRight: "10px", width: "50px" }}>End</Form.Label>
+                                    <Form.Control type="datetime-local" name="endAtDate" value={pollObject.endAtDate} style={{ width: "250px" }}
+                                        onChange={handleChange} disabled={!pollObject?.startAtDate} min={pollObject?.startAtDate} />
+                                </Form.Group>
                             </div>
 
-                            {/* List of options */}
-                            <div style={{ margin: "10px 0 0 10px" }}>
-                                {pollObject?.options &&
-                                    pollObject.options.map((option, index) => (
-                                        <div key={index} style={{ margin: "5px 0", display: "flex", alignItems: "center" }}>
+                            {/* Voting Strategy */}
+                            <div>
+                                <div style={{ display: "flex", alignItems: "center", padding: "10px 0" }}>
+                                    <Form.Label>Voting strategy</Form.Label>
+                                    <Form.Check style={{ marginLeft: "10px" }}
+                                        inline
+                                        type="switch"
+                                        id="voting-strategy-id"
+                                        name="votingStrategyFlag"
+                                        onChange={handleChange}
+                                        checked={pollObject.votingStrategyFlag}
+                                    />
+                                </div>
 
-                                            {pollObject?.votingSystem === "single" ?
-                                                <Form.Check style={{ marginRight: "10px" }}
-                                                    type='radio'
-                                                    disabled
-                                                />
-                                                :
-                                                <Form.Check style={{ marginRight: "10px" }}
-                                                    type='checkbox'
-                                                    disabled
-                                                />
-                                            }
+                                {pollObject?.votingStrategyFlag &&
+                                    <>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label>Default strategy</Form.Label>
+                                            <Form.Select id="voting-strategy-template" name="votingStrategyTemplate"
+                                                value={pollObject?.votingStrategyTemplate ? pollObject.votingStrategyTemplate : ""}
+                                                onChange={handleChange}>
+                                                <option disabled value="">Select</option>
+                                                <option value="satoshibles">Satoshibles</option>
+                                                <option value="crashpunks">CrashPunks</option>
+                                                <option value="theexplorerguild">The Explorer Guild</option>
+                                                <option value="stacksparrots">Stacks Parrots</option>
+                                                <option value="blocksurvey">BlockSurvey</option>
+                                                <option value="btcholders">.btc Namespace</option>
+                                                <option value="other">Other</option>
+                                            </Form.Select>
+                                        </Form.Group>
 
-                                            <Form.Control type="text" placeholder="" value={option?.value} onChange={e => handleOptionChange(e, option)} />
-
-                                            <Button variant="secondary" style={{ marginLeft: "10px", width: "80px" }} onClick={() => { deleteOption(index); }}>Delete</Button>
-                                        </div>
-                                    ))
+                                        {/* Only for other */}
+                                        {pollObject?.votingStrategyTemplate && pollObject?.votingStrategyTemplate == "other" &&
+                                            <>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label>NFT name</Form.Label>
+                                                    <Form.Control type="text" name="strategyNFTName" value={pollObject.strategyNFTName}
+                                                        onChange={handleChange} />
+                                                </Form.Group>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label>Contract name</Form.Label>
+                                                    <Form.Control type="text" name="strategyContractName" value={pollObject.strategyContractName}
+                                                        onChange={handleChange}
+                                                        placeholder="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.contract" />
+                                                </Form.Group>
+                                            </>
+                                        }
+                                    </>
                                 }
                             </div>
 
-                            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                                <Button variant="secondary" style={{ width: "75px" }} onClick={() => { addOption(); }}>Add</Button>
-                            </div>
-                        </Form.Group>
-
-                        {/* Voting Period */}
-                        <div>
-                            <Form.Label>Voting period</Form.Label>
-                            <Form.Group className="mb-3" style={{ display: "flex", alignItems: "center" }}>
-                                <Form.Label style={{ marginRight: "10px", width: "50px" }}>Start</Form.Label>
-                                <Form.Control type="datetime-local" name="startAtDate" value={pollObject.startAtDate} style={{ width: "250px" }}
-                                    min={new Date().toISOString().slice(0, 16)}
-                                    onChange={handleChange} />
-                            </Form.Group>
-
-                            <Form.Group className="mb-3" style={{ display: "flex", alignItems: "center" }}>
-                                <Form.Label style={{ marginRight: "10px", width: "50px" }}>End</Form.Label>
-                                <Form.Control type="datetime-local" name="endAtDate" value={pollObject.endAtDate} style={{ width: "250px" }}
-                                    onChange={handleChange} disabled={!pollObject?.startAtDate} min={pollObject?.startAtDate} />
-                            </Form.Group>
-                        </div>
-
-                        {/* Voting Strategy */}
-                        <div>
-                            <div style={{ display: "flex", alignItems: "center", padding: "10px 0" }}>
-                                <Form.Label>Voting strategy</Form.Label>
-                                <Form.Check style={{ marginLeft: "10px" }}
-                                    inline
-                                    type="switch"
-                                    id="voting-strategy-id"
-                                    name="votingStrategyFlag"
-                                    onChange={handleChange}
-                                    checked={pollObject.votingStrategyFlag}
-                                />
-                            </div>
-
-                            {pollObject?.votingStrategyFlag &&
-                                <>
-                                    <Form.Group className="mb-3">
-                                        <Form.Label>Default strategy</Form.Label>
-                                        <Form.Select id="voting-strategy-template" name="votingStrategyTemplate"
-                                            value={pollObject?.votingStrategyTemplate ? pollObject.votingStrategyTemplate : ""}
-                                            onChange={handleChange}>
-                                            <option disabled value="">Select</option>
-                                            <option value="satoshibles">Satoshibles</option>
-                                            <option value="crashpunks">CrashPunks</option>
-                                            <option value="theexplorerguild">The Explorer Guild</option>
-                                            <option value="stacksparrots">Stacks Parrots</option>
-                                            <option value="blocksurvey">BlockSurvey</option>
-                                            <option value="btcholders">.btc holders</option>
-                                            <option value="other">Other</option>
-                                        </Form.Select>
-                                    </Form.Group>
-
-                                    {/* Only for other */}
-                                    {pollObject?.votingStrategyTemplate && pollObject?.votingStrategyTemplate == "other" &&
-                                        <>
-                                            <Form.Group className="mb-3">
-                                                <Form.Label>NFT name</Form.Label>
-                                                <Form.Control type="text" name="strategyNFTName" value={pollObject.strategyNFTName}
-                                                    onChange={handleChange} />
-                                            </Form.Group>
-                                            <Form.Group className="mb-3">
-                                                <Form.Label>Contract name</Form.Label>
-                                                <Form.Control type="text" name="strategyContractName" value={pollObject.strategyContractName}
-                                                    onChange={handleChange}
-                                                    placeholder="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.contract" />
-                                            </Form.Group>
-                                        </>
-                                    }
-                                </>
+                            {/* Error Message */}
+                            {errorMessage &&
+                                <div style={{ margin: "10px 0" }}>
+                                    <span style={{ fontSize: "14px" }}>{errorMessage}</span>
+                                </div>
                             }
-                        </div>
 
-                        {/* Error Message */}
-                        {errorMessage &&
-                            <div style={{ margin: "10px 0" }}>
-                                <span style={{ fontSize: "14px" }}>{errorMessage}</span>
-                            </div>
-                        }
-
-                        {/* CTA */}
-                        {
-                            pollId !== "new" &&
-                            <Button variant="secondary" onClick={() => { handleShow() }}>Preview</Button>
-                        }
-                        {'  '}
-                        <Button variant="secondary" onClick={() => { savePollToGaia() }} disabled={isProcessing || pollObject?.status != "draft"}>
-                            Save
-                        </Button>
-                        {' '}
-                        <Button variant="secondary" onClick={() => { publishPoll() }} disabled={isProcessing || pollObject?.status != "draft"}>
-                            Publish
-                        </Button>
-                        {' '}
-                        {currentProgressMessage &&
-                            <span>{currentProgressMessage}</span>
-                        }
-                    </Form>
+                            {/* CTA */}
+                            {
+                                pollId !== "new" &&
+                                <Button variant="secondary" onClick={() => { handleShow() }}>Preview</Button>
+                            }
+                            {'  '}
+                            <Button variant="secondary" onClick={() => { savePollToGaia() }} disabled={isProcessing || pollObject?.status != "draft"}>
+                                Save
+                            </Button>
+                            {' '}
+                            <Button variant="secondary" onClick={() => { publishPoll() }} disabled={isProcessing || pollObject?.status != "draft"}>
+                                Publish
+                            </Button>
+                            {' '}
+                            {currentProgressMessage &&
+                                <span>{currentProgressMessage}</span>
+                            }
+                        </Form>
+                    </>
                     :
                     <>Loading...</>
                 }
