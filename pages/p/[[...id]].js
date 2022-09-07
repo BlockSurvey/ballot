@@ -5,7 +5,7 @@ import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
 import { Constants } from "../../common/constants";
-import DashboardMenuComponent from "../../components/dashboard/DashboardMenuComponent";
+import { DashboardNavBarComponent } from "../../components/common/DashboardNavBarComponent";
 import PollComponent from "../../components/poll/PollComponent";
 import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../../services/auth";
 import styles from "../../styles/Poll.module.css";
@@ -35,9 +35,6 @@ export default function Poll() {
     // Voting power
     const [votingPower, setVotingPower] = useState();
 
-    // Result screen flag
-    const [isResultScreen, setIsResultScreen] = useState(false);
-
     // Function
     useEffect(() => {
         let pollId, gaiaAddress;
@@ -47,10 +44,6 @@ export default function Poll() {
 
         if (pathParams && pathParams?.[1]) {
             gaiaAddress = pathParams[1];
-        }
-
-        if (pathParams && pathParams?.[2]) {
-            setIsResultScreen(true)
         }
 
         // Set shareable public URL
@@ -312,29 +305,18 @@ export default function Poll() {
     return (
         <>
             {/* Outer layer */}
-            <Container fluid>
+            <Container>
                 <Row>
-                    <Col md={12} className={styles.full_container}>
-                        {/* Inner layer */}
-                        <div className={styles.results}>
-                            {/* Left side */}
-                            {
-                                isResultScreen &&
-                                <div className={"d-none d-md-block " + styles.results_left}>
-                                    {/* Menu */}
-                                    <DashboardMenuComponent />
-                                </div>
-                            }
+                    <Col md={12}>
+                        {/* Nav bar */}
+                        <DashboardNavBarComponent />
 
-                            {/* Right side */}
-                            <div className={styles.results_center}>
-                                <PollComponent pollObject={pollObject} optionsMap={optionsMap} resultsByOption={resultsByOption}
-                                    resultsByPosition={resultsByPosition} total={total}
-                                    dns={dns} alreadyVoted={alreadyVoted} noHoldingToken={noHoldingToken}
-                                    holdingTokenArr={holdingTokenArr} holdingTokenIdArr={holdingTokenIdArr}
-                                    votingPower={votingPower} publicUrl={publicUrl} />
-                            </div>
-                        </div>
+                        {/* Body */}
+                        <PollComponent pollObject={pollObject} optionsMap={optionsMap} resultsByOption={resultsByOption}
+                            resultsByPosition={resultsByPosition} total={total}
+                            dns={dns} alreadyVoted={alreadyVoted} noHoldingToken={noHoldingToken}
+                            holdingTokenArr={holdingTokenArr} holdingTokenIdArr={holdingTokenIdArr}
+                            votingPower={votingPower} publicUrl={publicUrl} />
                     </Col>
                 </Row>
             </Container>

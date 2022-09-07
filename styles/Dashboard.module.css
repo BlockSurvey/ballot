@@ -1,38 +1,3 @@
-/* Full container */
-.full_container {
-    height: 100vh;
-    overflow-y: hidden;
-    overflow-x: hidden;
-    padding: 0px;
-}
-
-/* Dashboard Layout */
-.dashboard {
-    height: 100%;
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    z-index: 0;
-    overflow: hidden;
-}
-.dashboard_left {
-    flex-shrink: 0;
-    position: relative;
-    width: 220px;
-    height: 100%;
-    box-shadow: 1px 0px 0px rgba(100, 100, 100, 0.15);
-    z-index: 999;
-}
-.dashboard_center {
-    height: 100%;
-    flex-grow: 1;
-    overflow: auto;
-}
-
 .dashboard_container {
-    /* padding-left: 60px;
-    padding-right: 60px; */
-
     padding-top: 10px;
 }

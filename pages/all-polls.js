@@ -1,7 +1,6 @@
-import { Container, Row, Col } from "react-bootstrap";
+import { Col, Container, Row } from "react-bootstrap";
+import { DashboardNavBarComponent } from "../components/common/DashboardNavBarComponent";
 import DashboardAllPollsComponent from "../components/dashboard/DashboardAllPollsComponent";
-import DashboardMenuComponent from "../components/dashboard/DashboardMenuComponent";
-import styles from "../styles/Dashboard.module.css";
 
 export default function Dashboard() {
     // Variables
@@ -10,23 +9,14 @@ export default function Dashboard() {
     return (
         <>
             {/* Outer layer */}
-            <Container fluid>
+            <Container>
                 <Row>
-                    <Col md={12} className={styles.full_container}>
-                        {/* Inner layer */}
-                        <div className={styles.dashboard}>
-                            {/* Left side */}
-                            <div className={"d-none d-md-block " + styles.dashboard_left}>
-                                {/* Menu */}
-                                <DashboardMenuComponent />
-                            </div>
+                    <Col md={12}>
+                        {/* Dashboard nav bar */}
+                        <DashboardNavBarComponent />
 
-                            {/* Right side */}
-                            <div className={styles.dashboard_center}>
-                                {/* List of all polls */}
-                                <DashboardAllPollsComponent />
-                            </div>
-                        </div>
+                        {/* List of all polls */}
+                        <DashboardAllPollsComponent />
                     </Col>
                 </Row>
             </Container>

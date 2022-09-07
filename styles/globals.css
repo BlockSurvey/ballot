@@ -14,3 +14,13 @@
     padding-left: 2rem;
     padding-right: 2rem;
 }
+
+.ballot_link {
+    color: black;
+    text-decoration: underline;
+    fill: black
+}
+
+.ballot_link:hover {
+    color: black;
+}

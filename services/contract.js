@@ -299,7 +299,7 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
 
     // Parse dns
     let domain, namespace;
-    if (dns && dns.split(".").length <= 1) {
+    if (dns && dns.split(".").length > 1) {
         // Parse dns
         let splittedDns = dns.split(".");
         domain = splittedDns.pop();

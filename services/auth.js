@@ -30,7 +30,7 @@ export function alreadyLoggedIn() {
 /**
  * Sign in
  */
-export function authenticate() {
+export function authenticate(redirectTo) {
   // Sign up
   if (!userSession.isUserSignedIn() && !userSession.isSignInPending()) {
     showConnect({
@@ -40,8 +40,13 @@ export function authenticate() {
       },
       redirectTo: "/",
       onFinish: () => {
-        // Redirect to dashboard
-        window.location.assign("/all-polls");
+        if (redirectTo) {
+          // Redirect to dashboard
+          window.location.assign(redirectTo);
+        } else {
+          // Redirect to dashboard
+          window.location.assign("/all-polls");
+        }
       },
       userSession: userSession,
     });

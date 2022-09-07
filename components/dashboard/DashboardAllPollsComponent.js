@@ -56,11 +56,11 @@ export default function DashboardAllPollsComponent() {
         }
 
         return (
-            <Link href={pollIndexObject?.status == "draft" ? `/builder/${pollIndexObject.id}/draft` : `/p/${pollIndexObject.id}/${gaiaAddress}/results`}>
+            <Link href={pollIndexObject?.status == "draft" ? `/builder/${pollIndexObject.id}/draft` : `/p/${pollIndexObject.id}/${gaiaAddress}`}>
                 <div style={{ border: "1px solid black", borderRadius: "4px", padding: "10px", marginBottom: "10px", cursor: "pointer" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                         <div>
-                            <div style={{ fontSize: "16px", fontWeight: "bold" }}>
+                            <div style={{ fontSize: "16px", fontWeight: 600, marginBottom: "10px" }}>
                                 {pollIndexObject?.title ? pollIndexObject?.title : "..."}
                             </div>
 
@@ -90,38 +90,28 @@ export default function DashboardAllPollsComponent() {
     // Design
     return (
         <>
-            <Container fluid>
-                <Row className="justify-content-md-center">
-                    <Col lg={8} md={12}>
+            <div className={styles.dashboard_container}>
+                {/* Title */}
+                <h5>All Polls</h5>
 
-                        <div className={styles.dashboard_container}>
-                            {/* Welcome */}
-
-                            {/* Title */}
-                            <h4>All Polls</h4>
-
-                            {/* List of all polls */}
-                            <div style={{ padding: "10px 0" }}>
-                                {allPolls?.list && allPolls?.ref ?
-                                    allPolls?.list?.length > 0 ?
-                                        allPolls?.list.map(
-                                            (pollId, i) => (
-                                                <div key={i}>
-                                                    {getEachRow(allPolls.ref[pollId])}
-                                                </div>
-                                            )
-                                        )
-                                        :
-                                        <>No data found</>
-                                    :
-                                    <>Loading...</>
-                                }
-                            </div>
-                        </div>
-
-                    </Col>
-                </Row>
-            </Container>
+                {/* List of all polls */}
+                <div style={{ padding: "10px 0" }}>
+                    {allPolls?.list && allPolls?.ref ?
+                        allPolls?.list?.length > 0 ?
+                            allPolls?.list.map(
+                                (pollId, i) => (
+                                    <div key={i}>
+                                        {getEachRow(allPolls.ref[pollId])}
+                                    </div>
+                                )
+                            )
+                            :
+                            <>No data found</>
+                        :
+                        <>Loading...</>
+                    }
+                </div>
+            </div>
         </>
     );
 }
