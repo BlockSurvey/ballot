@@ -15,6 +15,8 @@ export default function Poll() {
     const router = useRouter();
     const pathParams = router.query.id;
 
+    const [publicUrl, setPublicUrl] = useState();
+
     const [pollObject, setPollObject] = useState();
     const [optionsMap, setOptionsMap] = useState({});
     const [resultsByOption, setResultsByOption] = useState({});
@@ -50,6 +52,9 @@ export default function Poll() {
         if (pathParams && pathParams?.[2]) {
             setIsResultScreen(true)
         }
+
+        // Set shareable public URL
+        setPublicUrl(`https://ballot.gg/p/${pollId}/${gaiaAddress}`);
 
         // Fetch from Gaia
         if (pollId && gaiaAddress) {
@@ -117,6 +122,11 @@ export default function Poll() {
 
                 // Take the btc dns name
                 setDns(_dns);
+
+                // Allow to vote
+                setHoldingTokenArr([]);
+                setHoldingTokenIdArr([]);
+                setVotingPower(1);
             } else {
                 // Not a BTC holder
 
@@ -322,7 +332,7 @@ export default function Poll() {
                                     resultsByPosition={resultsByPosition} total={total}
                                     dns={dns} alreadyVoted={alreadyVoted} noHoldingToken={noHoldingToken}
                                     holdingTokenArr={holdingTokenArr} holdingTokenIdArr={holdingTokenIdArr}
-                                    votingPower={votingPower} />
+                                    votingPower={votingPower} publicUrl={publicUrl} />
                             </div>
                         </div>
                     </Col>

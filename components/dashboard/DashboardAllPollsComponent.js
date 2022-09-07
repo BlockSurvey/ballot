@@ -64,7 +64,7 @@ export default function DashboardAllPollsComponent() {
                                 {pollIndexObject?.title ? pollIndexObject?.title : "..."}
                             </div>
 
-                            <div style={{ fontSize: "14px" }}>
+                            <div style={{ fontSize: "14px", color: "#737373" }}>
                                 <span>
                                     Status : {pollIndexObject?.status == "draft" ? "Draft" : "Active"}
                                 </span>
@@ -75,12 +75,12 @@ export default function DashboardAllPollsComponent() {
                             </div>
                         </div>
 
-                        <div>
+                        {/* <div>
                             <Button variant="danger" onClick={(event) => { event.stopPropagation(); deletePoll(pollIndexObject, setAllPolls) }}
                                 disabled={isDeleting}>
                                 Delete
                             </Button>
-                        </div>
+                        </div> */}
                     </div>
                 </div>
             </Link>

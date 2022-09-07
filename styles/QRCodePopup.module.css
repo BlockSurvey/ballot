@@ -1,0 +1,27 @@
+/* Modal */
+.dashboard_modal_header_box {
+  position: relative;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: 500;
+}
+.dashboard_modal_close_icon_btn_box {
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;  
+  transition: 0.3s all ease;
+}
+.dashboard_modal_body_box {
+  padding: 14px 20px;
+}
+.dashboard_transactions_modal_body_box {
+  max-height: 360px;
+  overflow: auto;
+}

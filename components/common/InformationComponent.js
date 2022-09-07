@@ -1,3 +1,4 @@
+import { Constants } from "../../common/constants";
 import { convertToDisplayDateFormat, formStacksExplorerUrl } from "../../services/utils";
 
 
@@ -47,7 +48,7 @@ export default function InformationComponent(props) {
                                 pollObject?.ipfsLocation &&
                                 <div>
                                     IPFS
-                                    <a target="_blank" rel="noreferrer" href={`https://owllink.mypinata.cloud/ipfs/${pollObject?.ipfsLocation}`}>
+                                    <a target="_blank" rel="noreferrer" href={`${Constants.IPFS_GATEWAY}${pollObject?.ipfsLocation}`}>
                                         <span style={{ float: "right", fontWeight: "bold" }}>
                                             #{pollObject?.ipfsLocation.substring(0, 8)} { }
                                             <svg

@@ -23,7 +23,8 @@ export default function PollComponent(props) {
         noHoldingToken,
         holdingTokenArr,
         holdingTokenIdArr,
-        votingPower } = props;
+        votingPower,
+        publicUrl } = props;
 
     // Capture the vote
     const [voteObject, setVoteObject] = useState({});
@@ -82,7 +83,7 @@ export default function PollComponent(props) {
                                         {/* Left Side */}
                                         <div className="col-sm-12 col-md-8">
                                             {/* Header */}
-                                            <HeaderComponent pollObject={pollObject} />
+                                            <HeaderComponent pollObject={pollObject} publicUrl={publicUrl} />
 
                                             {/* Cast your vote */}
                                             <div style={{ marginTop: "20px" }}>
@@ -103,13 +104,13 @@ export default function PollComponent(props) {
                                                             ))}
 
                                                             {userSession && userSession.isUserSignedIn() ?
-                                                                <Button style={{ marginTop: "10px" }}
+                                                                <Button variant="dark" style={{ marginTop: "10px" }}
                                                                     disabled={(isPreview || !holdingTokenArr || alreadyVoted) ? true : false}
                                                                     onClick={() => { castMyVote() }}>
                                                                     Vote
                                                                 </Button>
                                                                 :
-                                                                <Button style={{ marginTop: "10px" }}
+                                                                <Button variant="dark" style={{ marginTop: "10px" }}
                                                                     onClick={() => { authenticate() }}>
                                                                     Vote
                                                                 </Button>
@@ -125,7 +126,7 @@ export default function PollComponent(props) {
                                                             {/* Already voted */}
                                                             {alreadyVoted &&
                                                                 <div style={{ fontSize: "14px", color: "red" }}>
-                                                                    You have already cast your vote.
+                                                                    Your vote has already been cast.
                                                                 </div>
                                                             }
                                                         </Form.Group>
@@ -204,7 +205,7 @@ export default function PollComponent(props) {
                     <Modal.Title>Information</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    Successfully! You have cast your vote. Check your transaction status on explorer
+                    Voted successfully! Your vote has been cast. Here is a link to your transaction status
                     <a
                         style={{ textDecoration: "underline", color: "#000" }}
                         href={formStacksExplorerUrl(txId)}

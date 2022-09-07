@@ -5,7 +5,7 @@ export const Constants = {
   GAIA_HUB_PREFIX: "https://gaia.blockstack.org/hub/",
 
   // IPFS gateway
-  IPFS_GATEWAY: "https://ipfs.owl.link/ipfs/",
+  IPFS_GATEWAY: "https://cloudflare-ipfs.com/ipfs/",
 
   // FAQs
   FAQ: [
@@ -31,7 +31,7 @@ export const Constants = {
     },
     {
       question: "Who are the developers of Ballot.gg?",
-      answer: `We are developers from Team BlockSurvey.`,
+      answer: `We are developers from Team <a href="https://blocksurvey.io?ref=ballot" target="_blank" rel="noreferrer">BlockSurvey ↗</a>.`,
     }
   ]
 };

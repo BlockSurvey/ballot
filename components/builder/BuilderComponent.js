@@ -7,6 +7,7 @@ import { getRecentBlock } from "../../services/utils";
 import { getFileFromGaia, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
+import { nanoid } from 'nanoid'
 
 export default function BuilderComponent(props) {
     // Variables
@@ -327,7 +328,7 @@ export default function BuilderComponent(props) {
             pollObject['endAtBlock'] = calculateBlockTime(new Date(pollObject?.endAtDate).getTime(), currentBlock?.height);
         }
 
-        const contractName = "ballot-" + getTitleWithOutSpecialChar();
+        const contractName = "ballot-" + getTitleWithOutSpecialChar() + "-" + nanoid(5);
         pollObject["publishedInfo"] = {
             "contractAddress": getMyStxAddress(),
             "contractName": contractName
@@ -338,7 +339,7 @@ export default function BuilderComponent(props) {
 
     const publishContract = (contractName) => {
         // Publish contract
-        deployContract(pollObject, contractName, callbackFunction);
+        deployContract(pollObject, contractName, callbackFunction, cancelCallbackFunction);
     }
 
     const callbackFunction = (data) => {
@@ -351,6 +352,10 @@ export default function BuilderComponent(props) {
 
             publishPollToIPFS();
         }
+    }
+
+    const cancelCallbackFunction = (data) => {
+        window.location.reload();
     }
 
     const publishPollToIPFS = async () => {
@@ -390,7 +395,7 @@ export default function BuilderComponent(props) {
     }
 
     const getTitleWithOutSpecialChar = () => {
-        return pollObject?.title?.replace(/[^a-zA-Z0-9]/g, '');
+        return pollObject?.title?.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '').substr(0, 16);
     }
 
     return (
@@ -404,7 +409,7 @@ export default function BuilderComponent(props) {
                             <h4>{pollId && pollId === "new" ? "New" : "Edit"} Poll</h4>
 
                             {pollObject && pollObject.id ?
-                                <Form style={{ marginTop: "20px" }}>
+                                <Form style={{ margin: "20px 0 50px 0" }}>
                                     <Form.Group className="mb-3">
                                         <Form.Label>Title</Form.Label>
                                         <Form.Control type="text" name="title" value={pollObject.title} onChange={handleChange} />
@@ -491,6 +496,7 @@ export default function BuilderComponent(props) {
                                                 id="voting-strategy-id"
                                                 name="votingStrategyFlag"
                                                 onChange={handleChange}
+                                                checked={pollObject.votingStrategyFlag}
                                             />
                                         </div>
 
@@ -498,7 +504,9 @@ export default function BuilderComponent(props) {
                                             <>
                                                 <Form.Group className="mb-3">
                                                     <Form.Label>Default strategy</Form.Label>
-                                                    <Form.Select id="voting-strategy-template" name="votingStrategyTemplate" defaultValue={""} onChange={handleChange}>
+                                                    <Form.Select id="voting-strategy-template" name="votingStrategyTemplate"
+                                                        value={pollObject?.votingStrategyTemplate ? pollObject.votingStrategyTemplate : ""}
+                                                        onChange={handleChange}>
                                                         <option disabled value="">Select</option>
                                                         <option value="satoshibles">Satoshibles</option>
                                                         <option value="crashpunks">CrashPunks</option>
