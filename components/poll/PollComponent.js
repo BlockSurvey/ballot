@@ -139,7 +139,12 @@ export default function PollComponent(props) {
                                                     {/* Holdings Required */}
                                                     {noHoldingToken &&
                                                         <div style={{ fontSize: "14px", color: "red", marginTop: "10px" }}>
-                                                            You should have the "strategy name" to vote.
+                                                            You should have the {" "}
+                                                            {pollObject?.votingStrategyTemplate == "btcholders" ?
+                                                                ".btc Namespace" :
+                                                                (pollObject?.strategyNFTName ? pollObject?.strategyNFTName : "strategy NFT")
+                                                            }
+                                                            {" "} to vote.
                                                         </div>
                                                     }
 
