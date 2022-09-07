@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
@@ -11,6 +11,9 @@ export function DashboardNavBarComponent() {
     const [displayUsername, setDisplayUsername] = useState();
 
     const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+
+    // Feedback hidden button
+    const feedbackButton = useRef(null);
 
     // Functions
     useEffect(() => {
@@ -25,6 +28,28 @@ export function DashboardNavBarComponent() {
         const _username = await getDomainNamesFromBlockchain();
         setDisplayUsername(_username);
     }
+
+    const loadBlockSurveyWidgetScript = () => {
+        // If script is not loaded, load first
+        if (!window.blocksurvey) {
+            let body = document.body;
+            let script = document.createElement("script");
+            script.innerHTML = "";
+            script.src = "https://blocksurvey.io/assets/js/blocksurvey-widget.js";
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                window.blocksurvey = {
+                    loaded: true,
+                };
+
+                feedbackButton.current.click();
+            };
+            body.appendChild(script);
+        } else {
+            feedbackButton.current.click();
+        }
+    };
 
     // UI
     return (
@@ -48,7 +73,7 @@ export function DashboardNavBarComponent() {
                                 </Link>
                             </div>
 
-                            <div style={{ margin: "10px 0" }}>
+                            <div className="d-none d-md-block" style={{ margin: "10px 0" }}>
                                 <Link href="/all-polls">
                                     <Button variant="secondary">
                                         All Polls
@@ -60,10 +85,17 @@ export function DashboardNavBarComponent() {
                             <div>
                                 <DropdownButton
                                     align="end"
-                                    title={displayUsername ? displayUsername : "..."}
+                                    title={displayUsername ? (displayUsername.length < 16 ? displayUsername : (displayUsername.substr(0, 8) + "...")) : "..."}
                                     id="dropdown-menu-align-end"
                                     variant="secondary"
+                                    style={{ maxWidth: "120px" }}
                                 >
+                                    <Dropdown.Item
+                                        onClick={() => {
+                                            loadBlockSurveyWidgetScript();
+                                        }}>
+                                        Share feedback
+                                    </Dropdown.Item>
                                     <Dropdown.Item eventKey="1" onClick={() => { signOut() }}>Logout</Dropdown.Item>
                                 </DropdownButton>
                             </div>
@@ -78,6 +110,26 @@ export function DashboardNavBarComponent() {
                 }
 
             </div>
+
+            {/* Adding BlockSurvey script */}
+            <blocksurvey-widget
+                origin="blocksurvey.io"
+                uid="t"
+                sid="c4fc8c45-cc9f-4f8d-94eb-0dcc98ad716d"
+                mode="popupcard"
+                alignpopup="center"
+                popupsize="large"
+                background="rgb(0, 0, 0)"
+                color="rgb(255, 255, 255)"
+                params=""
+            ></blocksurvey-widget>
+            <button
+                style={{ display: "none" }}
+                className="blocksurvey-share"
+                ref={feedbackButton}
+            >
+                Launch me
+            </button>
         </>
     );
 }
