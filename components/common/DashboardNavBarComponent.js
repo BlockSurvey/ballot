@@ -101,7 +101,7 @@ export function DashboardNavBarComponent() {
                                             handleShowMyVotesPopup();
                                         }}
                                     >
-                                        My Votes
+                                        My votes
                                     </Dropdown.Item>
                                     <Dropdown.Item
                                         onClick={() => {

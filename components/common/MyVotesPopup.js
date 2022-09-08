@@ -129,9 +129,9 @@ export default function MyVotePopup(props) {
                                         <thead>
                                             <tr>
                                                 <th>Title</th>
-                                                <th>Voted Option</th>
-                                                <th>Voting Power</th>
-                                                <th>Voted At</th>
+                                                <th>Voted option</th>
+                                                <th>Voting power</th>
+                                                <th>Voted at</th>
                                                 <th>Transaction</th>
                                             </tr>
                                         </thead>
