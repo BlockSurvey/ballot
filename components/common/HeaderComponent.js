@@ -1,8 +1,18 @@
-import { formStacksExplorerUrl } from "../../services/utils";
+import {
+    formStacksExplorerUrl,
+    openFacebookUrl,
+    openLinkedinUrl,
+    openRedditUrl,
+    openTelegramUrl,
+    openTwitterUrl,
+    openWhatsappUrl
+} from "../../services/utils";
 import Tooltip from "react-bootstrap/Tooltip";
 import { useState } from "react";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import QRCodePopup from "../poll/QRCodePopup";
+import { Dropdown } from "react-bootstrap";
+import styles from "../../styles/Dashboard.module.css";
 
 export default function HeaderComponent(props) {
     // Variables
@@ -87,6 +97,87 @@ export default function HeaderComponent(props) {
                                 </svg>
                             </button>
                         </OverlayTrigger>
+
+                        {/* Share icon */}
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                id="user-account-dropdown"
+                                className={styles.share_dropdown}
+                                variant="light">
+                                <OverlayTrigger
+                                    placement="auto"
+                                    overlay={<Tooltip>Share</Tooltip>}>
+                                    <div>
+                                        <svg width="26" height="26" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M21.3 3.29999C19.1568 3.29999 17.4 5.05673 17.4 7.19999C17.4 7.61541 17.4655 8.02359 17.5875 8.39999L11.1469 11.9812C10.4759 11.4363 9.62566 11.1 8.70005 11.1C6.55681 11.1 4.80005 12.8567 4.80005 15C4.80005 17.1432 6.55681 18.9 8.70005 18.9C9.62566 18.9 10.4759 18.573 11.1469 18.0281L17.5969 21.6094C17.4743 21.9867 17.4 22.3834 17.4 22.8C17.4 24.9432 19.1568 26.7 21.3 26.7C23.4433 26.7 25.2 24.9432 25.2 22.8C25.2 20.6567 23.4433 18.9 21.3 18.9C20.2237 18.9 19.2423 19.3498 18.5344 20.0625L12.2625 16.575C12.4768 16.0933 12.6 15.5583 12.6 15C12.6 14.4385 12.479 13.9087 12.2625 13.425L18.525 9.93749C19.2336 10.6557 20.2189 11.1 21.3 11.1C23.4433 11.1 25.2 9.34324 25.2 7.19999C25.2 5.05673 23.4433 3.29999 21.3 3.29999ZM21.3 5.09999C22.4705 5.09999 23.4 6.02953 23.4 7.19999C23.4 8.37044 22.4705 9.29999 21.3 9.29999C20.1296 9.29999 19.2 8.37044 19.2 7.19999C19.2 6.02953 20.1296 5.09999 21.3 5.09999ZM8.70005 12.9C9.87049 12.9 10.8 13.8295 10.8 15C10.8 16.1704 9.87049 17.1 8.70005 17.1C7.52961 17.1 6.60005 16.1704 6.60005 15C6.60005 13.8295 7.52961 12.9 8.70005 12.9ZM21.3 20.7C22.4705 20.7 23.4 21.6295 23.4 22.8C23.4 23.9704 22.4705 24.9 21.3 24.9C20.1296 24.9 19.2 23.9704 19.2 22.8C19.2 21.6295 20.1296 20.7 21.3 20.7Z" fill="black" />
+                                        </svg>
+                                    </div>
+                                </OverlayTrigger>
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu>
+                                <Dropdown.Item
+                                    onClick={() => {
+                                        openTwitterUrl(
+                                            publicUrl,
+                                            pollObject?.title
+                                        );
+                                    }}
+                                >
+                                    Twitter
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => {
+                                        openFacebookUrl(
+                                            publicUrl,
+                                            pollObject?.title
+                                        );
+                                    }}
+                                >
+                                    Facebook
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => {
+                                        openLinkedinUrl(
+                                            publicUrl,
+                                            pollObject?.title
+                                        );
+                                    }}
+                                >
+                                    LinkedIn
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => {
+                                        openWhatsappUrl(
+                                            publicUrl,
+                                            pollObject?.title
+                                        );
+                                    }}
+                                >
+                                    WhatsApp
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => {
+                                        openTelegramUrl(
+                                            publicUrl,
+                                            pollObject?.title
+                                        );
+                                    }}
+                                >
+                                    Telegram
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => {
+                                        openRedditUrl(
+                                            publicUrl,
+                                            pollObject?.title
+                                        );
+                                    }}
+                                >
+                                    Reddit
+                                </Dropdown.Item>
+                            </Dropdown.Menu>
+                        </Dropdown>
                     </div>
 
                     {/* Description */}

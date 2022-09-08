@@ -305,6 +305,8 @@ export default function Poll(props) {
                 <meta property="og:url" content={displayURL} />
                 <meta property="og:image" content={metaImage} />
                 <meta property="og:site_name" content="ballot.gg" />
+                <meta property="og:image:width" content="1200" />
+                <meta property="og:image:height" content="630" />
 
                 {/* Twitter Meta Tags */}
                 <meta name="twitter:card" content="summary" />

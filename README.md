@@ -19,8 +19,8 @@ Yes. The source of the smart contact is available here.
 5. Is Ballot.gg free?
 Yes. There are no charges for creating polls in Ballot.
 
-6. Who is the team behind Owl Link?
-We are developers from Team [BlockSurvey ↗](https://blocksurvey.io/?ref=owl-link).
+6. Who is the team behind Ballot.gg?
+We are developers from Team [BlockSurvey ↗](https://blocksurvey.io/?ref=ballot).
 
 ## Getting Started
 

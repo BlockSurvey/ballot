@@ -69,3 +69,71 @@ export async function getDomainNamesFromBlockchain() {
 
     return displayUsername;
 };
+
+// Social media share
+/**
+ * Get Twitter post content
+ */
+export function openTwitterUrl(url, title) {
+    if (title && url) {
+        let link = "https://twitter.com/intent/tweet?text=" + title + "&url=" + url;
+        window.open(link, "_blank");
+    }
+}
+
+/**
+ * Get Facebook post content
+ */
+export function openFacebookUrl(url, title) {
+    if (url) {
+        let link = "https://www.facebook.com/sharer.php?u=" + url;
+        window.open(link, "_blank");
+    }
+}
+
+/**
+ * Get Linkedin post content
+ */
+export function openLinkedinUrl(url, title) {
+    if (url) {
+        let link = "https://www.linkedin.com/sharing/share-offsite/?url=" + url;
+
+        // Adding extra text
+        if (title) {
+            link = link + "&summary=" + title;
+        }
+
+        window.open(link, "_blank");
+    }
+}
+
+/**
+ * Get Whatsapp post content
+ */
+export function openWhatsappUrl(url, title) {
+    if (url) {
+        let link = "https://web.whatsapp.com/send?text=" + url;
+        window.open(link, "_blank");
+    }
+}
+
+/**
+ * Get Telegram post content
+ */
+export function openTelegramUrl(url, title) {
+    if (url) {
+        let link = "https://telegram.me/share/url?url=" + url;
+        window.open(link, "_blank");
+    }
+}
+
+/**
+ * Get Facebook post content
+ */
+export function openRedditUrl(url, title) {
+    if (url) {
+        let link = "https://www.reddit.com/submit?url=" + url;
+        window.open(link, "_blank");
+    }
+}
+  // Social media share

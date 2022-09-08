@@ -79,3 +79,13 @@
     max-height: 360px;
     overflow: auto;
 }
+
+.share_dropdown {
+    padding: 0px;
+    background: none;
+    border: 0px;
+}
+
+.share_dropdown::after {
+    display: none;
+}

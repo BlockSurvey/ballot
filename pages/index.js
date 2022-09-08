@@ -46,6 +46,14 @@ export default function Home() {
           content={metaImage}
         />
         <meta property="og:site_name" content="ballot" />
+        <meta
+          property="og:image:width"
+          content="1200"
+        />
+        <meta
+          property="og:image:height"
+          content="630"
+        />
 
         {/* Twitter Meta Tags */}
         <meta name="twitter:card" content="summary" />
@@ -63,7 +71,6 @@ export default function Home() {
           content={metaImage}
         />
         <meta name="twitter:site" content={twitterHandle} />
-
         <meta name="theme-color" content="#ffffff" />
       </Head>
 
