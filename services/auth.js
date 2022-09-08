@@ -56,6 +56,21 @@ export function authenticate(redirectTo) {
   }
 }
 
+export function switchAccount() {
+  showConnect({
+    appDetails: {
+      name: "Ballot",
+      icon: window.location.origin + "/images/logo/ballot.png",
+    },
+    redirectTo: "/",
+    onFinish: () => {
+      // Redirect to dashboard
+      window.location.replace("/all-polls");
+    },
+    userSession: userSession,
+  });
+}
+
 /**
  * Sign out
  */

@@ -69,54 +69,59 @@ export default function PollComponent(props) {
         if (data?.txId) {
             setTxId(data.txId);
 
-            // Store transaction to Gaia
-            getFileFromGaia("transactions_ballot.json").then(
-                (response) => {
-                    if (response) {
-                        const transactionsObj = JSON.parse(response);
-
-                        if (transactionsObj && transactionsObj.transactions) {
-                            transactionsObj.transactions.push({
-                                txId: data.txId,
-                                txRaw: data.txRaw,
-                                date: Date.now(),
-                            });
-
-                            // Store on gaia
-                            putFileToGaia(
-                                "transactions_ballot.json",
-                                JSON.stringify(transactionsObj),
-                                { dangerouslyIgnoreEtag: true }
-                            );
-                        }
-                    }
-                },
-                (error) => {
-                    // File does not exit in gaia
-                    if (error && error.code == "does_not_exist") {
-                        const transactionsObj = {
-                            transactions: [
-                                {
-                                    txId: data.txId,
-                                    txRaw: data.txRaw,
-                                    date: Date.now(),
-                                },
-                            ],
-                        };
-
-                        // Store on gaia
-                        putFileToGaia(
-                            "transactions_ballot.json",
-                            JSON.stringify(transactionsObj),
-                            { dangerouslyIgnoreEtag: true }
-                        );
-                    }
-                }
-            );
+            // Store my vote to Gaia
+            processMyVote(data);
 
             // Show information popup
             handleShow();
         }
+    }
+
+    const processMyVote = (data) => {
+        // Store my vote to Gaia
+        getFileFromGaia("my_votes_ballot.json").then(
+            (response) => {
+                if (response) {
+                    const myVotesObj = JSON.parse(response);
+
+                    if (myVotesObj && myVotesObj.votes) {
+                        saveMyVoteToGaia(myVotesObj, data);
+                    }
+                }
+            },
+            (error) => {
+                // File does not exit in gaia
+                if (error && error.code == "does_not_exist") {
+                    const myVotesObj = {
+                        votes: [
+                        ],
+                    };
+
+                    saveMyVoteToGaia(myVotesObj, data);
+                }
+            }
+        );
+    }
+
+    const saveMyVoteToGaia = (myVotesObj, data) => {
+        myVotesObj.votes.push({
+            title: pollObject?.title,
+            url: publicUrl,
+
+            voteObject: voteObject,
+            optionsMap: optionsMap,
+
+            votedAt: Date.now(),
+            txId: data.txId,
+            txRaw: data.txRaw
+        });
+
+        // Store on gaia
+        putFileToGaia(
+            "my_votes_ballot.json",
+            JSON.stringify(myVotesObj),
+            { dangerouslyIgnoreEtag: true }
+        );
     }
 
     const castMyVote = () => {
