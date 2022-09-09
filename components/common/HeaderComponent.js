@@ -43,7 +43,10 @@ export default function HeaderComponent(props) {
                     <div style={{ display: "flex", alignItems: "center", columnGap: "20px", fontSize: "14px", marginBottom: "30px" }}>
                         {/* Status */}
                         <div>
-                            {pollObject?.status == "draft" ? "Draft" : "Active"} {' '}
+                            {pollObject?.status == "draft" ? "Draft" :
+                                ((pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())) ?
+                                    (<span style={{ color: "#ff4d4d" }}>Closed</span>) : "Active")}
+                            {' '}
                         </div>
 
                         {/* Created by */}

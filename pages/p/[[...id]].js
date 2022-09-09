@@ -12,7 +12,6 @@ import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../../services
 export default function Poll(props) {
     const { pollObject, pollId, gaiaAddress } = props;
 
-    // const [pollObject, setPollObject] = useState();
     const [publicUrl, setPublicUrl] = useState();
     const [optionsMap, setOptionsMap] = useState({});
     const [resultsByOption, setResultsByOption] = useState({});
@@ -188,16 +187,21 @@ export default function Poll(props) {
             if (content && content.okay) {
                 const results = cvToValue(parseReadOnlyResponse(content)).value;
 
-                let resultsObj = {};
-                results?.options?.value.forEach((option, index) => {
-                    resultsObj[option?.value] = results?.results?.value?.[index]?.value;
-                });
-                setResultsByOption(resultsObj)
-
-                const total = parseInt(results?.total?.value);
+                const total = parseInt(results?.["total-with-voting-power"]?.value ? (results?.["total-with-voting-power"]?.value) : (results?.total?.value));
                 setTotal(total);
 
-                getFirstTenResults((total > 10 ? 10 : total), contractAddress, contractName);
+                let resultsObj = {};
+                results?.options?.value.forEach((option, index) => {
+                    resultsObj[option?.value] = {
+                        total: results?.results?.value?.[index]?.value,
+                        percentage: results?.results?.value?.[index]?.value == 0 ? 0 : ((results?.results?.value?.[index]?.value / total) * 100)
+                    };
+                });
+                setResultsByOption(resultsObj);
+
+                getFirstTenResults((results?.total?.value > 10 ? 10 : results?.total?.value), contractAddress, contractName);
+            } else {
+                setTotal(0);
             }
         }
     };

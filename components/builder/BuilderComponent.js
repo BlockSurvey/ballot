@@ -1,13 +1,13 @@
+import { nanoid } from 'nanoid';
 import Router from 'next/router';
 import { useEffect, useState } from "react";
-import { Button, Col, Container, Form, Row } from "react-bootstrap";
+import { Button, Form } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
-import { deployContract } from "../../services/contract"
-import { getRecentBlock } from "../../services/utils";
 import { getFileFromGaia, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
+import { deployContract } from "../../services/contract";
+import { getRecentBlock } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
-import { nanoid } from 'nanoid'
 
 export default function BuilderComponent(props) {
     // Variables

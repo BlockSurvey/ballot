@@ -35,28 +35,6 @@ export function DashboardNavBarComponent() {
         setDisplayUsername(_username);
     }
 
-    const loadBlockSurveyWidgetScript = () => {
-        // If script is not loaded, load first
-        if (!window.blocksurvey) {
-            let body = document.body;
-            let script = document.createElement("script");
-            script.innerHTML = "";
-            script.src = "https://blocksurvey.io/assets/js/blocksurvey-widget.js";
-            script.async = true;
-            script.defer = true;
-            script.onload = () => {
-                window.blocksurvey = {
-                    loaded: true,
-                };
-
-                feedbackButton.current.click();
-            };
-            body.appendChild(script);
-        } else {
-            feedbackButton.current.click();
-        }
-    };
-
     // UI
     return (
         <>
@@ -72,11 +50,11 @@ export function DashboardNavBarComponent() {
                     isUserSignedIn ?
                         <div style={{ display: "flex", gap: "26px", alignItems: "center" }}>
                             <div style={{ margin: "10px 0" }}>
-                                <Link href="/builder/new">
+                                <a href="/builder/new">
                                     <Button variant="secondary">
                                         + New Poll
                                     </Button>
-                                </Link>
+                                </a>
                             </div>
 
                             <div className="d-none d-md-block" style={{ margin: "10px 0" }}>
@@ -112,9 +90,8 @@ export function DashboardNavBarComponent() {
                                     </Dropdown.Item>
                                     <Dropdown.Divider />
                                     <Dropdown.Item
-                                        onClick={() => {
-                                            loadBlockSurveyWidgetScript();
-                                        }}>
+                                        href="https://github.com/BlockSurvey/ballot/issues"
+                                        target="_blank">
                                         Share feedback
                                     </Dropdown.Item>
                                     <Dropdown.Item eventKey="1" onClick={() => { signOut() }}>Logout</Dropdown.Item>
@@ -136,26 +113,6 @@ export function DashboardNavBarComponent() {
                 handleCloseMyVotesPopup={handleCloseMyVotesPopup}
                 handleShowMyVotesPopup={handleShowMyVotesPopup}
             />
-
-            {/* Adding BlockSurvey script */}
-            <blocksurvey-widget
-                origin="blocksurvey.io"
-                uid="t"
-                sid="c4fc8c45-cc9f-4f8d-94eb-0dcc98ad716d"
-                mode="popupcard"
-                alignpopup="center"
-                popupsize="large"
-                background="rgb(0, 0, 0)"
-                color="rgb(255, 255, 255)"
-                params=""
-            ></blocksurvey-widget>
-            <button
-                style={{ display: "none" }}
-                className="blocksurvey-share"
-                ref={feedbackButton}
-            >
-                Launch me
-            </button>
         </>
     );
 }

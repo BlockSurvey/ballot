@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { Col, Container, Row, Button } from "react-bootstrap";
-import styles from "../../styles/Dashboard.module.css";
-import { deleteFileToGaia, getFileFromGaia, getUserData, putFileToGaia } from "../../services/auth.js"
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { Button } from "react-bootstrap";
+import { deleteFileToGaia, getFileFromGaia, getUserData, putFileToGaia } from "../../services/auth.js";
 import { convertToDisplayDateFormat } from "../../services/utils";
+import styles from "../../styles/Dashboard.module.css";
 
 export default function DashboardAllPollsComponent() {
     // Variables
@@ -66,7 +66,11 @@ export default function DashboardAllPollsComponent() {
 
                             <div style={{ fontSize: "14px", color: "#737373" }}>
                                 <span>
-                                    Status : {pollIndexObject?.status == "draft" ? "Draft" : "Active"}
+                                    Status : {
+                                        pollIndexObject?.status == "draft" ? "Draft" :
+                                            ((pollIndexObject?.endAt && (new Date(pollIndexObject?.endAt) < new Date())) ?
+                                                (<span style={{ color: "#ff4d4d" }}>Closed</span>) : "Active")
+                                    }
                                 </span>
                                 {', '}
                                 <span>

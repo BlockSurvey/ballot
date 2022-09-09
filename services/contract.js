@@ -119,6 +119,7 @@ function getRawContract() {
     (define-map users {id: principal} {count: uint, vote: (list &{noOfOptions} (string-ascii 36)), volume: (list &{noOfOptions} uint)})
     (define-map register {id: uint} {user: principal, bns: (string-ascii 256), vote: (list &{noOfOptions} (string-ascii 36)), volume: (list &{noOfOptions} uint)})
     (define-data-var total uint u0)
+    (define-data-var total-with-voting-power uint u0)
     (define-data-var options (list &{noOfOptions} (string-ascii 36)) (list))
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -216,6 +217,9 @@ function getRawContract() {
             (map-set users {id: tx-sender} {count: u1, vote: vote, volume: volume})
             (map-set register {id: next-total} {user: tx-sender, bns: bns, vote: vote, volume: volume})
     
+            ;; Increase the total with voting power
+            (var-set total-with-voting-power (+ (unwrap-panic (element-at volume u0)) (var-get total-with-voting-power)))
+
             ;; Increase the total
             (var-set total next-total)
     
@@ -226,7 +230,7 @@ function getRawContract() {
     
     (define-read-only (get-results)
         (begin
-            (ok {total: (var-get total),options: (var-get options), results: (map get-single-result (var-get options))})
+            (ok {total: (var-get total), total-with-voting-power: (var-get total-with-voting-power), options: (var-get options), results: (map get-single-result (var-get options))})
         )
     )
     

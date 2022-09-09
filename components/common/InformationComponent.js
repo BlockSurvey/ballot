@@ -1,3 +1,4 @@
+import { Table } from "react-bootstrap";
 import { Constants } from "../../common/constants";
 import { convertToDisplayDateFormat, formStacksExplorerUrl } from "../../services/utils";
 
@@ -116,14 +117,26 @@ export default function InformationComponent(props) {
                         <h6>Current results</h6>
 
                         <div style={{ marginTop: "10px" }}>
-                            {pollObject?.options?.map((option, index) => (
-                                <div key={index}>
-                                    {option?.value}
-                                    <span style={{ float: "right", fontWeight: "bold", textTransform: "capitalize" }}>
-                                        {resultsByOption && resultsByOption[option.id] ? resultsByOption[option.id] : "-"}
-                                    </span>
-                                </div>
-                            ))}
+                            <Table striped bordered>
+                                <tbody>
+                                    {pollObject?.options?.map((option, index) => (
+                                        <tr key={index}>
+                                            <td style={{ width: "70%" }}>
+                                                {option?.value}
+                                            </td>
+                                            <td>
+                                                <span style={{ float: "right", fontWeight: "bold", textTransform: "capitalize" }}>
+                                                    {resultsByOption && resultsByOption[option.id] ?
+                                                        <>
+                                                            {resultsByOption[option.id]["percentage"]}% ({resultsByOption[option.id]["total"]})
+                                                        </>
+                                                        : "-"}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </Table>
                         </div>
                     </div>
                 </>

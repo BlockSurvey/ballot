@@ -125,7 +125,7 @@ export default function MyVotePopup(props) {
                         ) : // Once data found
                             votes && votes.length > 0 ? (
                                 <div style={{ padding: "0px 20px 10px", fontSize: "14px" }}>
-                                    <Table striped bordered hover>
+                                    <Table striped bordered>
                                         <thead>
                                             <tr>
                                                 <th>Title</th>

@@ -38,8 +38,8 @@ export default function PollComponent(props) {
     const handleShow = () => setShow(true);
     const handleClose = () => setShow(false);
 
-    // Loading
-    const [isLoading, setIsLoading] = useState(false);
+    // Processing
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Functions
     useEffect(() => {
@@ -127,7 +127,7 @@ export default function PollComponent(props) {
     const castMyVote = () => {
         if (pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName) {
             // Start processing
-            setIsLoading(true);
+            setIsProcessing(true);
 
             const contractAddress = pollObject?.publishedInfo?.contractAddress;
             const contractName = pollObject?.publishedInfo?.contractName;
@@ -183,7 +183,8 @@ export default function PollComponent(props) {
                                                     {/* Vote button */}
                                                     {isUserSignedIn ?
                                                         <Button variant="dark" style={{ marginTop: "30px" }}
-                                                            disabled={(isPreview || !holdingTokenArr || alreadyVoted) ? true : false}
+                                                            disabled={(isPreview || !holdingTokenArr || alreadyVoted || isProcessing ||
+                                                                (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? true : false}
                                                             onClick={() => { castMyVote() }}>
                                                             Vote
                                                         </Button>
@@ -219,50 +220,68 @@ export default function PollComponent(props) {
 
                                     {/* Results */}
                                     <div style={{ marginTop: "20px" }}>
-                                        <h5>Votes ({total})</h5>
-                                        <Table striped bordered hover>
+                                        <h5>Votes {total >= 0 ? <>({total})</> : ""}</h5>
+                                        <Table striped bordered>
                                             <thead>
                                                 <tr>
                                                     <th>Address</th>
                                                     <th>Option</th>
-                                                    <th>Voting Power</th>
+                                                    <th>Voting power</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {Object.keys(resultsByPosition).map((position, index) => (
-                                                    <tr key={index}>
-                                                        <td>{resultsByPosition[position]?.address &&
-                                                            <a className="ballot_link" target="_blank" rel="noreferrer" href={formStacksExplorerUrl(resultsByPosition[position]?.address)}>
-                                                                <span>
-                                                                    {resultsByPosition[position]?.address} { }
-                                                                    <svg
-                                                                        width="10"
-                                                                        height="10"
-                                                                        viewBox="0 0 12 12"
-                                                                        fill="none"
-                                                                        xmlns="http://www.w3.org/2000/svg"
-                                                                    >
-                                                                        <path
-                                                                            fillRule="evenodd"
-                                                                            clipRule="evenodd"
-                                                                            d="M3.5044 0.743397C3.5044 0.33283 3.83723 -6.71395e-08 4.2478 0L11.2566 6.60206e-07C11.6672 6.60206e-07 12 0.33283 12 0.743397L12 7.7522C12 8.16277 11.6672 8.4956 11.2566 8.4956C10.846 8.4956 10.5132 8.16277 10.5132 7.7522V2.53811L1.26906 11.7823C0.978742 12.0726 0.50805 12.0726 0.217736 11.7823C-0.0725787 11.4919 -0.0725784 11.0213 0.217736 10.7309L9.46189 1.48679L4.2478 1.48679C3.83723 1.48679 3.5044 1.15396 3.5044 0.743397Z"
-                                                                            fill="initial"
-                                                                        />
-                                                                    </svg>
-                                                                </span>
-                                                            </a>
+                                                {total >= 0 ?
+                                                    (total > 0 ?
+                                                        Object.keys(resultsByPosition).map((position, index) => (
+                                                            <tr key={index}>
+                                                                <td>{resultsByPosition[position]?.address &&
+                                                                    <a className="ballot_link" target="_blank" rel="noreferrer" href={formStacksExplorerUrl(resultsByPosition[position]?.address)}>
+                                                                        <span>
+                                                                            {resultsByPosition[position]?.address} { }
+                                                                            <svg
+                                                                                width="10"
+                                                                                height="10"
+                                                                                viewBox="0 0 12 12"
+                                                                                fill="none"
+                                                                                xmlns="http://www.w3.org/2000/svg"
+                                                                            >
+                                                                                <path
+                                                                                    fillRule="evenodd"
+                                                                                    clipRule="evenodd"
+                                                                                    d="M3.5044 0.743397C3.5044 0.33283 3.83723 -6.71395e-08 4.2478 0L11.2566 6.60206e-07C11.6672 6.60206e-07 12 0.33283 12 0.743397L12 7.7522C12 8.16277 11.6672 8.4956 11.2566 8.4956C10.846 8.4956 10.5132 8.16277 10.5132 7.7522V2.53811L1.26906 11.7823C0.978742 12.0726 0.50805 12.0726 0.217736 11.7823C-0.0725787 11.4919 -0.0725784 11.0213 0.217736 10.7309L9.46189 1.48679L4.2478 1.48679C3.83723 1.48679 3.5044 1.15396 3.5044 0.743397Z"
+                                                                                    fill="initial"
+                                                                                />
+                                                                            </svg>
+                                                                        </span>
+                                                                    </a>
 
-                                                        }</td>
-                                                        <td>
-                                                            {Object.keys(resultsByPosition[position]?.vote).map((optionId, voteIndex) => (
-                                                                <div key={voteIndex}>
-                                                                    {optionsMap[optionId] ? optionsMap[optionId] : "-"}
-                                                                </div>
-                                                            ))}
+                                                                }</td>
+                                                                <td>
+                                                                    {Object.keys(resultsByPosition[position]?.vote).map((optionId, voteIndex) => (
+                                                                        <div key={voteIndex}>
+                                                                            {optionsMap[optionId] ? optionsMap[optionId] : "-"}
+                                                                        </div>
+                                                                    ))}
+                                                                </td>
+                                                                <td>
+                                                                    {Object.values(resultsByPosition[position]?.vote)?.[0]}
+                                                                </td>
+                                                            </tr>
+                                                        ))
+                                                        :
+                                                        <tr>
+                                                            <td style={{ textAlign: "center" }} colSpan={3}>
+                                                                No data found
+                                                            </td>
+                                                        </tr>
+                                                    )
+                                                    :
+                                                    <tr>
+                                                        <td style={{ textAlign: "center" }} colSpan={3}>
+                                                            Loading
                                                         </td>
-                                                        <td>1</td>
                                                     </tr>
-                                                ))}
+                                                }
                                             </tbody>
                                         </Table>
                                     </div>
@@ -281,6 +300,7 @@ export default function PollComponent(props) {
                 }
             </div>
 
+            {/* Success message popup */}
             <Modal show={show} onHide={handleClose}>
                 <Modal.Header closeButton>
                     <Modal.Title>Information</Modal.Title>
