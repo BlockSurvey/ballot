@@ -162,6 +162,8 @@ export default function PollComponent(props) {
                                                             label={option.value}
                                                             id={option.id}
                                                             onChange={handleChange}
+                                                            disabled={(isPreview || !holdingTokenArr || alreadyVoted || isProcessing ||
+                                                                (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())))}
                                                         />
                                                     ))}
 
