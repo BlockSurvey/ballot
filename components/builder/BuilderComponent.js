@@ -339,7 +339,7 @@ export default function BuilderComponent(props) {
 
     const publishContract = (contractName) => {
         // Publish contract
-        deployContract(pollObject, contractName, callbackFunction, cancelCallbackFunction);
+        deployContract(pollObject, contractName, callbackFunction);
     }
 
     const callbackFunction = (data) => {
@@ -352,10 +352,6 @@ export default function BuilderComponent(props) {
 
             publishPollToIPFS();
         }
-    }
-
-    const cancelCallbackFunction = (data) => {
-        window.location.reload();
     }
 
     const publishPollToIPFS = async () => {

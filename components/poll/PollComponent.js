@@ -9,8 +9,6 @@ import InformationComponent from "../common/InformationComponent";
 
 export default function PollComponent(props) {
     // Variables
-
-    // Poll id and Gaia address
     const {
         pollObject,
         isPreview,
@@ -25,21 +23,16 @@ export default function PollComponent(props) {
         holdingTokenIdArr,
         votingPower,
         publicUrl } = props;
-
-    // Capture the vote
     const [voteObject, setVoteObject] = useState({});
-
+    const [errorMessage, setErrorMessage] = useState();
     const [txId, setTxId] = useState();
-
     const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false);
 
     // Show popup
     const [show, setShow] = useState(false);
     const handleShow = () => setShow(true);
     const handleClose = () => setShow(false);
-
-    // Processing
-    const [isProcessing, setIsProcessing] = useState(false);
 
     // Functions
     useEffect(() => {
@@ -55,7 +48,6 @@ export default function PollComponent(props) {
             voteObject = {
                 [value]: votingPower
             };
-            setVoteObject(voteObject);
         } else {
             if (voteObject?.[value]) {
                 delete voteObject[value];
@@ -63,6 +55,7 @@ export default function PollComponent(props) {
                 voteObject[value] = votingPower;
             }
         }
+        setVoteObject(voteObject);
     };
 
     const callbackFunction = (data) => {
@@ -124,8 +117,26 @@ export default function PollComponent(props) {
         );
     }
 
+    const validate = () => {
+        // Reset the error message
+        errorMessage = "";
+
+        // Not voted
+        if (!voteObject || Object.keys(voteObject)?.length == 0) {
+            errorMessage = "Please select option to vote";
+        }
+
+        setErrorMessage(errorMessage);
+    }
+
     const castMyVote = () => {
         if (pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName) {
+            // Validation
+            validate();
+            if (errorMessage) {
+                return;
+            }
+
             // Start processing
             setIsProcessing(true);
 
@@ -184,12 +195,19 @@ export default function PollComponent(props) {
 
                                                     {/* Vote button */}
                                                     {isUserSignedIn ?
-                                                        <Button variant="dark" style={{ marginTop: "30px" }}
-                                                            disabled={(isPreview || !holdingTokenArr || alreadyVoted || isProcessing ||
-                                                                (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? true : false}
-                                                            onClick={() => { castMyVote() }}>
-                                                            Vote
-                                                        </Button>
+                                                        <div style={{ display: "flex", alignItems: "center", marginTop: "30px" }}>
+                                                            <Button variant="dark"
+                                                                disabled={(isPreview || !holdingTokenArr || alreadyVoted || isProcessing ||
+                                                                    (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? true : false}
+                                                                onClick={() => { castMyVote() }}>
+                                                                Vote
+                                                            </Button>
+                                                            {errorMessage &&
+                                                                <span style={{ marginLeft: "10px" }}>
+                                                                    {errorMessage}
+                                                                </span>
+                                                            }
+                                                        </div>
                                                         :
                                                         <Button variant="dark" style={{ marginTop: "30px" }}
                                                             onClick={() => { authenticate(window?.location?.href) }}>

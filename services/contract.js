@@ -2,7 +2,11 @@ import { openContractCall, openContractDeploy } from "@stacks/connect";
 import { AnchorMode, bufferCV, listCV, stringAsciiCV, uintCV } from "@stacks/transactions";
 import { getNetworkType } from "../services/auth";
 
-export async function deployContract(pollObject, contractName, callbackFunction, cancelCallbackFunction) {
+const cancelCallbackFunction = (data) => {
+    window.location.reload();
+}
+
+export async function deployContract(pollObject, contractName, callbackFunction) {
     const contract = getContract(pollObject);
 
     // Transaction options
@@ -332,6 +336,7 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
             icon: window.location.origin + "/images/logo/ballot.png",
         },
         onFinish: callbackFunction,
+        onCancel: cancelCallbackFunction
     };
 
     // Call contract function
