@@ -114,8 +114,11 @@ export default function Poll(props) {
         } else {
             // Not a BTC holder
 
-            // No holdings to vote
-            setNoHoldingToken(true);
+            // Turn flag on
+            if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
+                // No holdings to vote
+                setNoHoldingToken(true);
+            }
         }
     };
 
