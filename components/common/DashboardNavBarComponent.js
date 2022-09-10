@@ -83,7 +83,7 @@ export function DashboardNavBarComponent() {
                                     </Dropdown.Item>
                                     <Dropdown.Item
                                         onClick={() => {
-                                            switchAccount();
+                                            switchAccount(window?.location?.href);
                                         }}
                                     >
                                         Switch account

@@ -56,7 +56,7 @@ export function authenticate(redirectTo) {
   }
 }
 
-export function switchAccount() {
+export function switchAccount(redirectTo) {
   showConnect({
     appDetails: {
       name: "Ballot",
@@ -64,8 +64,13 @@ export function switchAccount() {
     },
     redirectTo: "/",
     onFinish: () => {
-      // Redirect to dashboard
-      window.location.replace("/all-polls");
+      if (redirectTo) {
+        // Redirect to dashboard
+        window.location.assign(redirectTo);
+      } else {
+        // Redirect to dashboard
+        window.location.assign("/all-polls");
+      }
     },
     userSession: userSession,
   });

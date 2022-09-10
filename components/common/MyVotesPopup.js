@@ -14,8 +14,10 @@ export default function MyVotePopup(props) {
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
-        getMyVotes();
-    }, []);
+        if (showMyVotesPopup) {
+            getMyVotes();
+        }
+    }, [showMyVotesPopup]);
 
     // Show my polls
     const getMyVotes = () => {

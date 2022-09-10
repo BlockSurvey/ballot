@@ -99,9 +99,11 @@ export default function Poll(props) {
                 setDns(_dns);
 
                 // Allow to vote
-                setHoldingTokenArr([]);
-                setHoldingTokenIdArr([]);
-                setVotingPower(1);
+                if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
+                    setHoldingTokenArr([]);
+                    setHoldingTokenIdArr([]);
+                    setVotingPower(1);
+                }
             } else {
                 // Not a BTC holder
 
