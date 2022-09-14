@@ -25,7 +25,7 @@ export default function Poll(props) {
     // TokenIds
     const [alreadyVoted, setAlreadyVoted] = useState(false);
     const [noHoldingToken, setNoHoldingToken] = useState(false);
-    const [holdingTokenIdsArray, setHoldingTokenIdsArray] = useState([]);
+    const [holdingTokenIdsArray, setHoldingTokenIdsArray] = useState();
 
     // Voting power
     const [votingPower, setVotingPower] = useState();
@@ -404,7 +404,7 @@ export default function Poll(props) {
                 <meta name="twitter:description" content={description} />
                 <meta name="twitter:url" content={displayURL} />
                 <meta name="twitter:image" content={metaImage} />
-                <meta name="twitter:site" content="@ballot_gg" />
+                {/* <meta name="twitter:site" content="@ballot_gg" /> */}
             </Head>
 
             {/* Outer layer */}

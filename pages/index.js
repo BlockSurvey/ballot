@@ -32,45 +32,22 @@ export default function Home() {
 
         {/* Facebook Meta Tags */}
         <meta property="og:type" content="website" />
-        <meta
-          property="og:title"
-          content={title}
-        />
-        <meta
-          property="og:description"
-          content={description}
-        />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
         <meta property="og:url" content={link} />
-        <meta
-          property="og:image"
-          content={metaImage}
-        />
-        <meta property="og:site_name" content="ballot" />
-        <meta
-          property="og:image:width"
-          content="1200"
-        />
-        <meta
-          property="og:image:height"
-          content="630"
-        />
+        <meta property="og:image" content={metaImage} />
+        <meta property="og:site_name" content="ballot.gg" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
 
         {/* Twitter Meta Tags */}
         <meta name="twitter:card" content="summary" />
-        <meta
-          name="twitter:title"
-          content={title}
-        />
-        <meta
-          name="twitter:description"
-          content={description}
-        />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
         <meta name="twitter:url" content={link} />
-        <meta
-          name="twitter:image"
-          content={metaImage}
-        />
-        <meta name="twitter:site" content={twitterHandle} />
+        <meta name="twitter:image" content={metaImage} />
+        {/* <meta name="twitter:site" content={twitterHandle} /> */}
+
         <meta name="theme-color" content="#ffffff" />
       </Head>
 
