@@ -96,7 +96,7 @@ export default function DashboardAllPollsComponent() {
         <>
             <div className={styles.dashboard_container}>
                 {/* List of all polls */}
-                <div style={{ padding: "10px 0" }}>
+                <div style={{ padding: "10px 0 100px 0" }}>
                     {allPolls?.list && allPolls?.ref ?
                         allPolls?.list?.length > 0 ?
                             <>

@@ -101,7 +101,7 @@ export function DashboardNavBarComponent() {
                         :
                         <div>
                             <Button variant="dark"
-                                onClick={() => { authenticate() }}>
+                                onClick={() => { authenticate(window?.location?.href) }}>
                                 Sign up
                             </Button>
                         </div>

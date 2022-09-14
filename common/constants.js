@@ -7,6 +7,88 @@ export const Constants = {
   // IPFS gateway
   IPFS_GATEWAY: "https://cloudflare-ipfs.com/ipfs/",
 
+  VOTING_SYSTEMS: [
+    {
+      "id": "fptp",
+      "name": "First-past-the-post"
+    }, {
+      "id": "block",
+      "name": "Block Voting"
+    }, {
+      "id": "quadratic",
+      "name": "Quadratic Voting"
+    }, {
+      "id": "weighted",
+      "name": "Weighted Voting"
+    }
+  ],
+
+  STRATEGY_TEMPLATES: [
+    {
+      "id": "satoshibles",
+      "name": "Satoshibles",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "Satoshibles",
+      "strategyContractName": "SP6P4EJF0VG8V0RB3TQQKJBHDQKEF6NVRD1KZE3C.satoshibles"
+    }, {
+      "id": "crashpunks",
+      "name": "CrashPunks",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "crashpunks-v2",
+      "strategyContractName": "SP3QSAJQ4EA8WXEDSRRKMZZ29NH91VZ6C5X88FGZQ.crashpunks-v2"
+    }, {
+      "id": "theexplorerguild",
+      "name": "The Explorer Guild",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "The-Explorer-Guild",
+      "strategyContractName": "SP2X0TZ59D5SZ8ACQ6YMCHHNR2ZN51Z32E2CJ173.the-explorer-guild"
+    }, {
+      "id": "stacksparrots",
+      "name": "Stacks Parrots",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "stacks-parrots",
+      "strategyContractName": "SP2KAF9RF86PVX3NEE27DFV1CQX0T4WGR41X3S45C.byzantion-stacks-parrots"
+    }, {
+      "id": "blocksurvey",
+      "name": "BlockSurvey",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "blocksurvey",
+      "strategyContractName": "SPNWZ5V2TPWGQGVDR6T7B6RQ4XMGZ4PXTEE0VQ0S.blocksurvey"
+    }, {
+      "id": "btcholders",
+      "name": ".btc Namespace",
+      "strategyTokenType": "nft",
+      "strategyTokenName": ".btc Namespace",
+      "strategyContractName": ""
+    }, {
+      "id": "stx",
+      "name": "STX",
+      "strategyTokenType": "ft",
+      "strategyTokenName": "STX",
+      "strategyContractName": ""
+    }, {
+      "id": "miamicoin",
+      "name": "MIA",
+      "strategyTokenType": "ft",
+      "strategyTokenName": "miamicoin",
+      "strategyContractName": "SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2"
+    }, {
+      "id": "newyorkcitycoin",
+      "name": "NYC",
+      "strategyTokenType": "ft",
+      "strategyTokenName": "newyorkcitycoin",
+      "strategyContractName": "SP2H8PY27SEZ03MWRKS5XABZYQN17ETGQS3527SA5.newyorkcitycoin-token"
+    }, {
+      "id": "alex",
+      "name": "ALEX",
+      "strategyTokenType": "ft",
+      "strategyTokenName": "auto-alex",
+      "strategyContractName": "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.auto-alex"
+    }
+  ],
+
+  TOKEN_TYPES: [{ id: "nft", name: "Non Fungible Token" }, { id: "ft", name: "Fungible Token" }],
+
   // FAQs
   FAQ: [
     {

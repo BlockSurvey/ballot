@@ -10,6 +10,7 @@ import PollComponent from "../../components/poll/PollComponent";
 import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../../services/auth";
 
 export default function Poll(props) {
+    // Variables
     const { pollObject, pollId, gaiaAddress } = props;
 
     const [publicUrl, setPublicUrl] = useState();
@@ -24,8 +25,7 @@ export default function Poll(props) {
     // TokenIds
     const [alreadyVoted, setAlreadyVoted] = useState(false);
     const [noHoldingToken, setNoHoldingToken] = useState(false);
-    const [holdingTokenArr, setHoldingTokenArr] = useState();
-    const [holdingTokenIdArr, setHoldingTokenIdArr] = useState([]);
+    const [holdingTokenIdsArray, setHoldingTokenIdsArray] = useState([]);
 
     // Voting power
     const [votingPower, setVotingPower] = useState();
@@ -35,27 +35,20 @@ export default function Poll(props) {
     const metaImage = "https://ballot.gg/images/ballot-meta.png";
     const displayURL = "";
 
-    // Function
+    // Functions
     useEffect(() => {
-        // Set poll object
-        // setPollObject(data);
-
         // Set shareable public URL
         setPublicUrl(`https://ballot.gg/p/${pollId}/${gaiaAddress}`);
 
-        // Fetch from Gaia
-        if (pollId && gaiaAddress) {
+        if (pollObject) {
             // Parse poll options
             pollObject?.options.forEach(option => {
                 optionsMap[option.id] = option.value;
             });
             setOptionsMap(optionsMap);
 
-            // Fetch BTC domain
-            getBTCDomainFromBlockchain(pollObject);
-
-            // Fetch NFT holdings
-            getNFTHoldingInformation(pollObject);
+            // Fetch token holdings
+            fetchTokenHoldings(pollObject);
 
             // Fetch results
             getPollResults(pollObject);
@@ -64,6 +57,90 @@ export default function Poll(props) {
             getResultByUser(pollObject);
         }
     }, [pollObject, pollId, gaiaAddress]);
+
+    const fetchTokenHoldings = (pollObject) => {
+        // If user is not signed in, just return
+        if (!userSession.isUserSignedIn()) {
+            return;
+        }
+
+        // Strategy
+        if (pollObject?.votingStrategyFlag) {
+            if (pollObject?.strategyTokenType == "nft") {
+                // Fetch NFT holdings
+                getNFTHolding(pollObject);
+            } else if (pollObject?.strategyTokenType == "ft") {
+                // Fetch FT holdings
+                getFTHolding(pollObject);
+            }
+        } else {
+            // No strategy
+
+            // Allow anybody to vote
+            setHoldingTokenIdsArray([]);
+            setVotingPower(1);
+        }
+    }
+
+    const getNFTHolding = async (pollObject) => {
+        if (pollObject?.votingStrategyTemplate) {
+            // BTC holders check
+            if (pollObject?.votingStrategyTemplate === "btcholders") {
+                // Fetch BTC domain
+                getBTCDomainFromBlockchain(pollObject);
+            } else if (pollObject?.strategyContractName && pollObject?.strategyTokenName) {
+                const limit = 200;
+                // Get NFT holdings
+                const responseObject = await makeFetchCall(getStacksAPIPrefix() + "/extended/v1/tokens/nft/holdings?principal=" + getMyStxAddress() +
+                    "&asset_identifiers=" + pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName + "&offset=0&limit=" + limit);
+                if (responseObject?.total > 0) {
+                    // Set voting power
+                    setVotingPower(responseObject?.total);
+
+                    const _holdingTokenIdsArray = [];
+                    responseObject?.results.forEach(eachNFT => {
+                        _holdingTokenIdsArray.push(cvToValue(hexToCV(eachNFT.value.hex)));
+                    });
+
+                    // If there are more than 200, then fetch all
+                    if (responseObject?.total > limit) {
+                        const remainingTotal = (responseObject?.total - limit);
+                        const noOfFetchCallsToBeMade = Math.ceil(remainingTotal / limit);
+
+                        let listOfPromises = [];
+                        for (let i = 1; i <= noOfFetchCallsToBeMade; i++) {
+                            const offset = i * limit;
+
+                            listOfPromises.push(makeFetchCall(getStacksAPIPrefix() + "/extended/v1/tokens/nft/holdings?principal=" + getMyStxAddress() +
+                                "&asset_identifiers=" + pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName + "&offset=" + offset + "&limit=" + limit));
+                        }
+
+                        await Promise.all(listOfPromises).then(results => {
+                            results?.forEach(responseObject => {
+                                responseObject?.results.forEach(eachNFT => {
+                                    _holdingTokenIdsArray.push(cvToValue(hexToCV(eachNFT.value.hex)));
+                                });
+                            });
+                        });
+                    }
+
+                    holdingTokenIdsArray = _holdingTokenIdsArray;
+                    setHoldingTokenIdsArray(holdingTokenIdsArray);
+                } else {
+                    // No holdings to vote
+                    setNoHoldingToken(true);
+                }
+            }
+        }
+    }
+
+    const makeFetchCall = (url) => {
+        return new Promise(async (resolve, reject) => {
+            const response = await fetch(url);
+            const responseObject = await response.json();
+            resolve(responseObject);
+        })
+    }
 
     const getBTCDomainFromBlockchain = async (pollObject) => {
         // If user is not signed in, just return
@@ -100,8 +177,7 @@ export default function Poll(props) {
 
                 // Allow to vote
                 if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
-                    setHoldingTokenArr([]);
-                    setHoldingTokenIdArr([]);
+                    setHoldingTokenIdsArray([]);
                     setVotingPower(1);
                 }
             } else {
@@ -122,46 +198,50 @@ export default function Poll(props) {
                 setNoHoldingToken(true);
             }
         }
-    };
+    }
 
-    const getNFTHoldingInformation = async (pollObject) => {
-        // If user is not signed in, just return
-        if (!userSession.isUserSignedIn()) {
-            return;
-        }
-
-        if (pollObject?.votingStrategyFlag) {
+    const getFTHolding = async (pollObject) => {
+        if (pollObject?.votingStrategyTemplate) {
             // BTC holders check
-            if (pollObject?.votingStrategyTemplate === "btcholders") {
-                // Don't do anything here
-            } else if (pollObject?.strategyContractName && pollObject?.strategyNFTName) {
-                // Get btc domain for logged in user
-                const response = await fetch(
-                    getStacksAPIPrefix() + "/extended/v1/tokens/nft/holdings?principal=" + getMyStxAddress() +
-                    "&asset_identifiers=" + pollObject?.strategyContractName + "::" + pollObject?.strategyNFTName
-                );
+            if (pollObject?.votingStrategyTemplate === "stx") {
+                // Fetch STX holdings
+                getSTXHolding();
+            } else if (pollObject?.strategyContractName && pollObject?.strategyTokenName) {
+                const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/balances`);
                 const responseObject = await response.json();
 
-                if (responseObject?.total > 0) {
-                    setHoldingTokenArr(responseObject?.results);
-                    setVotingPower(responseObject?.total);
+                if (responseObject?.fungible_tokens && responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName]) {
+                    const tokenInfo = responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName];
 
-                    responseObject?.results.forEach(eachNFT => {
-                        holdingTokenIdArr.push(cvToValue(hexToCV(eachNFT.value.hex)));
-                    });
-                    setHoldingTokenIdArr(holdingTokenIdArr);
+                    if (tokenInfo?.balance !== "0") {
+                        const tokenBalance = Math.floor((parseInt(tokenInfo?.balance) / 1000000));
+                        setHoldingTokenIdsArray([]);
+                        setVotingPower(tokenBalance);
+                    } else {
+                        // No holdings to vote
+                        setNoHoldingToken(true);
+                    }
                 } else {
                     // No holdings to vote
                     setNoHoldingToken(true);
                 }
             }
-        } else {
-            // Allow anybody to vote
-            setHoldingTokenArr([]);
-            setHoldingTokenIdArr([]);
-            setVotingPower(1);
         }
-    };
+    }
+
+    const getSTXHolding = async () => {
+        const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/stx`);
+        const responseObject = await response.json();
+
+        if (responseObject?.balance !== "0") {
+            const stxBalance = Math.floor((parseInt(responseObject?.balance) / 1000000));
+            setHoldingTokenIdsArray([]);
+            setVotingPower(stxBalance);
+        } else {
+            // No holdings to vote
+            setNoHoldingToken(true);
+        }
+    }
 
     const getPollResults = async (pollObject) => {
         if (pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName) {
@@ -192,14 +272,14 @@ export default function Poll(props) {
             if (content && content.okay) {
                 const results = cvToValue(parseReadOnlyResponse(content)).value;
 
-                const total = parseInt(results?.["total-with-voting-power"]?.value ? (results?.["total-with-voting-power"]?.value) : (results?.total?.value));
+                const total = parseInt(results?.["total-votes"]?.value ? (results?.["total-votes"]?.value) : (results?.total?.value));
                 setTotal(total);
 
                 let resultsObj = {};
                 results?.options?.value.forEach((option, index) => {
                     resultsObj[option?.value] = {
                         total: results?.results?.value?.[index]?.value,
-                        percentage: results?.results?.value?.[index]?.value == 0 ? 0 : ((results?.results?.value?.[index]?.value / total) * 100)
+                        percentage: results?.results?.value?.[index]?.value == 0 ? 0 : ((results?.results?.value?.[index]?.value / total) * 100).toFixed(2)
                     };
                 });
                 setResultsByOption(resultsObj);
@@ -251,7 +331,8 @@ export default function Poll(props) {
             resultsByPosition[position] = {
                 "dns": results?.bns?.value,
                 "address": results?.user?.value,
-                "vote": resultsObj
+                "vote": resultsObj,
+                "votingPower": results?.["voting-power"]?.value
             }
 
             setResultsByPosition({ ...resultsByPosition });
@@ -337,7 +418,7 @@ export default function Poll(props) {
                         <PollComponent pollObject={pollObject} optionsMap={optionsMap} resultsByOption={resultsByOption}
                             resultsByPosition={resultsByPosition} total={total}
                             dns={dns} alreadyVoted={alreadyVoted} noHoldingToken={noHoldingToken}
-                            holdingTokenArr={holdingTokenArr} holdingTokenIdArr={holdingTokenIdArr}
+                            holdingTokenIdsArray={holdingTokenIdsArray}
                             votingPower={votingPower} publicUrl={publicUrl} />
                     </Col>
                 </Row>

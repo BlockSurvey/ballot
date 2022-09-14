@@ -19,8 +19,7 @@ export default function PollComponent(props) {
         dns,
         alreadyVoted,
         noHoldingToken,
-        holdingTokenArr,
-        holdingTokenIdArr,
+        holdingTokenIdsArray,
         votingPower,
         publicUrl } = props;
     const [voteObject, setVoteObject] = useState({});
@@ -44,7 +43,7 @@ export default function PollComponent(props) {
     const handleChange = e => {
         const { name, value } = e.target;
 
-        if (pollObject?.votingSystem == "single") {
+        if (pollObject?.votingSystem == "fptp") {
             voteObject = {
                 [value]: votingPower
             };
@@ -57,6 +56,16 @@ export default function PollComponent(props) {
         }
         setVoteObject(voteObject);
     };
+
+    const handleChangeVote = (e) => {
+        const { name, value } = e.target;
+
+        if (value <= 0) {
+            delete voteObject[name];
+        } else {
+            voteObject[name] = value;
+        }
+    }
 
     const callbackFunction = (data) => {
         if (data?.txId) {
@@ -142,7 +151,7 @@ export default function PollComponent(props) {
 
             const contractAddress = pollObject?.publishedInfo?.contractAddress;
             const contractName = pollObject?.publishedInfo?.contractName;
-            castMyVoteContractCall(contractAddress, contractName, voteObject, dns, holdingTokenIdArr?.[0], callbackFunction);
+            castMyVoteContractCall(contractAddress, contractName, voteObject, dns, holdingTokenIdsArray, callbackFunction);
         }
     }
 
@@ -151,7 +160,7 @@ export default function PollComponent(props) {
             <div className={styles.poll_container}>
                 {pollObject && pollObject.id ?
                     <>
-                        <div style={{ margin: "0px 0 50px 0" }}>
+                        <div style={{ margin: "0px 0 100px 0" }}>
                             <div className="row">
                                 {/* Left Side */}
                                 <div className="col-sm-12 col-md-8">
@@ -164,31 +173,52 @@ export default function PollComponent(props) {
                                         <div>
                                             <Form>
                                                 <Form.Group className="mb-3">
-                                                    {pollObject?.options.map((option, index) => (
-                                                        <Form.Check
-                                                            key={index}
-                                                            type={pollObject?.votingSystem == "single" ? "radio" : "checkbox"}
-                                                            name="vote"
-                                                            value={option.id}
-                                                            label={option.value}
-                                                            id={option.id}
-                                                            onChange={handleChange}
-                                                            disabled={(isPreview || !holdingTokenArr || alreadyVoted || isProcessing ||
-                                                                (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())))}
-                                                        />
-                                                    ))}
+                                                    {/* FPTP or Block Voting */}
+                                                    {(pollObject?.votingSystem == "fptp" || pollObject?.votingSystem == "block") &&
+                                                        pollObject?.options.map((option, index) => (
+                                                            <Form.Check
+                                                                key={index}
+                                                                type={pollObject?.votingSystem == "fptp" ? "radio" : "checkbox"}
+                                                                name="vote"
+                                                                value={option.id}
+                                                                label={option.value}
+                                                                id={option.id}
+                                                                onChange={handleChange}
+                                                                disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
+                                                                    (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())))}
+                                                            />
+                                                        ))
+                                                    }
+
+                                                    {/* Quadratic or Weighted Voting */}
+                                                    {(pollObject?.votingSystem == "quadratic" || pollObject?.votingSystem == "weighted") &&
+
+                                                        <Table striped bordered>
+                                                            <tbody>
+                                                                {pollObject?.options.map((option, index) => (
+                                                                    <tr key={index}>
+                                                                        <td style={{ width: "80%" }}>
+                                                                            <Form.Label>{option.value}</Form.Label>
+                                                                        </td>
+                                                                        <td>
+                                                                            <Form.Control type="number" name={option.id}
+                                                                                min="0"
+                                                                                onChange={handleChangeVote}
+                                                                                style={{ marginLeft: "10px", width: "100px" }} />
+                                                                        </td>
+                                                                    </tr>
+                                                                ))
+                                                                }
+                                                            </tbody>
+                                                        </Table>
+                                                    }
 
                                                     {/* Voting Criteria */}
-                                                    {pollObject?.votingStrategyFlag &&
+                                                    {(pollObject?.votingStrategyFlag && pollObject?.strategyTokenName) &&
                                                         <div style={{ marginTop: "30px" }}>
                                                             <h5>Voting Criteria</h5>
                                                             <span>
-                                                                {pollObject?.votingStrategyTemplate == "btcholders" ?
-                                                                    "You should hold .btc Namespace to vote." :
-                                                                    (pollObject?.strategyNFTName &&
-                                                                        `You should hold ${pollObject?.strategyNFTName} to vote.`
-                                                                    )
-                                                                }
+                                                                {`You should hold ${pollObject?.strategyTokenName} to vote.`}
                                                             </span>
                                                         </div>
                                                     }
@@ -197,7 +227,7 @@ export default function PollComponent(props) {
                                                     {isUserSignedIn ?
                                                         <div style={{ display: "flex", alignItems: "center", marginTop: "30px" }}>
                                                             <Button variant="dark"
-                                                                disabled={(isPreview || !holdingTokenArr || alreadyVoted || isProcessing ||
+                                                                disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
                                                                     (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? true : false}
                                                                 onClick={() => { castMyVote() }}>
                                                                 Vote
@@ -219,10 +249,7 @@ export default function PollComponent(props) {
                                                     {noHoldingToken &&
                                                         <div style={{ fontSize: "14px", color: "red", marginTop: "10px" }}>
                                                             You should have the {" "}
-                                                            {pollObject?.votingStrategyTemplate == "btcholders" ?
-                                                                ".btc Namespace" :
-                                                                (pollObject?.strategyNFTName ? pollObject?.strategyNFTName : "strategy NFT")
-                                                            }
+                                                            {pollObject?.strategyTokenName ? pollObject?.strategyTokenName : "strategy token"}
                                                             {" "} to vote.
                                                         </div>
                                                     }
@@ -246,6 +273,7 @@ export default function PollComponent(props) {
                                                 <tr>
                                                     <th>Address</th>
                                                     <th>Option</th>
+                                                    <th>No. of votes</th>
                                                     <th>Voting power</th>
                                                 </tr>
                                             </thead>
@@ -284,20 +312,27 @@ export default function PollComponent(props) {
                                                                     ))}
                                                                 </td>
                                                                 <td>
-                                                                    {Object.values(resultsByPosition[position]?.vote)?.[0]}
+                                                                    {Object.values(resultsByPosition[position]?.vote).map((value, voteIndex) => (
+                                                                        <div key={voteIndex}>
+                                                                            {value}
+                                                                        </div>
+                                                                    ))}
+                                                                </td>
+                                                                <td>
+                                                                    {resultsByPosition[position]?.votingPower}
                                                                 </td>
                                                             </tr>
                                                         ))
                                                         :
                                                         <tr>
-                                                            <td style={{ textAlign: "center" }} colSpan={3}>
+                                                            <td style={{ textAlign: "center" }} colSpan={4}>
                                                                 No data found
                                                             </td>
                                                         </tr>
                                                     )
                                                     :
                                                     <tr>
-                                                        <td style={{ textAlign: "center" }} colSpan={3}>
+                                                        <td style={{ textAlign: "center" }} colSpan={4}>
                                                             Loading
                                                         </td>
                                                     </tr>

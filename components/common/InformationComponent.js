@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Table } from "react-bootstrap";
 import { Constants } from "../../common/constants";
 import { convertToDisplayDateFormat, formStacksExplorerUrl } from "../../services/utils";
@@ -6,8 +7,12 @@ import { convertToDisplayDateFormat, formStacksExplorerUrl } from "../../service
 export default function InformationComponent(props) {
     // Variables
     const { pollObject, resultsByOption } = props;
+    const [votingSystemInfo, setVotingSystemInfo] = useState();
 
     // Function
+    useEffect(() => {
+        setVotingSystemInfo(Constants.VOTING_SYSTEMS.find(system => system.id == pollObject?.votingSystem));
+    }, [pollObject]);
 
     // Design
     return (
@@ -96,7 +101,7 @@ export default function InformationComponent(props) {
                                 </div>
                             }
                             <div>
-                                System <span style={{ float: "right", fontWeight: "bold", textTransform: "capitalize" }}>{pollObject?.votingSystem} Choice</span>
+                                Voting System <span style={{ float: "right", fontWeight: "bold", textTransform: "capitalize" }}>{votingSystemInfo?.name}</span>
                             </div>
                             <div>
                                 Start Date <span style={{ float: "right", fontWeight: "bold" }}>{convertToDisplayDateFormat(pollObject?.startAtDate)}</span>

@@ -3,6 +3,7 @@ import Router from 'next/router';
 import { useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
+import { Constants } from '../../common/constants.js';
 import { getFileFromGaia, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
 import { deployContract } from "../../services/contract";
 import { getRecentBlock } from "../../services/utils";
@@ -36,29 +37,6 @@ export default function BuilderComponent(props) {
     const handleClose = () => setShow(false);
 
     const [currentProgressMessage, setCurrentProgressMessage] = useState();
-
-    // Default strategy templates
-    const strategyTemplates = {
-        "satoshibles": {
-            "strategyNFTName": "Satoshibles",
-            "strategyContractName": "SP6P4EJF0VG8V0RB3TQQKJBHDQKEF6NVRD1KZE3C.satoshibles"
-        }, "crashpunks": {
-            "strategyNFTName": "crashpunks-v2",
-            "strategyContractName": "SP3QSAJQ4EA8WXEDSRRKMZZ29NH91VZ6C5X88FGZQ.crashpunks-v2"
-        }, "theexplorerguild": {
-            "strategyNFTName": "The-Explorer-Guild",
-            "strategyContractName": "SP2X0TZ59D5SZ8ACQ6YMCHHNR2ZN51Z32E2CJ173.the-explorer-guild"
-        }, "stacksparrots": {
-            "strategyNFTName": "stacks-parrots",
-            "strategyContractName": "SP2KAF9RF86PVX3NEE27DFV1CQX0T4WGR41X3S45C.byzantion-stacks-parrots"
-        }, "blocksurvey": {
-            "strategyNFTName": "blocksurvey",
-            "strategyContractName": "SPNWZ5V2TPWGQGVDR6T7B6RQ4XMGZ4PXTEE0VQ0S.blocksurvey"
-        }, "btcholders": {
-            "strategyNFTName": "",
-            "strategyContractName": ""
-        }
-    }
 
     // Functions
     useEffect(() => {
@@ -99,7 +77,7 @@ export default function BuilderComponent(props) {
         return {
             title: "",
             description: "",
-            votingSystem: "single",
+            votingSystem: "fptp",
             options: [
                 {
                     id: uuidv4(),
@@ -130,19 +108,15 @@ export default function BuilderComponent(props) {
         // Switch box component
         if (name == "votingStrategyFlag") {
             value = e.target.checked;
-
-            // Reset the values
-            if (value == false) {
-                pollObject["votingStrategyTemplate"] = "";
-                pollObject["strategyNFTName"] = "";
-                pollObject["strategyContractName"] = "";
-            }
         } else if (name == "votingStrategyTemplate") {
-            if (strategyTemplates[value]) {
-                pollObject["strategyNFTName"] = strategyTemplates[value]["strategyNFTName"];
-                pollObject["strategyContractName"] = strategyTemplates[value]["strategyContractName"];
+            const strategyTemplate = Constants.STRATEGY_TEMPLATES.find(template => template.id == value);
+            if (strategyTemplate) {
+                pollObject["strategyTokenType"] = strategyTemplate["strategyTokenType"];
+                pollObject["strategyTokenName"] = strategyTemplate["strategyTokenName"];
+                pollObject["strategyContractName"] = strategyTemplate["strategyContractName"];
             } else {
-                pollObject["strategyNFTName"] = "";
+                pollObject["strategyTokenType"] = "nft";
+                pollObject["strategyTokenName"] = "";
                 pollObject["strategyContractName"] = "";
             }
         }
@@ -277,8 +251,8 @@ export default function BuilderComponent(props) {
             return "End date should be greater than start date."
         }
 
-        if (pollObject?.votingStrategyTemplate == "other" && (!pollObject?.strategyNFTName || !pollObject?.strategyContractName)) {
-            return "Please enter strategy NFT name or Contract Address"
+        if (pollObject?.votingStrategyTemplate == "other" && (!pollObject?.strategyTokenName || !pollObject?.strategyContractName)) {
+            return "Please enter strategy Token name and Contract Address"
         }
     }
 
@@ -402,7 +376,7 @@ export default function BuilderComponent(props) {
                         {/* Title */}
                         <h5>{pollId && pollId === "new" ? "New" : "Edit"} Poll</h5>
 
-                        <Form style={{ margin: "20px 0 50px 0" }}>
+                        <Form style={{ margin: "20px 0 100px 0" }}>
 
                             <Form.Group className="mb-3">
                                 <Form.Label>Title</Form.Label>
@@ -414,42 +388,34 @@ export default function BuilderComponent(props) {
                                 <Form.Control as="textarea" name="description" value={pollObject.description} rows={5} onChange={handleChange} />
                             </Form.Group>
 
+                            {/* Voting system */}
                             <Form.Group className="mb-3">
                                 <Form.Label>Voting system</Form.Label>
                                 <div>
-                                    {['Single', 'Multiple'].map((option, index) => (
+                                    {Constants.VOTING_SYSTEMS.map((option, index) => (
                                         <Form.Check
                                             inline
                                             key={index}
                                             type='radio'
                                             name="votingSystem"
-                                            value={option.toLowerCase()}
-                                            checked={pollObject.votingSystem === option.toLowerCase()}
-                                            id={`voting_system_${option}`}
-                                            label={option}
+                                            value={option.id.toLowerCase()}
+                                            checked={pollObject.votingSystem === option.id.toLowerCase()}
+                                            id={`voting_system_${option.id}`}
+                                            label={option.name}
                                             onChange={handleChange}
                                         />
                                     ))}
                                 </div>
+                            </Form.Group>
 
+                            {/* Options */}
+                            <Form.Group className="mb-3">
+                                <Form.Label>Options</Form.Label>
                                 {/* List of options */}
-                                <div style={{ margin: "10px 0 0 10px" }}>
+                                <div>
                                     {pollObject?.options &&
                                         pollObject.options.map((option, index) => (
                                             <div key={index} style={{ margin: "5px 0", display: "flex", alignItems: "center" }}>
-
-                                                {pollObject?.votingSystem === "single" ?
-                                                    <Form.Check style={{ marginRight: "10px" }}
-                                                        type='radio'
-                                                        disabled
-                                                    />
-                                                    :
-                                                    <Form.Check style={{ marginRight: "10px" }}
-                                                        type='checkbox'
-                                                        disabled
-                                                    />
-                                                }
-
                                                 <Form.Control type="text" placeholder="" value={option?.value} onChange={e => handleOptionChange(e, option)} />
 
                                                 <Button variant="secondary" style={{ marginLeft: "10px", width: "80px" }} onClick={() => { deleteOption(index); }}>Delete</Button>
@@ -502,12 +468,9 @@ export default function BuilderComponent(props) {
                                                 value={pollObject?.votingStrategyTemplate ? pollObject.votingStrategyTemplate : ""}
                                                 onChange={handleChange}>
                                                 <option disabled value="">Select</option>
-                                                <option value="satoshibles">Satoshibles</option>
-                                                <option value="crashpunks">CrashPunks</option>
-                                                <option value="theexplorerguild">The Explorer Guild</option>
-                                                <option value="stacksparrots">Stacks Parrots</option>
-                                                <option value="blocksurvey">BlockSurvey</option>
-                                                <option value="btcholders">.btc Namespace</option>
+                                                {Constants.STRATEGY_TEMPLATES.map((option, index) => (
+                                                    <option value={option.id} key={index}>{option.name}</option>
+                                                ))}
                                                 <option value="other">Other</option>
                                             </Form.Select>
                                         </Form.Group>
@@ -516,9 +479,27 @@ export default function BuilderComponent(props) {
                                         {pollObject?.votingStrategyTemplate && pollObject?.votingStrategyTemplate == "other" &&
                                             <>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label>NFT name</Form.Label>
-                                                    <Form.Control type="text" name="strategyNFTName" value={pollObject.strategyNFTName}
-                                                        onChange={handleChange} />
+                                                    <Form.Label>Token type</Form.Label>
+                                                    <div>
+                                                        {Constants.TOKEN_TYPES.map((option, index) => (
+                                                            <Form.Check
+                                                                inline
+                                                                key={index}
+                                                                type='radio'
+                                                                name="strategyTokenType"
+                                                                value={option.id}
+                                                                checked={pollObject.strategyTokenType === option.id}
+                                                                id={`strategy_token_type_${option.id}`}
+                                                                label={option.name}
+                                                                onChange={handleChange}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </Form.Group>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label>Token name</Form.Label>
+                                                    <Form.Control type="text" name="strategyTokenName" value={pollObject.strategyTokenName}
+                                                        onChange={handleChange} placeholder="blocksurvey" />
                                                 </Form.Group>
                                                 <Form.Group className="mb-3">
                                                     <Form.Label>Contract name</Form.Label>
