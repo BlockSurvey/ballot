@@ -6,10 +6,6 @@
     justify-content: center;
 }
 
-.btn {
-    border-radius: 0px;
-}
-
 .btn_big {
     padding-left: 2rem;
     padding-right: 2rem;
@@ -52,6 +48,7 @@
     border: none;
 }
 
+/* Secondary button */
 .action_secondary_btn {
     padding: 6px 16px !important;
     border: 1px solid #000000 !important;
@@ -70,6 +67,49 @@
     color: black;
     background-color: rgba(0, 0, 0, 0.04);
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+
+/* dashed button */
+.action_dashed_btn {
+    padding: 6px 16px !important;
+    border: 1px dashed rgba(0, 0, 0, 0.5) !important;
+    background-color: transparent;
+    color: black !important;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    column-gap: 6px;
+}
+.action_dashed_btn:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+.action_dashed_btn:focus {
+    color: black;
+    background-color: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+
+/* Links */
+.ballot_links {
+    color: rgba(0, 0, 0, 0.7);
+}
+.ballot_links:hover {
+    color: rgba(0, 0, 0, 0.9);
+}
+
+/* Labels */
+.ballot_labels {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+/* Input box */
+.ballot_input {
+    background-color: rgba(236, 239, 241, 0.6);
+    border: transparent;    
+}
+.ballot_input:focus {
+    background-color: rgba(236, 239, 241, 0.6);
 }
 
 @media (min-width: 1400px) {

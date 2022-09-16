@@ -70,7 +70,7 @@ export default function Home() {
                   <Nav.Link href="#how-it-works">How it works</Nav.Link>
                   <Nav.Link href="#faq">FAQ</Nav.Link>
                   <Nav.Link onClick={() => { authenticate() }}>Log in</Nav.Link>
-                  <Button style={{ borderRadius: "0px" }} className='btn_big' variant="dark" onClick={() => { authenticate() }}>Sign up</Button>
+                  <Button className='btn_big' variant="dark" onClick={() => { authenticate() }}>Sign up</Button>
                 </Nav>
               </Navbar.Collapse>
             </Navbar>
