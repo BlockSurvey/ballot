@@ -408,7 +408,7 @@ export default function Poll(props) {
             </Head>
 
             {/* Outer layer */}
-            <Container>
+            <Container className="ballot_container">
                 <Row>
                     <Col md={12}>
                         {/* Nav bar */}

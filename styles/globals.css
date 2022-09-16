@@ -18,7 +18,7 @@
 .ballot_link {
     color: black;
     text-decoration: underline;
-    fill: black
+    fill: black;
 }
 
 .ballot_link:hover {
@@ -27,4 +27,53 @@
 
 .dropdown-menu {
     border-radius: 0px;
+}
+.dropdown-toggle {
+    padding: 6px 0px !important;
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    column-gap: 6px;
+}
+.dropdown-toggle:hover {
+    color: rgba(0, 0, 0, 1);
+}
+.dropdown-toggle:focus {
+    color: rgba(0, 0, 0, 1);
+}
+.dropdown-toggle::after {
+    content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+    width: 12px;
+    margin-top: 3px;
+    margin-left: 0px;
+    border: none;
+}
+
+.action_secondary_btn {
+    padding: 6px 16px !important;
+    border: 1px solid #000000 !important;
+    background-color: transparent;
+    color: black !important;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    column-gap: 6px;
+}
+.action_secondary_btn:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+}
+.action_secondary_btn:focus {
+    color: black;
+    background-color: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+
+@media (min-width: 1400px) {
+    .ballot_container {
+        max-width: 1140px;
+    }
 }

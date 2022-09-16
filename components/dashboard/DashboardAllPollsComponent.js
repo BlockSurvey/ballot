@@ -96,7 +96,7 @@ export default function DashboardAllPollsComponent() {
         <>
             <div className={styles.dashboard_container}>
                 {/* List of all polls */}
-                <div style={{ padding: "10px 0 100px 0" }}>
+                <div style={{ padding: "10px 0 100px 0", maxWidth: "700px", width: "100%" }}>
                     {allPolls?.list && allPolls?.ref ?
                         allPolls?.list?.length > 0 ?
                             <>
@@ -130,7 +130,7 @@ export default function DashboardAllPollsComponent() {
 
                                         <div>
                                             <Link href="/builder/new">
-                                                <Button variant="secondary">
+                                                <Button className="action_secondary_btn">
                                                     Create New Poll
                                                 </Button>
                                             </Link>

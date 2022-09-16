@@ -9,7 +9,7 @@ export default function Dashboard() {
     return (
         <>
             {/* Outer layer */}
-            <Container>
+            <Container className="ballot_container">
                 <Row>
                     <Col md={12}>
                         {/* Dashboard nav bar */}
