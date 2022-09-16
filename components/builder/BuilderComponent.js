@@ -427,7 +427,7 @@ export default function BuilderComponent(props) {
                                 <Form.Group className="mb-3">
                                     <Form.Label className='ballot_labels'>Options</Form.Label>
                                     {/* List of options */}
-                                    <div>
+                                    <div className={styles.builder_option_box}>
                                         {pollObject?.options &&
                                             pollObject.options.map((option, index) => (
                                                 <div key={index} className={styles.builder_option_section}>
@@ -445,7 +445,7 @@ export default function BuilderComponent(props) {
                                         }
                                     </div>
 
-                                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                                    <div style={{ display: "flex", marginTop: "10px" }}>
                                         <Button style={{ width: "100%" }} className="action_dashed_btn" onClick={() => { addOption(); }}>
                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <circle cx="12" cy="12" r="12" fill="#ECEFF1" />
@@ -546,24 +546,47 @@ export default function BuilderComponent(props) {
 
                         {/* Right side */}
                         <div className={styles.builder_right}>
-                            <div className={styles.builder_right_section}>
-                                {
-                                    pollId !== "new" &&
+                            <div style={{ position: "sticky", top: "119px" }}>
+                                <div className={styles.builder_right_section}>
+                                    {
+                                        pollId !== "new" &&
+                                        <Button style={{ width: "100%", marginBottom: "10px" }} className="action_secondary_btn"
+                                            onClick={() => { handleShow() }}>
+                                            Preview
+                                        </Button>
+                                    }
+
                                     <Button style={{ width: "100%", marginBottom: "10px" }} className="action_secondary_btn"
-                                        onClick={() => { handleShow() }}>
-                                        Preview
+                                        onClick={() => { savePollToGaia() }} disabled={isProcessing || pollObject?.status != "draft"}>
+                                        Save
                                     </Button>
-                                }
 
-                                <Button style={{ width: "100%", marginBottom: "10px" }} className="action_secondary_btn"
-                                    onClick={() => { savePollToGaia() }} disabled={isProcessing || pollObject?.status != "draft"}>
-                                    Save
-                                </Button>
+                                    <Button variant="dark" style={{ width: "100%" }}
+                                        onClick={() => { publishPoll() }} disabled={isProcessing || pollObject?.status != "draft"}>
+                                        Publish
+                                    </Button>
+                                </div>
 
-                                <Button variant="dark" style={{ width: "100%" }}
-                                    onClick={() => { publishPoll() }} disabled={isProcessing || pollObject?.status != "draft"}>
-                                    Publish
-                                </Button>
+                                <div style={{ margin: "28px 0px 100px 0px", padding: "0px 20px" }}>
+                                    <Link href="https://docs.ballot.gg">
+                                        <a style={{ fontSize: "14px", textDecoration: "none" }} className="ballot_links" target={"_blank"}>
+                                            Help documentation
+                                            <svg style={{ marginLeft: "6px" }}
+                                                width="8"
+                                                height="8"
+                                                viewBox="0 0 12 12"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    fillRule="evenodd"
+                                                    clipRule="evenodd"
+                                                    d="M3.5044 0.743397C3.5044 0.33283 3.83723 -6.71395e-08 4.2478 0L11.2566 6.60206e-07C11.6672 6.60206e-07 12 0.33283 12 0.743397L12 7.7522C12 8.16277 11.6672 8.4956 11.2566 8.4956C10.846 8.4956 10.5132 8.16277 10.5132 7.7522V2.53811L1.26906 11.7823C0.978742 12.0726 0.50805 12.0726 0.217736 11.7823C-0.0725787 11.4919 -0.0725784 11.0213 0.217736 10.7309L9.46189 1.48679L4.2478 1.48679C3.83723 1.48679 3.5044 1.15396 3.5044 0.743397Z"
+                                                    fill="initial"
+                                                />
+                                            </svg>
+                                        </a>
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -572,7 +595,22 @@ export default function BuilderComponent(props) {
                     <PreviewComponent pollObject={pollObject} show={show} handleClose={handleClose} />
                 </>
                 :
-                <>Loading...</>
+                <>
+                    <div style={{ width: "100%", maxWidth: "52px", height: "17px", marginBottom: "20px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+
+                    <div style={{ width: "100px", height: "22px", marginBottom: "8px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+                    <div style={{ width: "100%", height: "36px", marginBottom: "16px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+
+                    <div style={{ width: "130px", height: "22px", marginBottom: "8px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+                    <div style={{ width: "100%", height: "132px", marginBottom: "16px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+
+                    <div style={{ width: "150px", height: "22px", marginBottom: "8px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+                    <div style={{ width: "100%", height: "36px", marginBottom: "16px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+
+                    <div style={{ width: "170px", height: "22px", marginBottom: "8px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+                    <div style={{ width: "100%", height: "36px", marginBottom: "16px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+
+                </>
             }
         </>
     );

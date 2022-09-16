@@ -22,7 +22,8 @@
 }
 
 .dropdown-menu {
-    border-radius: 0px;
+    border-radius: 4px;
+    min-width: 184px;
 }
 .dropdown-toggle {
     padding: 6px 0px !important;
@@ -59,6 +60,7 @@
     align-items: center;
     justify-content: center;
     column-gap: 6px;
+    box-shadow: none;
 }
 .action_secondary_btn:hover {
     background-color: rgba(0, 0, 0, 0.04);
@@ -67,6 +69,15 @@
     color: black;
     background-color: rgba(0, 0, 0, 0.04);
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+.action_secondary_btn:active {
+    color: black;
+    background-color: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+.action_secondary_btn:disabled {
+    box-shadow: none;
+    background-color: transparent;
 }
 
 /* dashed button */
@@ -80,6 +91,7 @@
     align-items: center;
     justify-content: center;
     column-gap: 6px;
+    box-shadow: none;
 }
 .action_dashed_btn:hover {
     background-color: rgba(0, 0, 0, 0.04);
@@ -88,6 +100,15 @@
     color: black;
     background-color: rgba(0, 0, 0, 0.04);
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+.action_dashed_btn:active {
+    color: black;
+    background-color: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+.action_dashed_btn:disabled {
+    box-shadow: none;
+    background-color: transparent;
 }
 
 /* Links */
@@ -101,15 +122,36 @@
 /* Labels */
 .ballot_labels {
     color: rgba(0, 0, 0, 0.6);
+    font-size: 15px;
 }
 
 /* Input box */
 .ballot_input {
     background-color: rgba(236, 239, 241, 0.6);
-    border: transparent;    
+    border: transparent;
 }
 .ballot_input:focus {
     background-color: rgba(236, 239, 241, 0.6);
+    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+}
+
+/* Text truncate */
+.text_truncate_2 {
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+}
+
+.form-check-input:checked {
+    background-color: #000;
+    border-color: #000;
+}
+.form-check-input:focus {
+    border-color: #000;
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem rgb(0 0 0 / 25%);
 }
 
 @media (min-width: 1400px) {

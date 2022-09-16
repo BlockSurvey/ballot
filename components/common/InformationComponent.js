@@ -19,11 +19,11 @@ export default function InformationComponent(props) {
         <>
             {pollObject && pollObject.id &&
                 <>
-                    <div style={{ padding: "10px", border: "1px solid #cccccc", width: "100%", overflow: "auto" }}>
+                    <div style={{ padding: "16px", backgroundColor: "rgba(236, 239, 241, 0.3)", width: "100%", overflow: "auto" }}>
                         {/* Title */}
-                        <h6>Information</h6>
+                        <h6 style={{ fontWeight: "600" }}>Information</h6>
 
-                        <div style={{ marginTop: "10px" }}>
+                        <div style={{ marginTop: "10px", display: "flex", flexDirection: "column", rowGap: "6px" }}>
                             {
                                 pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName &&
                                 pollObject?.publishedInfo?.txId &&
@@ -117,9 +117,9 @@ export default function InformationComponent(props) {
                         </div>
                     </div>
 
-                    <div style={{ padding: "10px", marginTop: "10px", border: "1px solid #cccccc", width: "100%" }}>
+                    <div style={{ padding: "16px", marginTop: "10px", backgroundColor: "rgba(236, 239, 241, 0.3)", width: "100%" }}>
                         {/* Title */}
-                        <h6>Current results</h6>
+                        <h6 style={{ fontWeight: "600" }}>Current results</h6>
 
                         <div style={{ marginTop: "10px" }}>
                             <Table striped bordered>

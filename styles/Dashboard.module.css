@@ -51,3 +51,48 @@
 .share_dropdown::after {
     display: none;
 }
+
+/* Dashboard all polls */
+.all_polls_list_outline_box {
+    display: flex;
+    align-items: flex-start;
+    flex-direction: column;
+    row-gap: 10px;
+}
+.all_polls_list_box {
+    border-radius: 6px;
+    padding: 16px;
+    cursor: pointer;
+    background-color: rgba(236, 239, 241, 0.3);
+    width: 100%;
+    transition: 0.2s ease all;
+}
+.all_polls_list_box:hover {
+    background-color: rgba(236, 239, 241, 0.6);
+}
+.all_polls_status_box_active {
+    padding: 1px 8px;
+    background-color: #21b66f;
+    font-size: 12px;
+    color: white;
+    border-radius: 24px;
+}
+.all_polls_status_box_draft {
+    padding: 1px 8px;
+    background-color: #fca43e;
+    font-size: 12px;
+    color: white;
+    border-radius: 24px;
+}
+.all_polls_status_box_closed {
+    padding: 1px 8px;
+    background-color: #fa4949;
+    font-size: 12px;
+    color: white;
+    border-radius: 24px;
+}
+.all_polls_description {
+    font-size: 15px;
+    color: rgba(0, 0, 0, 0.8);
+    line-height: 1.6;
+}

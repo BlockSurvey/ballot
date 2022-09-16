@@ -25,29 +25,11 @@ export const Constants = {
 
   STRATEGY_TEMPLATES: [
     {
-      "id": "satoshibles",
-      "name": "Satoshibles",
-      "strategyTokenType": "nft",
-      "strategyTokenName": "Satoshibles",
-      "strategyContractName": "SP6P4EJF0VG8V0RB3TQQKJBHDQKEF6NVRD1KZE3C.satoshibles"
-    }, {
-      "id": "crashpunks",
-      "name": "CrashPunks",
-      "strategyTokenType": "nft",
-      "strategyTokenName": "crashpunks-v2",
-      "strategyContractName": "SP3QSAJQ4EA8WXEDSRRKMZZ29NH91VZ6C5X88FGZQ.crashpunks-v2"
-    }, {
-      "id": "theexplorerguild",
-      "name": "The Explorer Guild",
-      "strategyTokenType": "nft",
-      "strategyTokenName": "The-Explorer-Guild",
-      "strategyContractName": "SP2X0TZ59D5SZ8ACQ6YMCHHNR2ZN51Z32E2CJ173.the-explorer-guild"
-    }, {
-      "id": "stacksparrots",
-      "name": "Stacks Parrots",
-      "strategyTokenType": "nft",
-      "strategyTokenName": "stacks-parrots",
-      "strategyContractName": "SP2KAF9RF86PVX3NEE27DFV1CQX0T4WGR41X3S45C.byzantion-stacks-parrots"
+      "id": "alex",
+      "name": "ALEX",
+      "strategyTokenType": "ft",
+      "strategyTokenName": "auto-alex",
+      "strategyContractName": "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.auto-alex"
     }, {
       "id": "blocksurvey",
       "name": "BlockSurvey",
@@ -61,11 +43,11 @@ export const Constants = {
       "strategyTokenName": ".btc Namespace",
       "strategyContractName": ""
     }, {
-      "id": "stx",
-      "name": "STX",
-      "strategyTokenType": "ft",
-      "strategyTokenName": "STX",
-      "strategyContractName": ""
+      "id": "crashpunks",
+      "name": "CrashPunks",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "crashpunks-v2",
+      "strategyContractName": "SP3QSAJQ4EA8WXEDSRRKMZZ29NH91VZ6C5X88FGZQ.crashpunks-v2"
     }, {
       "id": "miamicoin",
       "name": "MIA",
@@ -79,11 +61,29 @@ export const Constants = {
       "strategyTokenName": "newyorkcitycoin",
       "strategyContractName": "SP2H8PY27SEZ03MWRKS5XABZYQN17ETGQS3527SA5.newyorkcitycoin-token"
     }, {
-      "id": "alex",
-      "name": "ALEX",
+      "id": "satoshibles",
+      "name": "Satoshibles",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "Satoshibles",
+      "strategyContractName": "SP6P4EJF0VG8V0RB3TQQKJBHDQKEF6NVRD1KZE3C.satoshibles"
+    }, {
+      "id": "stacksparrots",
+      "name": "Stacks Parrots",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "stacks-parrots",
+      "strategyContractName": "SP2KAF9RF86PVX3NEE27DFV1CQX0T4WGR41X3S45C.byzantion-stacks-parrots"
+    }, {
+      "id": "stx",
+      "name": "STX",
       "strategyTokenType": "ft",
-      "strategyTokenName": "auto-alex",
-      "strategyContractName": "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.auto-alex"
+      "strategyTokenName": "STX",
+      "strategyContractName": ""
+    }, {
+      "id": "theexplorerguild",
+      "name": "The Explorer Guild",
+      "strategyTokenType": "nft",
+      "strategyTokenName": "The-Explorer-Guild",
+      "strategyContractName": "SP2X0TZ59D5SZ8ACQ6YMCHHNR2ZN51Z32E2CJ173.the-explorer-guild"
     }
   ],
 

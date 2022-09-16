@@ -57,35 +57,43 @@ export default function DashboardAllPollsComponent() {
 
         return (
             <Link href={pollIndexObject?.status == "draft" ? `/builder/${pollIndexObject.id}/draft` : `/p/${pollIndexObject.id}/${gaiaAddress}`}>
-                <div style={{ border: "1px solid black", borderRadius: "4px", padding: "10px", marginBottom: "10px", cursor: "pointer" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <div>
-                            <div style={{ fontSize: "16px", fontWeight: 600, marginBottom: "10px" }}>
-                                {pollIndexObject?.title ? pollIndexObject?.title : "..."}
-                            </div>
-
-                            <div style={{ fontSize: "14px", color: "#737373" }}>
-                                <span>
-                                    Status : {
-                                        pollIndexObject?.status == "draft" ? "Draft" :
-                                            ((pollIndexObject?.endAt && (new Date(pollIndexObject?.endAt) < new Date())) ?
-                                                (<span style={{ color: "#ff4d4d" }}>Closed</span>) : "Active")
-                                    }
-                                </span>
-                                {', '}
-                                <span>
-                                    Last Modified : {convertToDisplayDateFormat(pollIndexObject?.updatedAt)}
-                                </span>
-                            </div>
+                <div>
+                    {/* Title */}
+                    <div className="d-flex align-items-center" style={{ marginBottom: "10px", columnGap: "10px", width: "100%" }}>
+                        <div className="text-truncate" style={{ fontSize: "18px", fontWeight: 600 }}>
+                            {pollIndexObject?.title ? pollIndexObject?.title : "..."}
                         </div>
+                        {/* Status */}
+                        <div className={pollIndexObject?.status == "draft" ? styles.all_polls_status_box_draft : ((pollIndexObject?.endAt && (new Date(pollIndexObject?.endAt) < new Date()))) ? styles.all_polls_status_box_closed : styles.all_polls_status_box_active}>
+                            {
+                                pollIndexObject?.status == "draft" ? "Draft" :
+                                    ((pollIndexObject?.endAt && (new Date(pollIndexObject?.endAt) < new Date())) ?
+                                        (<span style={{ color: "#ff4d4d" }}>Closed</span>) : "Active")
+                            }
+                        </div>
+                    </div>
 
-                        {/* <div>
+                    {/* Description */}
+                    {
+                        pollIndexObject?.description ?
+                            <p className={"text_truncate_2" + ' ' + styles.all_polls_description}>
+                                {pollIndexObject?.description ? pollIndexObject?.description : "..."}
+                            </p>
+                            : <></>
+                    }
+
+                    <div style={{ fontSize: "14px", color: "#737373" }}>
+                        <span>
+                            Last Modified : {convertToDisplayDateFormat(pollIndexObject?.updatedAt)}
+                        </span>
+                    </div>
+
+                    {/* <div>
                             <Button variant="danger" onClick={(event) => { event.stopPropagation(); deletePoll(pollIndexObject, setAllPolls) }}
                                 disabled={isDeleting}>
                                 Delete
                             </Button>
                         </div> */}
-                    </div>
                 </div>
             </Link>
         )
@@ -101,16 +109,18 @@ export default function DashboardAllPollsComponent() {
                         allPolls?.list?.length > 0 ?
                             <>
                                 {/* Title */}
-                                <h5>All Polls</h5>
+                                <h5 style={{ fontSize: "20px", fontWeight: "600", marginBottom: "40px" }}>All Polls</h5>
 
                                 {/* List of polls */}
-                                {allPolls?.list.map(
-                                    (pollId, i) => (
-                                        <div key={i}>
-                                            {getEachRow(allPolls.ref[pollId])}
-                                        </div>
-                                    )
-                                )}
+                                <div className={styles.all_polls_list_outline_box}>
+                                    {allPolls?.list.map(
+                                        (pollId, i) => (
+                                            <div key={i} className={styles.all_polls_list_box}>
+                                                {getEachRow(allPolls.ref[pollId])}
+                                            </div>
+                                        )
+                                    )}
+                                </div>
                             </>
                             :
                             <div className="row">
@@ -139,7 +149,14 @@ export default function DashboardAllPollsComponent() {
                                 </div>
                             </div>
                         :
-                        <>Loading...</>
+                        <>
+                            {/* Loading */}
+                            <div style={{ width: "100%", maxWidth: "100px", height: "24px", marginBottom: "40px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+
+                            <div style={{ width: "100%", height: "110px", marginBottom: "10px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+                            <div style={{ width: "100%", height: "110px", marginBottom: "10px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+                            <div style={{ width: "100%", height: "110px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
+                        </>
                     }
                 </div>
             </div>

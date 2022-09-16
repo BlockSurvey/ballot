@@ -168,8 +168,8 @@ export default function PollComponent(props) {
                                     <HeaderComponent pollObject={pollObject} publicUrl={publicUrl} />
 
                                     {/* Cast your vote */}
-                                    <div style={{ marginBottom: "30px" }}>
-                                        <h5>Cast your vote</h5>
+                                    <div style={{ marginBottom: "24px" }}>
+                                        <h5 style={{ fontSize: "18px", fontWeight: "600" }}>Cast your vote</h5>
                                         <div>
                                             <Form>
                                                 <Form.Group className="mb-3">
@@ -187,6 +187,14 @@ export default function PollComponent(props) {
                                                                 disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
                                                                     (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())))}
                                                             />
+
+                                                            // <div>
+                                                            //     <input key={index} id={option.id} value={option.id} name="vote"
+                                                            //         type={pollObject?.votingSystem == "fptp" ? "radio" : "checkbox"} onChange={handleChange}
+                                                            //         disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
+                                                            //             (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())))} />
+                                                            //     <label for={option.id}>{option.value}</label>
+                                                            // </div>
                                                         ))
                                                     }
 
@@ -216,7 +224,7 @@ export default function PollComponent(props) {
                                                     {/* Voting Criteria */}
                                                     {(pollObject?.votingStrategyFlag && pollObject?.strategyTokenName) &&
                                                         <div style={{ marginTop: "30px" }}>
-                                                            <h5>Voting Criteria</h5>
+                                                            <h5 style={{ fontSize: "18px", fontWeight: "600" }}>Voting Criteria</h5>
                                                             <span>
                                                                 {`You should hold ${pollObject?.strategyTokenName} to vote.`}
                                                             </span>
@@ -267,7 +275,7 @@ export default function PollComponent(props) {
 
                                     {/* Results */}
                                     <div style={{ marginTop: "20px" }}>
-                                        <h5>Votes {total >= 0 ? <>({total})</> : ""}</h5>
+                                        <h5 style={{ fontSize: "18px", fontWeight: "600" }}>Votes {total >= 0 ? <>({total})</> : ""}</h5>
                                         <Table striped bordered>
                                             <thead>
                                                 <tr>
