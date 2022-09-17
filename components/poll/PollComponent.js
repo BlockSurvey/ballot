@@ -212,7 +212,7 @@ export default function PollComponent(props) {
                                                                             <Form.Control type="number" name={option.id}
                                                                                 min="0"
                                                                                 onChange={handleChangeVote}
-                                                                                style={{ marginLeft: "10px", width: "100px" }} />
+                                                                                style={{ marginLeft: "10px", width: "100px" }} placeholder="0" />
                                                                         </td>
                                                                     </tr>
                                                                 ))

@@ -53,14 +53,14 @@ export function DashboardNavBarComponent() {
                     isUserSignedIn ?
                         <div style={{ display: "flex", gap: "20px", alignItems: "center" }}>
                             <div style={{ margin: "10px 0" }}>
-                                <a href="/builder/new" style={{ color: "black", textDecoration: "none" }}>
+                                <Link href="/builder/new">
                                     <Button className="action_secondary_btn">
                                         <svg style={{ width: "12px" }} viewBox="0 0 11 11" fill="none" xmlns="http://www.w3.org/2000/svg">
                                             <path fillRule="evenodd" clipRule="evenodd" d="M5.30005 0.299988C5.63917 0.299988 5.91408 0.574901 5.91408 0.914023V4.68595H9.68601C10.0251 4.68595 10.3 4.96087 10.3 5.29999C10.3 5.63911 10.0251 5.91402 9.68601 5.91402H5.91408V9.68595C5.91408 10.0251 5.63917 10.3 5.30005 10.3C4.96093 10.3 4.68601 10.0251 4.68601 9.68595V5.91402H0.914084C0.574962 5.91402 0.300049 5.63911 0.300049 5.29999C0.300049 4.96087 0.574962 4.68595 0.914084 4.68595H4.68601V0.914023C4.68601 0.574901 4.96093 0.299988 5.30005 0.299988Z" fill="black" />
                                         </svg>
                                         New Poll
                                     </Button>
-                                </a>
+                                </Link>
                             </div>
 
                             {/* <div className="d-none d-md-block" style={{ margin: "10px 0" }}>
