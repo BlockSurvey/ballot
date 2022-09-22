@@ -279,7 +279,7 @@ export default function PollComponent(props) {
                                         <Table striped bordered>
                                             <thead>
                                                 <tr>
-                                                    <th>Address</th>
+                                                    <th>User name</th>
                                                     <th>Option</th>
                                                     <th>No. of votes</th>
                                                     <th>Voting power</th>
@@ -293,7 +293,7 @@ export default function PollComponent(props) {
                                                                 <td>{resultsByPosition[position]?.address &&
                                                                     <a className="ballot_link" target="_blank" rel="noreferrer" href={formStacksExplorerUrl(resultsByPosition[position]?.address)}>
                                                                         <span>
-                                                                            {resultsByPosition[position]?.address} { }
+                                                                            {resultsByPosition[position]?.username ? resultsByPosition[position]?.username : resultsByPosition[position]?.address} { }
                                                                             <svg
                                                                                 width="10"
                                                                                 height="10"

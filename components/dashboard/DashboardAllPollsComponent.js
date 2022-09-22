@@ -56,7 +56,7 @@ export default function DashboardAllPollsComponent() {
         }
 
         return (
-            <Link href={pollIndexObject?.status == "draft" ? `/builder/${pollIndexObject.id}/draft` : `/p/${pollIndexObject.id}/${gaiaAddress}`}>
+            <Link href={pollIndexObject?.status == "draft" ? `/builder/${pollIndexObject.id}/draft` : `/${pollIndexObject.id}/${gaiaAddress}`}>
                 <div>
                     {/* Title */}
                     <div className="d-flex align-items-center" style={{ marginBottom: "10px", columnGap: "10px", width: "100%" }}>

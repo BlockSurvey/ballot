@@ -31,6 +31,13 @@ export default function HeaderComponent(props) {
         }
     };
 
+    const convertToHrefLink = (text) => {
+        const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
+        return text.replace(urlRegex, function (url) {
+            return '<a href="' + url + '" target="_blank">' + url + '</a>';
+        });
+    }
+
     // Design
     return (
         <>
@@ -193,8 +200,8 @@ export default function HeaderComponent(props) {
 
                     {/* Description */}
                     <div style={{ marginBottom: "24px", whiteSpace: "pre-wrap" }}>
-                        <p style={{ lineHeight: "1.7" }}>
-                            {pollObject?.description}
+                        <p style={{ lineHeight: "1.7" }}
+                            dangerouslySetInnerHTML={{ __html: pollObject?.description ? convertToHrefLink(pollObject?.description) : "" }}>
                         </p>
                     </div>
                 </>

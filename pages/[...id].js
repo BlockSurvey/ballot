@@ -4,10 +4,10 @@ import {
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { Col, Container, Row } from "react-bootstrap";
-import { Constants } from "../../common/constants";
-import { DashboardNavBarComponent } from "../../components/common/DashboardNavBarComponent";
-import PollComponent from "../../components/poll/PollComponent";
-import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../../services/auth";
+import { Constants } from "../common/constants";
+import { DashboardNavBarComponent } from "../components/common/DashboardNavBarComponent";
+import PollComponent from "../components/poll/PollComponent";
+import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../services/auth";
 
 export default function Poll(props) {
     // Variables
@@ -31,14 +31,14 @@ export default function Poll(props) {
     const [votingPower, setVotingPower] = useState();
 
     const title = `${pollObject?.title} | Ballot`;
-    const description = pollObject?.description;
+    const description = pollObject?.description?.substr(0, 160);
     const metaImage = "https://ballot.gg/images/ballot-meta.png";
     const displayURL = "";
 
     // Functions
     useEffect(() => {
         // Set shareable public URL
-        setPublicUrl(`https://ballot.gg/p/${pollId}/${gaiaAddress}`);
+        setPublicUrl(`https://ballot.gg/${pollId}/${gaiaAddress}`);
 
         if (pollObject) {
             // Parse poll options
@@ -333,6 +333,33 @@ export default function Poll(props) {
                 "address": results?.user?.value,
                 "vote": resultsObj,
                 "votingPower": results?.["voting-power"]?.value
+            }
+
+            // Testnet code
+            if (Constants.STACKS_MAINNET_FLAG == true && results?.user?.value) {
+                // Get btc domain for logged in user
+                const response = await fetch(
+                    getStacksAPIPrefix() + "/v1/addresses/stacks/" + results?.user?.value
+                );
+                const responseObject = await response.json();
+
+                // Get btc dns
+                if (responseObject?.names?.length > 0) {
+                    const btcDNS = responseObject.names.filter((bns) =>
+                        bns.endsWith(".btc")
+                    );
+
+                    // Check does BTC dns is available
+                    if (btcDNS && btcDNS.length > 0) {
+                        // BTC holder
+                        const btcNamespace = btcDNS[0];
+                        resultsByPosition[position]["username"] = btcNamespace;
+                    }
+                }
+            } else if (Constants.STACKS_MAINNET_FLAG == false) {
+                // Testnet
+                const btcNamespace = results?.user?.value?.substr(-5) + ".btc";
+                resultsByPosition[position]["username"] = btcNamespace;
             }
 
             setResultsByPosition({ ...resultsByPosition });
