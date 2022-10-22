@@ -79,11 +79,11 @@ export default function HeaderComponent(props) {
                             </div>
 
                             {/* Status */}
-                            <div className={pollObject?.status == "draft" ? styles.all_polls_status_box_draft : ((pollObject?.endAt && (new Date(pollObject?.endAt) < new Date()))) ? styles.all_polls_status_box_closed : styles.all_polls_status_box_active}>
+                            <div className={pollObject?.status == "draft" ? styles.all_polls_status_box_draft : ((pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? styles.all_polls_status_box_closed : styles.all_polls_status_box_active}>
                                 {
                                     pollObject?.status == "draft" ? "Draft" :
-                                        ((pollObject?.endAt && (new Date(pollObject?.endAt) < new Date())) ?
-                                            (<span style={{ color: "#ff4d4d" }}>Closed</span>) : "Active")
+                                        ((pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())) ?
+                                            (<span style={{ color: "white" }}>Closed</span>) : "Active")
                                 }
                             </div>
                         </div>
