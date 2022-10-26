@@ -124,10 +124,11 @@ export default function BuilderComponent(props) {
                 pollObject["strategyTokenType"] = strategyTemplate["strategyTokenType"];
                 pollObject["strategyTokenName"] = strategyTemplate["strategyTokenName"];
                 pollObject["strategyContractName"] = strategyTemplate["strategyContractName"];
+                pollObject["strategyTokenDecimals"] = strategyTemplate["strategyTokenDecimals"];
             } else {
-                pollObject["strategyTokenType"] = "nft";
                 pollObject["strategyTokenName"] = "";
                 pollObject["strategyContractName"] = "";
+                pollObject["strategyTokenDecimals"] = "";
             }
         }
 
@@ -263,6 +264,15 @@ export default function BuilderComponent(props) {
 
         if (pollObject?.votingStrategyTemplate == "other" && (!pollObject?.strategyTokenName || !pollObject?.strategyContractName)) {
             return "Please enter strategy Token name and Contract Address"
+        }
+
+        try {
+            if (pollObject?.strategyTokenType == "ft" &&
+                (!pollObject?.strategyTokenDecimals || !Number.isInteger(parseInt(pollObject?.strategyTokenDecimals)))) {
+                return "Please enter positive integer value for strategy decimals"
+            }
+        } catch (e) {
+            return "Please enter positive integer value for strategy decimals"
         }
     }
 
@@ -411,25 +421,7 @@ export default function BuilderComponent(props) {
                                 {/* Voting system */}
                                 <Form.Group className="mb-3">
                                     <Form.Label className='ballot_labels'>
-                                        Voting system {" "}
-                                        <Link href="https://docs.ballot.gg">
-                                            <a style={{ fontSize: "14px" }} className="ballot_links" target={"_blank"}>
-                                                Learn more
-                                                <svg style={{ marginLeft: "6px" }}
-                                                    width="8"
-                                                    height="8"
-                                                    viewBox="0 0 12 12"
-                                                    fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg">
-                                                    <path
-                                                        fillRule="evenodd"
-                                                        clipRule="evenodd"
-                                                        d="M3.5044 0.743397C3.5044 0.33283 3.83723 -6.71395e-08 4.2478 0L11.2566 6.60206e-07C11.6672 6.60206e-07 12 0.33283 12 0.743397L12 7.7522C12 8.16277 11.6672 8.4956 11.2566 8.4956C10.846 8.4956 10.5132 8.16277 10.5132 7.7522V2.53811L1.26906 11.7823C0.978742 12.0726 0.50805 12.0726 0.217736 11.7823C-0.0725787 11.4919 -0.0725784 11.0213 0.217736 10.7309L9.46189 1.48679L4.2478 1.48679C3.83723 1.48679 3.5044 1.15396 3.5044 0.743397Z"
-                                                        fill="initial"
-                                                    />
-                                                </svg>
-                                            </a>
-                                        </Link>
+                                        Voting system
                                     </Form.Label>
                                     <div>
                                         <Form.Select id="voting-strategy-template" name="votingSystem"
@@ -439,6 +431,29 @@ export default function BuilderComponent(props) {
                                                 <option value={option.id} key={index}>{option.name}</option>
                                             ))}
                                         </Form.Select>
+
+                                        {(pollObject.votingSystem && Constants.VOTING_SYSTEM_DOCUMENTATION?.[pollObject.votingSystem]) &&
+                                            <small class="form-text text-muted" style={{ fontSize: "12px" }}>
+                                                <Link href={Constants.VOTING_SYSTEM_DOCUMENTATION?.[pollObject.votingSystem]?.["link"]}>
+                                                    <a className="ballot_links" target={"_blank"}>
+                                                        Learn more about {" "} {Constants.VOTING_SYSTEM_DOCUMENTATION?.[pollObject.votingSystem]?.["name"]}
+                                                        <svg style={{ marginLeft: "6px" }}
+                                                            width="8"
+                                                            height="8"
+                                                            viewBox="0 0 12 12"
+                                                            fill="none"
+                                                            xmlns="http://www.w3.org/2000/svg">
+                                                            <path
+                                                                fillRule="evenodd"
+                                                                clipRule="evenodd"
+                                                                d="M3.5044 0.743397C3.5044 0.33283 3.83723 -6.71395e-08 4.2478 0L11.2566 6.60206e-07C11.6672 6.60206e-07 12 0.33283 12 0.743397L12 7.7522C12 8.16277 11.6672 8.4956 11.2566 8.4956C10.846 8.4956 10.5132 8.16277 10.5132 7.7522V2.53811L1.26906 11.7823C0.978742 12.0726 0.50805 12.0726 0.217736 11.7823C-0.0725787 11.4919 -0.0725784 11.0213 0.217736 10.7309L9.46189 1.48679L4.2478 1.48679C3.83723 1.48679 3.5044 1.15396 3.5044 0.743397Z"
+                                                                fill="initial"
+                                                            />
+                                                        </svg>
+                                                    </a>
+                                                </Link>
+                                            </small>
+                                        }
                                     </div>
                                 </Form.Group>
 
@@ -490,6 +505,10 @@ export default function BuilderComponent(props) {
                                             <Form.Control type="datetime-local" name="endAtDate" value={pollObject.endAtDate} style={{ width: "250px" }}
                                                 onChange={handleChange} disabled={!pollObject?.startAtDate} min={pollObject?.startAtDate} className="ballot_input" />
                                         </Form.Group>
+
+                                        <small class="form-text text-muted" style={{ fontSize: "12px" }}>
+                                            The start and End date with time are stored in ISO date format(2022-10-21T17:19). It will be converted to a local date format for displaying.
+                                        </small>
                                     </div>
                                 </Form.Group>
 
@@ -549,6 +568,9 @@ export default function BuilderComponent(props) {
                                                     <Form.Label className='ballot_labels'>Token name</Form.Label>
                                                     <Form.Control type="text" name="strategyTokenName" value={pollObject.strategyTokenName}
                                                         onChange={handleChange} placeholder="blocksurvey" className="ballot_input" />
+                                                    <small class="form-text text-muted" style={{ fontSize: "12px" }}>
+                                                        The token name is case-sensitive. Please give it as it is in the smart contract. (ex. APower)
+                                                    </small>
                                                 </Form.Group>
                                                 <Form.Group className="mb-3">
                                                     <Form.Label className='ballot_labels'>Contract name</Form.Label>
@@ -556,6 +578,18 @@ export default function BuilderComponent(props) {
                                                         onChange={handleChange}
                                                         placeholder="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.contract" className="ballot_input" />
                                                 </Form.Group>
+
+                                                {/* Only fungible token */}
+                                                {pollObject?.strategyTokenType == "ft" &&
+                                                    <>
+                                                        <Form.Group className="mb-3">
+                                                            <Form.Label className='ballot_labels'>Token decimals</Form.Label>
+                                                            <Form.Control type="number" name="strategyTokenDecimals" value={pollObject.strategyTokenDecimals}
+                                                                onChange={handleChange}
+                                                                placeholder="0" className="ballot_input" min="0" />
+                                                        </Form.Group>
+                                                    </>
+                                                }
                                             </>
                                         }
                                     </>

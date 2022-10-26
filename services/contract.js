@@ -413,10 +413,14 @@ function getStrategyFunctionForFT(strategyContractName) {
         (let
             (
                 (ft-balance (unwrap-panic (contract-call? '${strategyContractName} get-balance tx-sender)))
+                (ft-decimals (unwrap-panic (contract-call? '${strategyContractName} get-decimals)))
             )
 
             (if (> ft-balance u0)
-                (/ ft-balance u1000000)
+                (if (> ft-decimals u0)
+                    (/ ft-balance (pow u10 ft-decimals))
+                    ft-balance
+                )
                 ft-balance
             )
         )

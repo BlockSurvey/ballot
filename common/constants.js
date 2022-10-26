@@ -28,8 +28,9 @@ export const Constants = {
       "id": "alex",
       "name": "ALEX",
       "strategyTokenType": "ft",
-      "strategyTokenName": "auto-alex",
-      "strategyContractName": "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.auto-alex"
+      "strategyTokenName": "alex",
+      "strategyContractName": "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9.age000-governance-token",
+      "strategyTokenDecimals": "8"
     }, {
       "id": "blocksurvey",
       "name": "BlockSurvey",
@@ -53,13 +54,15 @@ export const Constants = {
       "name": "MIA",
       "strategyTokenType": "ft",
       "strategyTokenName": "miamicoin",
-      "strategyContractName": "SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2"
+      "strategyContractName": "SP1H1733V5MZ3SZ9XRW9FKYGEZT0JDGEB8Y634C7R.miamicoin-token-v2",
+      "strategyTokenDecimals": "6"
     }, {
       "id": "newyorkcitycoin",
       "name": "NYC",
       "strategyTokenType": "ft",
       "strategyTokenName": "newyorkcitycoin",
-      "strategyContractName": "SP2H8PY27SEZ03MWRKS5XABZYQN17ETGQS3527SA5.newyorkcitycoin-token"
+      "strategyContractName": "SP2H8PY27SEZ03MWRKS5XABZYQN17ETGQS3527SA5.newyorkcitycoin-token",
+      "strategyTokenDecimals": "0"
     }, {
       "id": "satoshibles",
       "name": "Satoshibles",
@@ -77,7 +80,8 @@ export const Constants = {
       "name": "STX",
       "strategyTokenType": "ft",
       "strategyTokenName": "STX",
-      "strategyContractName": ""
+      "strategyContractName": "",
+      "strategyTokenDecimals": "6"
     }, {
       "id": "theexplorerguild",
       "name": "The Explorer Guild",
@@ -115,5 +119,26 @@ export const Constants = {
       question: "Who are the developers of Ballot.gg?",
       answer: `We are developers from Team <a href="https://blocksurvey.io?ref=ballot" target="_blank" rel="noreferrer">BlockSurvey ↗</a>.`,
     }
-  ]
+  ],
+
+  // Voting system document links
+  VOTING_SYSTEM_DOCUMENTATION: {
+    "fptp": {
+      "id": "fptp",
+      "name": "First-past-the-post",
+      "link": "https://docs.ballot.gg/ballot.gg/voting-system/first-past-the-post"
+    }, "block": {
+      "id": "block",
+      "name": "Block Voting",
+      "link": "https://docs.ballot.gg/ballot.gg/voting-system/block-voting"
+    }, "quadratic": {
+      "id": "quadratic",
+      "name": "Quadratic Voting",
+      "link": "https://docs.ballot.gg/ballot.gg/voting-system/quadratic-voting"
+    }, "weighted": {
+      "id": "weighted",
+      "name": "Weighted Voting",
+      "link": "https://docs.ballot.gg/ballot.gg/voting-system/weighted-voting"
+    }
+  }
 };

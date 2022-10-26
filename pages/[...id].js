@@ -214,7 +214,15 @@ export default function Poll(props) {
                     const tokenInfo = responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName];
 
                     if (tokenInfo?.balance !== "0") {
-                        const tokenBalance = Math.floor((parseInt(tokenInfo?.balance) / 1000000));
+                        // Default value
+                        let tokenDecimalsPowerOfTen = 1000000;
+                        if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) >= 0) {
+                            tokenDecimalsPowerOfTen = Math.pow(10, parseInt(pollObject?.strategyTokenDecimals));
+                        } else if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) === 0) {
+                            tokenDecimalsPowerOfTen = 1;
+                        }
+
+                        const tokenBalance = Math.floor((parseInt(tokenInfo?.balance) / tokenDecimalsPowerOfTen));
                         setHoldingTokenIdsArray([]);
                         setVotingPower(tokenBalance);
                     } else {

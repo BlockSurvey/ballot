@@ -80,16 +80,31 @@
 )
 
 (define-private (get-voting-power-by-stx-holdings)
-    (stx-get-balance tx-sender)
+    (let
+        (
+            (stx-balance (stx-get-balance tx-sender))
+        )
+        (if (> stx-balance u0)
+            (/ stx-balance u1000000)
+            stx-balance
+        )
+    )    
 )
 
-(define-private (get-voting-power-by-ft-holdings)
+(define-read-only (get-voting-power-by-ft-holdings)
     (let
         (
             (ft-balance (unwrap-panic (contract-call? 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.contract get-balance tx-sender)))
+            (ft-decimals (unwrap-panic (contract-call? 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.contract get-decimals)))
         )
 
-        ft-balance
+        (if (> ft-balance u0)
+            (if (> ft-decimals u0)
+                (/ ft-balance (pow u10 ft-decimals))
+                ft-balance
+            )
+            ft-balance
+        )
     )
 )
 
