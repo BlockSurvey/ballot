@@ -13,7 +13,8 @@ export default function SummaryComponent(props) {
     // Function
     function getEachRow(pollIndexObject) {
         return (
-            <Link href={pollIndexObject?.status == "draft" ? `/builder/${pollIndexObject.id}/draft` : `/${pollIndexObject.id}/${gaiaAddress}`}>
+            <a href={pollIndexObject?.status == "draft" ? `/builder/${pollIndexObject.id}/draft` : `/${pollIndexObject.id}/${gaiaAddress}`} target="_blank"
+                style={{ textDecoration: "none", color: "#212529" }}>
                 <div>
                     {/* Title */}
                     <div className="d-flex align-items-center" style={{ marginBottom: "10px", columnGap: "10px", width: "100%" }}>
@@ -45,7 +46,7 @@ export default function SummaryComponent(props) {
                         </span>
                     </div>
                 </div>
-            </Link>
+            </a>
         )
     }
 

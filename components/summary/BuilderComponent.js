@@ -242,7 +242,7 @@ export default function SummaryBuilderComponent(props) {
 
                                     <a href={"/" + urlSuffix} target="_blank" style={{ textDecoration: "none" }}>
                                         <Button style={{ width: "100%", marginBottom: "10px" }} className="action_secondary_btn">
-                                            Preview
+                                            Open summary
                                             <svg style={{ marginLeft: "6px" }}
                                                 width="8"
                                                 height="8"
