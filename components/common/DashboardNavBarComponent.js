@@ -87,6 +87,10 @@ export function DashboardNavBarComponent() {
                                         My votes
                                     </Dropdown.Item>
                                     <Dropdown.Item
+                                        href="/summary">
+                                        Summary page
+                                    </Dropdown.Item>
+                                    <Dropdown.Item
                                         onClick={() => {
                                             switchAccount(window?.location?.href);
                                         }}
