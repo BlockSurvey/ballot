@@ -13,6 +13,9 @@ export default function Poll(props) {
     // Variables
     const { pollObject, pollId, gaiaAddress } = props;
 
+    // Contract transaction status
+    const [txStatus, setTxStatus] = useState();
+
     const [publicUrl, setPublicUrl] = useState();
     const [optionsMap, setOptionsMap] = useState({});
     const [resultsByOption, setResultsByOption] = useState({});
@@ -47,6 +50,9 @@ export default function Poll(props) {
             });
             setOptionsMap(optionsMap);
 
+            // Get contract transaction status
+            getContractTransactionStatus(pollObject);
+
             // Fetch token holdings
             fetchTokenHoldings(pollObject);
 
@@ -57,6 +63,19 @@ export default function Poll(props) {
             getResultByUser(pollObject);
         }
     }, [pollObject, pollId, gaiaAddress]);
+
+    const getContractTransactionStatus = async (pollObject) => {
+        if (!pollObject?.publishedInfo?.txId) {
+            return;
+        }
+
+        // Get btc domain for logged in user
+        const response = await fetch(
+            getStacksAPIPrefix() + "/extended/v1/tx/" + pollObject?.publishedInfo?.txId
+        );
+        const responseObject = await response.json();
+        setTxStatus(responseObject?.tx_status);
+    }
 
     const fetchTokenHoldings = (pollObject) => {
         // If user is not signed in, just return
@@ -454,7 +473,7 @@ export default function Poll(props) {
                             resultsByPosition={resultsByPosition} total={total}
                             dns={dns} alreadyVoted={alreadyVoted} noHoldingToken={noHoldingToken}
                             holdingTokenIdsArray={holdingTokenIdsArray}
-                            votingPower={votingPower} publicUrl={publicUrl} />
+                            votingPower={votingPower} publicUrl={publicUrl} txStatus={txStatus} />
                     </Col>
                 </Row>
             </Container>

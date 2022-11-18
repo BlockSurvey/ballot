@@ -16,7 +16,7 @@ import styles from "../../styles/Dashboard.module.css";
 
 export default function HeaderComponent(props) {
     // Variables
-    const { pollObject, publicUrl } = props;
+    const { pollObject, publicUrl, txStatus } = props;
 
     const [copyText, setCopyText] = useState("Copy");
     const [showQRCodePopupFlag, setShowQRCodePopupFlag] = useState(false);
@@ -79,13 +79,24 @@ export default function HeaderComponent(props) {
                             </div>
 
                             {/* Status */}
-                            <div className={pollObject?.status == "draft" ? styles.all_polls_status_box_draft : ((pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? styles.all_polls_status_box_closed : styles.all_polls_status_box_active}>
-                                {
-                                    pollObject?.status == "draft" ? "Draft" :
-                                        ((pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())) ?
-                                            (<span style={{ color: "white" }}>Closed</span>) : "Active")
-                                }
-                            </div>
+                            {(txStatus && txStatus == "success") &&
+                                <div className={pollObject?.status == "draft" ? styles.all_polls_status_box_draft : ((pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? styles.all_polls_status_box_closed : styles.all_polls_status_box_active}>
+                                    {
+                                        pollObject?.status == "draft" ? "Draft" :
+                                            ((pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())) ? "Closed" : "Active")
+                                    }
+                                </div>
+                            }
+                            {(txStatus && txStatus == "pending") &&
+                                <div className={styles.all_polls_status_box_draft}>
+                                    Contract pending
+                                </div>
+                            }
+                            {(txStatus && txStatus != "success" && txStatus != "pending") &&
+                                <div className={styles.all_polls_status_box_closed}>
+                                    Contract failed
+                                </div>
+                            }
                         </div>
 
                         <div className="d-flex align-items-center" style={{ columnGap: "10px" }}>

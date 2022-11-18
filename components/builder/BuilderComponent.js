@@ -267,7 +267,7 @@ export default function BuilderComponent(props) {
         }
 
         try {
-            if (pollObject?.strategyTokenType == "ft" &&
+            if (pollObject?.votingStrategyFlag && pollObject?.strategyTokenType == "ft" &&
                 (!pollObject?.strategyTokenDecimals || !Number.isInteger(parseInt(pollObject?.strategyTokenDecimals)))) {
                 return "Please enter positive integer value for strategy decimals"
             }

@@ -21,7 +21,8 @@ export default function PollComponent(props) {
         noHoldingToken,
         holdingTokenIdsArray,
         votingPower,
-        publicUrl } = props;
+        publicUrl,
+        txStatus } = props;
     const [voteObject, setVoteObject] = useState({});
     const [errorMessage, setErrorMessage] = useState();
     const [txId, setTxId] = useState();
@@ -165,7 +166,7 @@ export default function PollComponent(props) {
                                 {/* Left Side */}
                                 <div className="col-sm-12 col-md-8">
                                     {/* Header */}
-                                    <HeaderComponent pollObject={pollObject} publicUrl={publicUrl} />
+                                    <HeaderComponent pollObject={pollObject} publicUrl={publicUrl} txStatus={txStatus} />
 
                                     {/* Cast your vote */}
                                     <div style={{ marginBottom: "24px" }}>
@@ -173,6 +174,9 @@ export default function PollComponent(props) {
                                         <div>
                                             <Form>
                                                 <Form.Group className="mb-3">
+                                                    {/* Title */}
+                                                    <Form.Label>{pollObject?.title}</Form.Label>
+
                                                     {/* FPTP or Block Voting */}
                                                     {(pollObject?.votingSystem == "fptp" || pollObject?.votingSystem == "block") &&
                                                         pollObject?.options.map((option, index) => (
