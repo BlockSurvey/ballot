@@ -228,7 +228,7 @@ function getRawContract() {
         (> each-volume u0)
     )
 
-    (define-private (validate-vote-volume (volume (list 2 uint)))
+    (define-private (validate-vote-volume (volume (list &{noOfOptions} uint)))
         (begin
             (fold fold-boolean (map check-volume volume) true)
         )
