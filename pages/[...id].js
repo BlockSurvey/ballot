@@ -1,5 +1,5 @@
 import {
-    cvToHex, cvToValue, hexToCV, parseReadOnlyResponse, standardPrincipalCV, uintCV
+    cvToHex, cvToValue, hexToCV, parseReadOnlyResponse, standardPrincipalCV
 } from "@stacks/transactions";
 import Head from "next/head";
 import { useEffect, useState } from "react";
@@ -7,6 +7,7 @@ import { Col, Container, Row } from "react-bootstrap";
 import { Constants } from "../common/constants";
 import { DashboardNavBarComponent } from "../components/common/DashboardNavBarComponent";
 import PollComponent from "../components/poll/PollComponent";
+import { getIndividualResultByStartAndEndPosition } from "../components/poll/PollService";
 import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../services/auth";
 
 export default function Poll(props) {
@@ -20,7 +21,9 @@ export default function Poll(props) {
     const [optionsMap, setOptionsMap] = useState({});
     const [resultsByOption, setResultsByOption] = useState({});
     const [resultsByPosition, setResultsByPosition] = useState({});
-    const [total, setTotal] = useState();
+    const [totalVotes, setTotalVotes] = useState();
+    const [totalUniqueVotes, setTotalUniqueVotes] = useState();
+    const [noOfResultsLoaded, setNoOfResultsLoaded] = useState();
 
     // BTC dns name
     const [dns, setDns] = useState();
@@ -300,7 +303,11 @@ export default function Poll(props) {
                 const results = cvToValue(parseReadOnlyResponse(content)).value;
 
                 const total = parseInt(results?.["total-votes"]?.value ? (results?.["total-votes"]?.value) : (results?.total?.value));
-                setTotal(total);
+                setTotalVotes(total);
+
+                // Total unique vote
+                totalUniqueVotes = results?.total?.value;
+                setTotalUniqueVotes(results?.total?.value);
 
                 let resultsObj = {};
                 results?.options?.value.forEach((option, index) => {
@@ -311,87 +318,16 @@ export default function Poll(props) {
                 });
                 setResultsByOption(resultsObj);
 
-                getFirstTenResults((results?.total?.value > 10 ? 10 : results?.total?.value), contractAddress, contractName);
+                // Get list of individual vote
+                getIndividualResultByStartAndEndPosition(results?.total?.value, (results?.total?.value > 10 ? (results?.total?.value - 10) : 0), totalUniqueVotes,
+                    contractAddress, contractName, resultsByPosition, setResultsByPosition, noOfResultsLoaded, setNoOfResultsLoaded);
             } else {
-                setTotal(0);
+                setTotalVotes(0);
+                setTotalUniqueVotes(0);
+                setNoOfResultsLoaded(0);
             }
         }
     };
-
-    const getFirstTenResults = (total, contractAddress, contractName) => {
-        for (let i = 1; i <= total; i++) {
-            getResultAtPosition(i, contractAddress, contractName);
-        }
-    }
-
-    const getResultAtPosition = async (position, contractAddress, contractName) => {
-        let url = getStacksAPIPrefix() +
-            "/v2/contracts/call-read/" +
-            contractAddress +
-            "/" +
-            contractName +
-            "/get-result-at-position";
-
-        // Fetch gaia URL from stacks blockchain
-        const rawResponse = await fetch(url, {
-            method: "POST",
-            headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                sender: contractAddress,
-                arguments: [cvToHex(uintCV(position))]
-            }),
-        });
-        const content = await rawResponse.json();
-
-        // If data found on stacks blockchain
-        if (content && content.okay) {
-            const results = cvToValue(parseReadOnlyResponse(content))?.value?.value;
-
-            let resultsObj = {};
-            results?.vote?.value.forEach((option, index) => {
-                resultsObj[option?.value] = results?.volume?.value?.[index]?.value;
-            });
-
-            resultsByPosition[position] = {
-                "dns": results?.bns?.value,
-                "address": results?.user?.value,
-                "vote": resultsObj,
-                "votingPower": results?.["voting-power"]?.value
-            }
-
-            // Testnet code
-            if (Constants.STACKS_MAINNET_FLAG == true && results?.user?.value) {
-                // Get btc domain for logged in user
-                const response = await fetch(
-                    getStacksAPIPrefix() + "/v1/addresses/stacks/" + results?.user?.value
-                );
-                const responseObject = await response.json();
-
-                // Get btc dns
-                if (responseObject?.names?.length > 0) {
-                    const btcDNS = responseObject.names.filter((bns) =>
-                        bns.endsWith(".btc")
-                    );
-
-                    // Check does BTC dns is available
-                    if (btcDNS && btcDNS.length > 0) {
-                        // BTC holder
-                        const btcNamespace = btcDNS[0];
-                        resultsByPosition[position]["username"] = btcNamespace;
-                    }
-                }
-            } else if (Constants.STACKS_MAINNET_FLAG == false) {
-                // Testnet
-                const btcNamespace = results?.user?.value?.substr(-5) + ".btc";
-                resultsByPosition[position]["username"] = btcNamespace;
-            }
-
-            setResultsByPosition({ ...resultsByPosition });
-        }
-    }
 
     const getResultByUser = async (pollObject) => {
         if (userSession.isUserSignedIn() &&
@@ -470,10 +406,12 @@ export default function Poll(props) {
 
                         {/* Body */}
                         <PollComponent pollObject={pollObject} optionsMap={optionsMap} resultsByOption={resultsByOption}
-                            resultsByPosition={resultsByPosition} total={total}
+                            resultsByPosition={resultsByPosition} setResultsByPosition={setResultsByPosition}
+                            totalVotes={totalVotes} totalUniqueVotes={totalUniqueVotes}
                             dns={dns} alreadyVoted={alreadyVoted} noHoldingToken={noHoldingToken}
                             holdingTokenIdsArray={holdingTokenIdsArray}
-                            votingPower={votingPower} publicUrl={publicUrl} txStatus={txStatus} />
+                            votingPower={votingPower} publicUrl={publicUrl} txStatus={txStatus}
+                            noOfResultsLoaded={noOfResultsLoaded} setNoOfResultsLoaded={setNoOfResultsLoaded} />
                     </Col>
                 </Row>
             </Container>
