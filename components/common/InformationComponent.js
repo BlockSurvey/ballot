@@ -109,6 +109,12 @@ export default function InformationComponent(props) {
                             <div>
                                 End Date <span style={{ float: "right", fontWeight: "bold" }}>{convertToDisplayDateFormat(pollObject?.endAtDate)}</span>
                             </div>
+                            <div>
+                                Start Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.startAtBlock}</span>
+                            </div>
+                            <div>
+                                End Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.endAtBlock}</span>
+                            </div>
                             {pollObject?.contractAddress &&
                                 <div>
                                     Contract Address <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.contractAddress}</span>
