@@ -214,6 +214,7 @@ export default function PollComponent(props) {
                                                                 id={option.id}
                                                                 onChange={handleChange}
                                                                 disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
+                                                                    (pollObject?.startAtDate && (new Date(pollObject?.startAtDate) > new Date())) ||
                                                                     (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())))}
                                                             />
 
@@ -265,6 +266,7 @@ export default function PollComponent(props) {
                                                         <div style={{ display: "flex", alignItems: "center", marginTop: "30px" }}>
                                                             <Button variant="dark"
                                                                 disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
+                                                                    (pollObject?.startAtDate && (new Date(pollObject?.startAtDate) > new Date())) ||
                                                                     (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? true : false}
                                                                 onClick={() => { castMyVote() }}>
                                                                 Vote
