@@ -318,7 +318,7 @@ export default function PollComponent(props) {
                                                 <tbody>
                                                     {totalUniqueVotes >= 0 &&
                                                         (totalUniqueVotes > 0 ?
-                                                            Object.keys(resultsByPosition).map((position, index) => (
+                                                            Object.keys(resultsByPosition)?.reverse().map((position, index) => (
                                                                 <tr key={index}>
                                                                     <td style={{ wordBreak: "break-all" }}>{resultsByPosition[position]?.address &&
                                                                         <a className="ballot_link" target="_blank" rel="noreferrer" href={formStacksExplorerUrl(resultsByPosition[position]?.address)}>
