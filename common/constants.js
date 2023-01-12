@@ -117,7 +117,9 @@ export const Constants = {
     },
     {
       question: "Who are the developers of Ballot.gg?",
-      answer: `We are developers from Team <a href="https://blocksurvey.io?ref=ballot" target="_blank" rel="noreferrer">BlockSurvey ↗</a>.`,
+      answer: `We are developers from Team <a href="https://blocksurvey.io?ref=ballot" target="_blank" rel="noreferrer">BlockSurvey ↗</a> , 
+      <a href="https://owl.link?ref=ballot" target="_blank" rel="noreferrer">Owl Link ↗</a> , 
+      <a href="https://checklist.gg?ref=ballot" target="_blank" rel="noreferrer">Checklist ↗</a>.`,
     }
   ],
 
