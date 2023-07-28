@@ -433,7 +433,7 @@ export default function BuilderComponent(props) {
                                         </Form.Select>
 
                                         {(pollObject.votingSystem && Constants.VOTING_SYSTEM_DOCUMENTATION?.[pollObject.votingSystem]) &&
-                                            <small class="form-text text-muted" style={{ fontSize: "12px" }}>
+                                            <small className="form-text text-muted" style={{ fontSize: "12px" }}>
                                                 <Link href={Constants.VOTING_SYSTEM_DOCUMENTATION?.[pollObject.votingSystem]?.["link"]}>
                                                     <a className="ballot_links" target={"_blank"}>
                                                         Learn more about {" "} {Constants.VOTING_SYSTEM_DOCUMENTATION?.[pollObject.votingSystem]?.["name"]}
@@ -506,7 +506,7 @@ export default function BuilderComponent(props) {
                                                 onChange={handleChange} disabled={!pollObject?.startAtDate} min={pollObject?.startAtDate} className="ballot_input" />
                                         </Form.Group>
 
-                                        <small class="form-text text-muted" style={{ fontSize: "12px" }}>
+                                        <small className="form-text text-muted" style={{ fontSize: "12px" }}>
                                             The start and End date with time are stored in ISO date format(2022-10-21T17:19). It will be converted to a local date format for displaying.
                                         </small>
                                     </div>
@@ -568,7 +568,7 @@ export default function BuilderComponent(props) {
                                                     <Form.Label className='ballot_labels'>Token name</Form.Label>
                                                     <Form.Control type="text" name="strategyTokenName" value={pollObject.strategyTokenName}
                                                         onChange={handleChange} placeholder="blocksurvey" className="ballot_input" />
-                                                    <small class="form-text text-muted" style={{ fontSize: "12px" }}>
+                                                    <small className="form-text text-muted" style={{ fontSize: "12px" }}>
                                                         The token name is case-sensitive. Please give it as it is in the smart contract. (ex. APower)
                                                     </small>
                                                 </Form.Group>
