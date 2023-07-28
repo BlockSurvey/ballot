@@ -9,9 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@stacks/connect": "^6.10.0",
+    "@stacks/connect": "^6.10.2",
     "@stacks/network": "^4.3.5",
-    "@stacks/storage": "^4.3.5",
+    "@stacks/storage": "^4.3.8",
     "@stacks/transactions": "^4.3.5",
     "bootstrap": "^5.2.0",
     "lodash": "^4.17.21",

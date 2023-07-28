@@ -151,15 +151,15 @@
     "@noble/hashes" "~1.1.1"
     "@scure/base" "~1.1.0"
 
-"@stacks/auth@^4.3.5":
-  "integrity" "sha512-C2kV3V47TNmtmAhGnmM52i51TC0O6cANry2UCHAyBH+VAxW+MnN37cK3UeA9xsZhURst79aYFfxKtzxuvUN7fA=="
-  "resolved" "https://registry.npmjs.org/@stacks/auth/-/auth-4.3.5.tgz"
-  "version" "4.3.5"
+"@stacks/auth@^4.3.8":
+  "integrity" "sha512-vJWrzeDnpJAJ5wFvHTQ5H89cBUKIBYtDHEJ6MLRTOfjCdAZHSjeC86l922ccXEoYNgGhyib9N4mWmmCExNqRZw=="
+  "resolved" "https://registry.npmjs.org/@stacks/auth/-/auth-4.3.8.tgz"
+  "version" "4.3.8"
   dependencies:
     "@stacks/common" "^4.3.5"
-    "@stacks/encryption" "^4.3.5"
+    "@stacks/encryption" "^4.3.8"
     "@stacks/network" "^4.3.5"
-    "@stacks/profile" "^4.3.5"
+    "@stacks/profile" "^4.3.8"
     "cross-fetch" "^3.1.5"
     "jsontokens" "^3.1.1"
     "query-string" "^6.13.1"
@@ -186,20 +186,20 @@
     "@types/node" "^18.0.4"
     "buffer" "^6.0.3"
 
-"@stacks/connect-ui@5.5.2":
-  "integrity" "sha512-Tgv1GZz9sXrGkx0MDoF6Y4tmje+8vUVs133nx2GoSs2ZLPzjbsQKv9ksIUMIfzNX+doErDoEw1+xXPbi40InUQ=="
-  "resolved" "https://registry.npmjs.org/@stacks/connect-ui/-/connect-ui-5.5.2.tgz"
-  "version" "5.5.2"
+"@stacks/connect-ui@5.5.4":
+  "integrity" "sha512-xstC05PoxpPeA2HWytkJp/NJBtDEPDUoHuUyyvpuqS7f95rsHyx/tLFWv9ElxWiIbeMPPDEQipoy6S1qnZb8jw=="
+  "resolved" "https://registry.npmjs.org/@stacks/connect-ui/-/connect-ui-5.5.4.tgz"
+  "version" "5.5.4"
   dependencies:
-    "@stencil/core" "2.15.0"
+    "@stencil/core" "^2.17.1"
 
-"@stacks/connect@^6.10.0":
-  "integrity" "sha512-1r0aRG+v2h7HRi69sJ2YFqcIUFEArKcqUMOPOoFR5EyvF0IOkrJoVtSg5tuKmDf2YbsEqz/DBm97qXcsXICWIA=="
-  "resolved" "https://registry.npmjs.org/@stacks/connect/-/connect-6.10.0.tgz"
-  "version" "6.10.0"
+"@stacks/connect@^6.10.2":
+  "integrity" "sha512-rixsMWhSIMGS8ClUgfNKA7PLV4ikr7SpjFUcVuKCmEsrRMnDdcvuhiY87hLPiatD0W6qMWZVR+BaIbHIgvp9aQ=="
+  "resolved" "https://registry.npmjs.org/@stacks/connect/-/connect-6.10.2.tgz"
+  "version" "6.10.2"
   dependencies:
     "@stacks/auth" "4.3.2"
-    "@stacks/connect-ui" "5.5.2"
+    "@stacks/connect-ui" "5.5.4"
     "@stacks/network" "4.3.2"
     "@stacks/prettier-config" "0.0.8"
     "@stacks/transactions" "4.3.2"
@@ -209,10 +209,10 @@
     "readable-stream" "^3.6.0"
     "url" "^0.11.0"
 
-"@stacks/encryption@^4.3.2", "@stacks/encryption@^4.3.5":
-  "integrity" "sha512-s7fPwGLHQc/4SMFq7W75wt5xNqUJcciDkyxSEA30I+ukFSjLlZnmxI91ElWD15MRq/oKNHBlS0URF0N37dEe1A=="
-  "resolved" "https://registry.npmjs.org/@stacks/encryption/-/encryption-4.3.5.tgz"
-  "version" "4.3.5"
+"@stacks/encryption@^4.3.2", "@stacks/encryption@^4.3.8":
+  "integrity" "sha512-p6r7TdHdMFUnlQbLopBnpyk5O/TGp90pMDZuie/iDigTOc1ghWXZfNSn2gfgBNPVYSnGdei/cg7wqtxX6HkaPA=="
+  "resolved" "https://registry.npmjs.org/@stacks/encryption/-/encryption-4.3.8.tgz"
+  "version" "4.3.8"
   dependencies:
     "@noble/hashes" "^1.0.0"
     "@noble/secp256k1" "^1.5.5"
@@ -246,33 +246,33 @@
   dependencies:
     "prettier" "^2.3.0"
 
-"@stacks/profile@^4.3.2", "@stacks/profile@^4.3.5":
-  "integrity" "sha512-YPIgGzffTNacRKPqojArK1tOid8T1wEbPeHN1PY4kEcwy7zHNFxe/bWkIUZnk2NQ/i8rp7JoKfnWcqoaaR26Fw=="
-  "resolved" "https://registry.npmjs.org/@stacks/profile/-/profile-4.3.5.tgz"
-  "version" "4.3.5"
+"@stacks/profile@^4.3.2", "@stacks/profile@^4.3.8":
+  "integrity" "sha512-aXe/O9u2O0aAslzlcERc+JV3ZAQ75/FSO3l/5TGz+le0vZ6gqoflP6lCI1t3kPy0l6vnZjIUnwUDFR6JOmAHrQ=="
+  "resolved" "https://registry.npmjs.org/@stacks/profile/-/profile-4.3.8.tgz"
+  "version" "4.3.8"
   dependencies:
     "@stacks/common" "^4.3.5"
     "@stacks/network" "^4.3.5"
-    "@stacks/transactions" "^4.3.5"
+    "@stacks/transactions" "^4.3.8"
     "jsontokens" "^3.1.1"
     "schema-inspector" "2.0.1"
     "zone-file" "^2.0.0-beta.3"
 
-"@stacks/storage@^4.3.5":
-  "integrity" "sha512-W9yCGizlqx02eC2S6eHPzfY6iSJ+1l+x26JDlEUUBODnZp0PMMe1LHMd8SKv0SVNzrf5CfHV+f07oQvgSUFbdA=="
-  "resolved" "https://registry.npmjs.org/@stacks/storage/-/storage-4.3.5.tgz"
-  "version" "4.3.5"
+"@stacks/storage@^4.3.8":
+  "integrity" "sha512-xjz3OlW7xVPMC8Ezdn0vFXErWOE3jK+/DfWro2Jo/BBJ5L4gCpP4bzuAmlpgWoiyMHMkx/CDJHQiVryV6utHhg=="
+  "resolved" "https://registry.npmjs.org/@stacks/storage/-/storage-4.3.8.tgz"
+  "version" "4.3.8"
   dependencies:
-    "@stacks/auth" "^4.3.5"
+    "@stacks/auth" "^4.3.8"
     "@stacks/common" "^4.3.5"
-    "@stacks/encryption" "^4.3.5"
+    "@stacks/encryption" "^4.3.8"
     "@stacks/network" "^4.3.5"
     "jsontokens" "^3.1.1"
 
-"@stacks/transactions@^4.3.5":
-  "integrity" "sha512-tTkuVlIfpD6QKF0vHoJvUZ2h3Ua82l4HhxzzVs3ZKr5M9WYULZQo1RMaMloJLgUMxsexDZ1Mib6ADiXgBefrBQ=="
-  "resolved" "https://registry.npmjs.org/@stacks/transactions/-/transactions-4.3.5.tgz"
-  "version" "4.3.5"
+"@stacks/transactions@^4.3.5", "@stacks/transactions@^4.3.8":
+  "integrity" "sha512-5xYYv2TdXXM9PVixB79Pr99symQ8fhbVATjempGUxtL23/XUiRiLvJZohDxIE4VQ2EzbB4g4j8Y7oqPjj0h09Q=="
+  "resolved" "https://registry.npmjs.org/@stacks/transactions/-/transactions-4.3.8.tgz"
+  "version" "4.3.8"
   dependencies:
     "@noble/hashes" "^1.0.0"
     "@noble/secp256k1" "^1.5.5"
@@ -303,10 +303,10 @@
     "sha.js" "^2.4.11"
     "smart-buffer" "^4.1.0"
 
-"@stencil/core@2.15.0":
-  "integrity" "sha512-58+FPFpJCJScd5nmqVsZN+qk7aui57wFcMHWzySr1SQzoY8Efst9OPG7XRf27UsNj1DNeEdYWTtdrTfJyn3mZg=="
-  "resolved" "https://registry.npmjs.org/@stencil/core/-/core-2.15.0.tgz"
-  "version" "2.15.0"
+"@stencil/core@^2.17.1":
+  "integrity" "sha512-kmVA0M/HojwsfkeHsifvHVIYe4l5tin7J5+DLgtl8h6WWfiMClND5K3ifCXXI2ETDNKiEk21p6jql3Fx9o2rng=="
+  "resolved" "https://registry.npmjs.org/@stencil/core/-/core-2.22.3.tgz"
+  "version" "2.22.3"
 
 "@swc/helpers@0.4.3":
   "integrity" "sha512-6JrF+fdUK2zbGpJIlN7G3v966PQjyx/dPt1T9km2wj+EUBqgrxCk3uX4Kct16MIm9gGxfKRcfax2hVf5jvlTzA=="
