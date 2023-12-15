@@ -137,8 +137,8 @@ export function getMyStxAddress() {
 
 export function getStacksAPIPrefix() {
   if (stacksMainnetFlag) {
-    return "https://stacks-node-api.stacks.co";
+    return Constants.STACKS_MAINNET_API_URL;
   } else {
-    return "https://stacks-node-api.testnet.stacks.co";
+    return Constants.STACKS_TESTNET_API_URL;
   }
 }
