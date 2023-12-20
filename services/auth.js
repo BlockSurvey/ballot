@@ -2,6 +2,7 @@ import { AppConfig, showConnect, UserSession } from "@stacks/connect";
 import { StacksMainnet, StacksTestnet } from "@stacks/network";
 import { Storage } from "@stacks/storage";
 import { Constants } from "../common/constants";
+import { parseJWTtoken } from "./utils";
 
 const appConfig = new AppConfig(["store_write", "publish_data"]);
 
@@ -87,6 +88,24 @@ export function signOut() {
   window.location.assign("/");
 }
 
+function validateGaiaAccessToken() {
+  const userData = userSession.loadUserData();
+
+  // Validate gaiaAccessToken expire time
+  if (userData["gaiaAssociationToken"]) {
+    const gaiaAssociationTokenObj = parseJWTtoken(userData["gaiaAssociationToken"]);
+
+    // If token is expired, then logout from page
+    if (gaiaAssociationTokenObj && gaiaAssociationTokenObj.exp && Date.now() >= (gaiaAssociationTokenObj.exp * 1000)) {
+      // Force logout
+      signOut();
+      return false;
+    }
+  }
+
+  return true;
+}
+
 /**
  * Save file to gaia storage
  *
@@ -96,6 +115,12 @@ export function signOut() {
  * @returns
  */
 export function putFileToGaia(fileName, file, options = {}) {
+  // Always validate gaiaAccessToken before saving file
+  const validationStatus = validateGaiaAccessToken();
+  if (!validationStatus) {
+    return;
+  }
+
   return storage.putFile(fileName, file, options);
 }
 

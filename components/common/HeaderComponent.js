@@ -211,7 +211,7 @@ export default function HeaderComponent(props) {
 
                     {/* Description */}
                     <div style={{ marginBottom: "24px", whiteSpace: "pre-wrap" }}>
-                        <p style={{ lineHeight: "1.7" }}
+                        <p style={{ lineHeight: "1.7", wordWrap: "break-word" }}
                             dangerouslySetInnerHTML={{ __html: pollObject?.description ? convertToHrefLink(pollObject?.description) : "" }}>
                         </p>
                     </div>
