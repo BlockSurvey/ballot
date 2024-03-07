@@ -121,7 +121,19 @@ export function putFileToGaia(fileName, file, options = {}) {
     return;
   }
 
-  return storage.putFile(fileName, file, options);
+  let overrideOptions = {};
+  if (!options) {
+    overrideOptions = {
+      dangerouslyIgnoreEtag: true // Ignore automatic conflict prevention using etags
+    }
+  } else if (options && typeof options === 'object') {
+    overrideOptions = {
+      ...options,
+      dangerouslyIgnoreEtag: true // Ignore automatic conflict prevention using etags
+    }
+  }
+
+  return storage.putFile(fileName, file, overrideOptions);
 }
 
 /**
