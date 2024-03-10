@@ -152,3 +152,18 @@ export function parseJWTtoken(token) {
 
     return JSON.parse(jsonPayload);
 }
+
+export function isValidUtf8(str) {
+    try {
+        // Encode the string as URI component and then decode it.
+        decodeURIComponent(encodeURIComponent(str));
+        return true;
+    } catch (e) {
+        // If there's a decoding error, the string is not valid UTF-8
+        return false;
+    }
+}
+
+export function isValidAscii(str) {
+    return /^[\x20-\x7E]*$/.test(str);
+}

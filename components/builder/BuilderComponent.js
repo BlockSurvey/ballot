@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
 import { getFileFromGaia, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
 import { deployContract } from "../../services/contract";
-import { getRecentBlock } from "../../services/utils";
+import { getRecentBlock, isValidUtf8 } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
 
@@ -246,13 +246,33 @@ export default function BuilderComponent(props) {
     }
 
     const validatePoll = () => {
-        if (!pollObject) return "Poll is not yet created.";
+        if (!pollObject) {
+            return "Poll is not yet created.";
+        }
 
+        // Check for all required fields
         if (!pollObject?.title || !pollObject?.description ||
             !pollObject?.options || pollObject?.options?.length == 0) {
             return "Please fill all required fields."
         }
 
+        // Check for valid UTF-8 characters
+        if (isValidUtf8(pollObject?.title) == false || isValidUtf8(pollObject?.description) == false) {
+            return "Please enter valid UTF-8 characters."
+        }
+
+        // Check for options
+        if (pollObject?.options) {
+            for (let i = 0; i < pollObject.options.length; i++) {
+                if (!pollObject.options[i].value) {
+                    return "Please fill all options."
+                } else if (isValidUtf8(pollObject.options[i].value) == false) {
+                    return "Please enter valid UTF-8 characters."
+                }
+            }
+        }
+
+        // Check for start and end date
         if (!pollObject?.startAtDate || !pollObject?.endAtDate) {
             return "Please select poll start and end date."
         } else if (new Date() > new Date(pollObject?.startAtDate)) {
@@ -260,6 +280,11 @@ export default function BuilderComponent(props) {
         } else if (new Date() > new Date(pollObject?.endAtDate) ||
             new Date(pollObject?.startAtDate) > new Date(pollObject?.endAtDate)) {
             return "End date should be greater than start date."
+        }
+
+        // Check for voting strategy template
+        if (pollObject?.votingStrategyFlag && pollObject?.strategyTokenType && !pollObject?.votingStrategyTemplate) {
+            return "Please select default strategy"
         }
 
         if (pollObject?.votingStrategyTemplate == "other" && (!pollObject?.strategyTokenName || !pollObject?.strategyContractName)) {
@@ -408,20 +433,20 @@ export default function BuilderComponent(props) {
 
                             <Form style={{ margin: "20px 0 100px 0" }}>
                                 <Form.Group className="mb-3">
-                                    <Form.Label className='ballot_labels'>Title</Form.Label>
+                                    <Form.Label className='ballot_labels'>Title *</Form.Label>
                                     <Form.Control type="text" name="title" value={pollObject.title} onChange={handleChange}
                                         className="ballot_input" />
                                 </Form.Group>
 
                                 <Form.Group className="mb-3">
-                                    <Form.Label className='ballot_labels'>Description</Form.Label>
+                                    <Form.Label className='ballot_labels'>Description *</Form.Label>
                                     <Form.Control as="textarea" name="description" value={pollObject.description} rows={5} onChange={handleChange} className="ballot_input" />
                                 </Form.Group>
 
                                 {/* Voting system */}
                                 <Form.Group className="mb-3">
                                     <Form.Label className='ballot_labels'>
-                                        Voting system
+                                        Voting system *
                                     </Form.Label>
                                     <div>
                                         <Form.Select id="voting-strategy-template" name="votingSystem"
@@ -459,7 +484,7 @@ export default function BuilderComponent(props) {
 
                                 {/* Options */}
                                 <Form.Group className="mb-3">
-                                    <Form.Label className='ballot_labels'>Options</Form.Label>
+                                    <Form.Label className='ballot_labels'>Options *</Form.Label>
                                     {/* List of options */}
                                     <div className={styles.builder_option_box}>
                                         {pollObject?.options &&
@@ -494,14 +519,14 @@ export default function BuilderComponent(props) {
                                     <Form.Label className='ballot_labels'>Voting period</Form.Label>
                                     <div style={{ display: "flex", flexWrap: "wrap", columnGap: "20px" }}>
                                         <Form.Group className="mb-3">
-                                            <Form.Label style={{ width: "50px" }} className='ballot_labels'>Start</Form.Label>
+                                            <Form.Label style={{ width: "50px" }} className='ballot_labels'>Start *</Form.Label>
                                             <Form.Control type="datetime-local" name="startAtDate" value={pollObject.startAtDate} style={{ width: "250px" }}
                                                 min={new Date().toISOString().slice(0, 16)}
                                                 onChange={handleChange} className="ballot_input" />
                                         </Form.Group>
 
                                         <Form.Group className="mb-3">
-                                            <Form.Label style={{ width: "50px" }} className='ballot_labels'>End</Form.Label>
+                                            <Form.Label style={{ width: "50px" }} className='ballot_labels'>End *</Form.Label>
                                             <Form.Control type="datetime-local" name="endAtDate" value={pollObject.endAtDate} style={{ width: "250px" }}
                                                 onChange={handleChange} disabled={!pollObject?.startAtDate} min={pollObject?.startAtDate} className="ballot_input" />
                                         </Form.Group>
@@ -529,7 +554,7 @@ export default function BuilderComponent(props) {
                                     <>
                                         {/* Token type */}
                                         <Form.Group className="mb-3">
-                                            <Form.Label className='ballot_labels'>Token type</Form.Label>
+                                            <Form.Label className='ballot_labels'>Token type *</Form.Label>
                                             <div>
                                                 {Constants.TOKEN_TYPES.map((option, index) => (
                                                     <Form.Check
@@ -548,7 +573,7 @@ export default function BuilderComponent(props) {
                                         </Form.Group>
 
                                         <Form.Group className="mb-3">
-                                            <Form.Label className='ballot_labels'>Default strategy</Form.Label>
+                                            <Form.Label className='ballot_labels'>Default strategy *</Form.Label>
                                             <Form.Select id="voting-strategy-template" name="votingStrategyTemplate"
                                                 value={pollObject?.votingStrategyTemplate ? pollObject.votingStrategyTemplate : ""}
                                                 onChange={handleChange} className="ballot_input">
@@ -565,7 +590,7 @@ export default function BuilderComponent(props) {
                                         {pollObject?.votingStrategyTemplate && pollObject?.votingStrategyTemplate == "other" &&
                                             <>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label className='ballot_labels'>Token name</Form.Label>
+                                                    <Form.Label className='ballot_labels'>Token name *</Form.Label>
                                                     <Form.Control type="text" name="strategyTokenName" value={pollObject.strategyTokenName}
                                                         onChange={handleChange} placeholder="blocksurvey" className="ballot_input" />
                                                     <small className="form-text text-muted" style={{ fontSize: "12px" }}>
@@ -573,7 +598,7 @@ export default function BuilderComponent(props) {
                                                     </small>
                                                 </Form.Group>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label className='ballot_labels'>Contract name</Form.Label>
+                                                    <Form.Label className='ballot_labels'>Contract name *</Form.Label>
                                                     <Form.Control type="text" name="strategyContractName" value={pollObject.strategyContractName}
                                                         onChange={handleChange}
                                                         placeholder="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.contract" className="ballot_input" />
