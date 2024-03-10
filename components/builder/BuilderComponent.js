@@ -347,6 +347,10 @@ export default function BuilderComponent(props) {
             pollObject['endAtBlock'] = calculateBlockTime(new Date(pollObject?.endAtDate).getTime(), currentBlock?.height);
         }
 
+        // Convert local date to ISO date
+        pollObject['startAtDateUTC'] = new Date(pollObject?.startAtDate).toISOString();
+        pollObject['endAtDateUTC'] = new Date(pollObject?.endAtDate).toISOString();
+
         const contractName = "ballot-" + getTitleWithOutSpecialChar() + "-" + nanoid(5);
         pollObject["publishedInfo"] = {
             "contractAddress": getMyStxAddress(),

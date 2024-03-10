@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Table } from "react-bootstrap";
 import { Constants } from "../../common/constants";
-import { convertToDisplayDateFormat, formStacksExplorerUrl } from "../../services/utils";
+import { convertToDisplayDateFormat, formStacksExplorerUrl, formatUtcDateTime } from "../../services/utils";
 
 
 export default function InformationComponent(props) {
@@ -104,10 +104,10 @@ export default function InformationComponent(props) {
                                 Voting System <span style={{ float: "right", fontWeight: "bold", textTransform: "capitalize" }}>{votingSystemInfo?.name}</span>
                             </div>
                             <div>
-                                Start Date <span style={{ float: "right", fontWeight: "bold" }}>{convertToDisplayDateFormat(pollObject?.startAtDate)}</span>
+                                Start Date <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.startAtDateUTC ? (formatUtcDateTime(pollObject?.startAtDateUTC) + " UTC") : convertToDisplayDateFormat(pollObject?.startAtDate)}</span>
                             </div>
                             <div>
-                                End Date <span style={{ float: "right", fontWeight: "bold" }}>{convertToDisplayDateFormat(pollObject?.endAtDate)}</span>
+                                End Date <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.endAtDateUTC ? (formatUtcDateTime(pollObject?.endAtDateUTC) + " UTC") : convertToDisplayDateFormat(pollObject?.endAtDate)}</span>
                             </div>
                             <div>
                                 Start Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.startAtBlock}</span>

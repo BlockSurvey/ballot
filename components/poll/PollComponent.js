@@ -214,8 +214,9 @@ export default function PollComponent(props) {
                                                                 id={option.id}
                                                                 onChange={handleChange}
                                                                 disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
-                                                                    (pollObject?.startAtDate && (new Date(pollObject?.startAtDate) > new Date())) ||
-                                                                    (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date())))}
+                                                                    ((pollObject?.startAtDate || pollObject?.startAtDateUTC) && (new Date(pollObject?.startAtDateUTC ? pollObject?.startAtDateUTC : pollObject?.startAtDate) > new Date())) ||
+                                                                    ((pollObject?.endAtDate || pollObject?.endAtDateUTC) && (new Date(pollObject?.endAtDateUTC ? pollObject?.endAtDateUTC : pollObject?.endAtDate) < new Date()))
+                                                                )}
                                                             />
 
                                                             // <div>
@@ -266,8 +267,8 @@ export default function PollComponent(props) {
                                                         <div style={{ display: "flex", alignItems: "center", marginTop: "30px" }}>
                                                             <Button variant="dark"
                                                                 disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
-                                                                    (pollObject?.startAtDate && (new Date(pollObject?.startAtDate) > new Date())) ||
-                                                                    (pollObject?.endAtDate && (new Date(pollObject?.endAtDate) < new Date()))) ? true : false}
+                                                                    ((pollObject?.startAtDate || pollObject?.startAtDateUTC) && (new Date(pollObject?.startAtDateUTC ? pollObject?.startAtDateUTC : pollObject?.startAtDate) > new Date())) ||
+                                                                    ((pollObject?.endAtDate || pollObject?.endAtDateUTC) && (new Date(pollObject?.endAtDateUTC ? pollObject?.endAtDateUTC : pollObject?.endAtDate) < new Date()))) ? true : false}
                                                                 onClick={() => { castMyVote() }}>
                                                                 Vote
                                                             </Button>

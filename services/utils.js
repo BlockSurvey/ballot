@@ -167,3 +167,23 @@ export function isValidUtf8(str) {
 export function isValidAscii(str) {
     return /^[\x20-\x7E]*$/.test(str);
 }
+
+export function formatUtcDateTime(dateTimeStr) {
+    // Parse the date-time string as a UTC date
+    const date = new Date(dateTimeStr);
+
+    // Extract and format the components of the date
+    const day = date.getUTCDate();
+    const month = date.toLocaleString('en-US', { month: 'short', timeZone: 'UTC' });
+    const year = date.getUTCFullYear();
+    const hours = date.getUTCHours();
+    const minutes = date.getUTCMinutes();
+
+    // Format the time in 12-hour format with AM/PM
+    const hourFormatted = hours % 12 || 12; // Convert 0 (midnight) to 12
+    const minuteFormatted = minutes < 10 ? '0' + minutes : minutes;
+    const amPm = hours < 12 ? 'am' : 'pm';
+
+    // Construct the formatted string
+    return `${day} ${month} ${year}, ${hourFormatted}:${minuteFormatted} ${amPm}`;
+}

@@ -437,9 +437,9 @@ export async function getServerSideProps(context) {
     // Fetch from Gaia
     if (pollId && gaiaAddress) {
         // Form gaia url            
-        let pollGaiaUrl = Constants.GAIA_HUB_PREFIX + gaiaAddress + "/" + pollId + ".json";
+        const pollGaiaUrl = Constants.GAIA_HUB_PREFIX + gaiaAddress + "/" + pollId + ".json";
 
-        const response = await fetch(pollGaiaUrl)
+        const response = await fetch(pollGaiaUrl);
         pollObject = await response.json();
     }
 
