@@ -35,10 +35,10 @@ function getContract(pollObject) {
     pollObject?.options?.forEach(option => {
         if (!optionIds) {
             optionIds = `"${option?.id}"`
-            optionResults = `(map-set results {id: "${option?.id}"} {count: u0, name: u"${encodeURIComponent(getStringByLength(option?.value, 512))}"})`
+            optionResults = `(map-set results {id: "${option?.id}"} {count: u0, name: u"${getStringByLength(encodeURIComponent(option?.value), 512)}"})`
         } else {
             optionIds = optionIds + ` "${option?.id}"`;
-            optionResults = optionResults + ` (map-set results {id: "${option?.id}"} {count: u0, name: u"${encodeURIComponent(getStringByLength(option?.value, 512))}"})`
+            optionResults = optionResults + ` (map-set results {id: "${option?.id}"} {count: u0, name: u"${getStringByLength(encodeURIComponent(option?.value), 512)}"})`
         }
     });
 
@@ -142,8 +142,8 @@ function getContract(pollObject) {
 
     const placeholder = {
         "noOfOptions": pollObject?.options?.length,
-        "title": encodeURIComponent(getStringByLength(pollObject?.title, 512)),
-        "description": encodeURIComponent(getStringByLength(pollObject?.description, 512)),
+        "title": getStringByLength(encodeURIComponent(pollObject?.title), 512),
+        "description": getStringByLength(encodeURIComponent(pollObject?.description), 512),
         "votingSystem": pollObject?.votingSystem,
         "startAtBlock": pollObject?.startAtBlock,
         "endAtBlock": pollObject?.endAtBlock,
