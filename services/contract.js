@@ -10,16 +10,29 @@ const cancelCallbackFunction = (data) => {
 export async function deployContract(pollObject, contractName, callbackFunction) {
     const contract = getContract(pollObject);
 
+    // this post-condition ensures that our recipient receives at least 5000 STX tokens
+    const myPostCondition = makeStandardSTXPostCondition(
+        Constants.STACKS_MAINNET_FLAG ? Constants.MAINNET_DONATION_ADDRESS : Constants.TESTNET_DONATION_ADDRESS, // address of recipient
+        FungibleConditionCode.GreaterEqual, // comparator
+        5000000 // relative amount to previous balance (denoted in micro-STX)
+    );
+
     // Transaction options
     const txOptions = {
+        network: getNetworkType(), // Testnet or Mainnet
+        anchorMode: AnchorMode.Any, // which type of block the tx should be mined in
+
         contractName: contractName,
         codeBody: contract,
-        network: getNetworkType(),
-        anchorMode: AnchorMode.Any,
+
         appDetails: {
             name: "Ballot",
             icon: window.location.origin + "/images/logo/ballot.png"
         },
+
+        postConditionMode: PostConditionMode.Deny, // whether the tx should fail when unexpected assets are transferred
+        postConditions: [myPostCondition], // for an example using post-conditions, see next example
+
         onFinish: callbackFunction,
         onCancel: cancelCallbackFunction
     };
