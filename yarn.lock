@@ -151,101 +151,188 @@
     "@noble/hashes" "~1.1.1"
     "@scure/base" "~1.1.0"
 
-"@stacks/auth@^6.1.1", "@stacks/auth@^6.12.0":
-  version "6.12.0"
-  resolved "https://registry.npmjs.org/@stacks/auth/-/auth-6.12.0.tgz"
-  integrity sha512-ViSpeWNw1MJBtvykcPTcn9vTy9v8pK8jiQFjfOkiFQ0q+oEhIDQrtpN5OYtTh5HvoZk8du+43nIoUYUECNahHQ==
+"@stacks/auth@^6.17.0":
+  version "6.17.0"
+  resolved "https://registry.npmjs.org/@stacks/auth/-/auth-6.17.0.tgz"
+  integrity sha512-SaxB6ULkYLRd5WZotymlPzroBn5/28KgJOTY0nKDcwCqxSkYjPZepweA30LK5eUOmePuGILaMTagj1ibZRnvUg==
   dependencies:
-    "@stacks/common" "^6.10.0"
-    "@stacks/encryption" "^6.12.0"
-    "@stacks/network" "^6.11.3"
-    "@stacks/profile" "^6.12.0"
+    "@stacks/common" "^6.16.0"
+    "@stacks/encryption" "^6.17.0"
+    "@stacks/network" "^6.17.0"
+    "@stacks/profile" "^6.17.0"
     cross-fetch "^3.1.5"
     jsontokens "^4.0.1"
 
-"@stacks/common@^6.10.0":
-  version "6.10.0"
-  resolved "https://registry.npmjs.org/@stacks/common/-/common-6.10.0.tgz"
-  integrity sha512-6x5Z7AKd9/kj3+DYE9xIDIkFLHihBH614i2wqrZIjN02WxVo063hWSjIlUxlx8P4gl6olVzlOy5LzhLJD9OP0A==
+"@stacks/auth@^7.0.0-next.70":
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/@stacks/auth/-/auth-7.0.0.tgz"
+  integrity sha512-p0/FJy5jRRgtsVzGpWDgNE0fi/ioPCL3S1tZHRsvdKO7moquHWnTlBV/9yVkGbd+V0kD95Sd0euX5pwWA82MhA==
+  dependencies:
+    "@noble/secp256k1" "1.7.1"
+    "@stacks/common" "^7.0.0"
+    "@stacks/encryption" "^7.0.0"
+    "@stacks/network" "^7.0.0"
+    "@stacks/profile" "^7.0.0"
+    cross-fetch "^3.1.5"
+    jsontokens "^4.0.1"
+
+"@stacks/common@^6.16.0":
+  version "6.16.0"
+  resolved "https://registry.npmjs.org/@stacks/common/-/common-6.16.0.tgz"
+  integrity sha512-PnzvhrdGRMVZvxTulitlYafSK4l02gPCBBoI9QEoTqgSnv62oaOXhYAUUkTMFKxdHW1seVEwZsrahuXiZPIAwg==
   dependencies:
     "@types/bn.js" "^5.1.0"
     "@types/node" "^18.0.4"
 
-"@stacks/connect-ui@6.4.1":
-  version "6.4.1"
-  resolved "https://registry.npmjs.org/@stacks/connect-ui/-/connect-ui-6.4.1.tgz"
-  integrity sha512-Y6Fp26MUsMQq08zFSWus40rS7RNHrHj6VDJrFUqM9VsksV3wftpsRcy7psQusUvW1DS7fPza67IlM1dcN4rvSg==
+"@stacks/common@^7.0.0", "@stacks/common@^7.0.0-next.70":
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/@stacks/common/-/common-7.0.0.tgz"
+  integrity sha512-/BKBK9S9GEuGjbnc2fBAwsG21f8cfNekG/9mXLSMwBqnh4qaQY2hxK+6wRI2YXJgpkXrpZilpZy2sdPGlVUdQA==
+
+"@stacks/connect-ui@6.5.0":
+  version "6.5.0"
+  resolved "https://registry.npmjs.org/@stacks/connect-ui/-/connect-ui-6.5.0.tgz"
+  integrity sha512-iXSpl2NxrjERBqtGgkZp0tX1uJgdWZXmsNo3I0cJYYTTbieSAE/Al9nTYc1wLTPW5w5oVvZEkQKo90WIrHR8Rw==
   dependencies:
     "@stencil/core" "^2.17.1"
 
-"@stacks/connect@^7.7.1":
-  version "7.7.1"
-  resolved "https://registry.npmjs.org/@stacks/connect/-/connect-7.7.1.tgz"
-  integrity sha512-MwLRhgRLOGo0Y4IDC0qp9RUX2SZubgse1aI2TN/fz2abNIh1LgmOKUua3w17YiBEZxDD9nyQ4KW1c33bdnrOPw==
+"@stacks/connect@^7.8.0":
+  version "7.8.0"
+  resolved "https://registry.npmjs.org/@stacks/connect/-/connect-7.8.0.tgz"
+  integrity sha512-whwHygS69XyY/LMvlyp0Whu4mkWkFoJ4Z/Bva9aO1xLLyEVDbKLZnslGWmPs1Io/y76oGEorqVEh0MeLymTIjg==
   dependencies:
-    "@stacks/auth" "^6.1.1"
-    "@stacks/connect-ui" "6.4.1"
-    "@stacks/network" "^6.1.1"
-    "@stacks/profile" "^6.1.1"
-    "@stacks/transactions" "^6.1.1"
+    "@stacks/auth" "^7.0.0-next.70"
+    "@stacks/common" "^7.0.0-next.70"
+    "@stacks/connect-ui" "6.5.0"
+    "@stacks/network" "^7.0.0-next.70"
+    "@stacks/network-v6" "npm:@stacks/network@^6.16.0"
+    "@stacks/profile" "^7.0.0-next.70"
+    "@stacks/transactions" "^7.0.0-next.70"
+    "@stacks/transactions-v6" "npm:@stacks/transactions@^6.16.0"
     jsontokens "^4.0.1"
 
-"@stacks/encryption@^6.12.0":
-  version "6.12.0"
-  resolved "https://registry.npmjs.org/@stacks/encryption/-/encryption-6.12.0.tgz"
-  integrity sha512-CubE51pHrcxx3yA+xapevPgA9UDleIoEaUZ06/9uD91B42yvTg37HyS8t06rzukU9q+X7Cv2I/+vbuf4nJIo8g==
+"@stacks/encryption@^6.17.0":
+  version "6.17.0"
+  resolved "https://registry.npmjs.org/@stacks/encryption/-/encryption-6.17.0.tgz"
+  integrity sha512-c0+ZOjrAiB1fDCjXO6XqHdYgpeBeMYyeH+dWahpD1VQUDor2PE5Q47qyuibWmx36rLWt1M6wlaLdeVm6HlKGzw==
   dependencies:
     "@noble/hashes" "1.1.5"
     "@noble/secp256k1" "1.7.1"
     "@scure/bip39" "1.1.0"
-    "@stacks/common" "^6.10.0"
+    "@stacks/common" "^6.16.0"
     "@types/node" "^18.0.4"
     base64-js "^1.5.1"
     bs58 "^5.0.0"
     ripemd160-min "^0.0.6"
     varuint-bitcoin "^1.1.2"
 
-"@stacks/network@^6.1.1", "@stacks/network@^6.11.3":
-  version "6.11.3"
-  resolved "https://registry.npmjs.org/@stacks/network/-/network-6.11.3.tgz"
-  integrity sha512-c4ClCU/QUwuu8NbHtDKPJNa0M5YxauLN3vYaR0+S4awbhVIKFQSxirm9Q9ckV1WBh7FtD6u2S0x+tDQGAODjNg==
+"@stacks/encryption@^7.0.0":
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/@stacks/encryption/-/encryption-7.0.0.tgz"
+  integrity sha512-kQhiurn8s0DV6OALqEy2Aqwp2DNJUD41S1bnD/+UESyEDD5XRqL84MEo7mCL8pTPr+FVdhT+diEIPeAfEtbTPQ==
   dependencies:
-    "@stacks/common" "^6.10.0"
+    "@noble/hashes" "1.1.5"
+    "@noble/secp256k1" "1.7.1"
+    "@scure/bip39" "1.1.0"
+    "@stacks/common" "^7.0.0"
+    base64-js "^1.5.1"
+    bs58 "^5.0.0"
+    ripemd160-min "^0.0.6"
+    varuint-bitcoin "^1.1.2"
+
+"@stacks/network-v6@npm:@stacks/network@^6.16.0":
+  version "6.17.0"
+  resolved "https://registry.npmjs.org/@stacks/network/-/network-6.17.0.tgz"
+  integrity sha512-numHbfKjwco/rbkGPOEz8+FcJ2nBnS/tdJ8R422Q70h3SiA9eqk9RjSzB8p4JP8yW1SZvW+eihADHfMpBuZyfw==
+  dependencies:
+    "@stacks/common" "^6.16.0"
     cross-fetch "^3.1.5"
 
-"@stacks/profile@^6.1.1", "@stacks/profile@^6.12.0":
-  version "6.12.0"
-  resolved "https://registry.npmjs.org/@stacks/profile/-/profile-6.12.0.tgz"
-  integrity sha512-eY5IpX+GGHIcYLkivDmf3mkxDIgTQ+LhU8UG4jvOqDi+e1DvF9cIi3+reG5KVo0pQzqyT1OS7+16AwVcgp7/og==
+"@stacks/network@^6.17.0":
+  version "6.17.0"
+  resolved "https://registry.npmjs.org/@stacks/network/-/network-6.17.0.tgz"
+  integrity sha512-numHbfKjwco/rbkGPOEz8+FcJ2nBnS/tdJ8R422Q70h3SiA9eqk9RjSzB8p4JP8yW1SZvW+eihADHfMpBuZyfw==
   dependencies:
-    "@stacks/common" "^6.10.0"
-    "@stacks/network" "^6.11.3"
-    "@stacks/transactions" "^6.12.0"
+    "@stacks/common" "^6.16.0"
+    cross-fetch "^3.1.5"
+
+"@stacks/network@^7.0.0", "@stacks/network@^7.0.0-next.70":
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/@stacks/network/-/network-7.0.0.tgz"
+  integrity sha512-4diddT0ii85BQ4PW6ww3l4cS7Oo0a5VIsJ7umBcCPAArIc4Sm/MIOEXIg9joKK8fVHLnWyh1p4D+febJQFfa+Q==
+  dependencies:
+    "@stacks/common" "^7.0.0"
+    cross-fetch "^3.1.5"
+
+"@stacks/profile@^6.17.0":
+  version "6.17.0"
+  resolved "https://registry.npmjs.org/@stacks/profile/-/profile-6.17.0.tgz"
+  integrity sha512-EoYe0NapFc6bgA+vyCVY2sYYRHk3pbsbRnm3eaSp8y9Drfy8dBqsM10W1jjTwOn0R+IMmDT52lojdW7Pw3c7Mw==
+  dependencies:
+    "@stacks/common" "^6.16.0"
+    "@stacks/network" "^6.17.0"
+    "@stacks/transactions" "^6.17.0"
     jsontokens "^4.0.1"
     schema-inspector "^2.0.2"
     zone-file "^2.0.0-beta.3"
 
-"@stacks/storage@^6.12.0":
-  version "6.12.0"
-  resolved "https://registry.npmjs.org/@stacks/storage/-/storage-6.12.0.tgz"
-  integrity sha512-RiB8cfWKCm4LrDLXdjtRj4syzvpwmJ/6WKcF+1RHQBTyJerPgxoBn1NoKzjOcydQvVj1jpR/ccaS78xVxlMsTQ==
+"@stacks/profile@^7.0.0", "@stacks/profile@^7.0.0-next.70":
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/@stacks/profile/-/profile-7.0.0.tgz"
+  integrity sha512-E9RDodVgcLBs6ZiV88lVQyDjA8ZDVPswbPpLNHeAA+evJ2GwRKMJrNnirjydMI37aWm3ZpYOEMLMbqdi38VR7w==
   dependencies:
-    "@stacks/auth" "^6.12.0"
-    "@stacks/common" "^6.10.0"
-    "@stacks/encryption" "^6.12.0"
-    "@stacks/network" "^6.11.3"
+    "@stacks/common" "^7.0.0"
+    "@stacks/network" "^7.0.0"
+    "@stacks/transactions" "^7.0.0"
+    jsontokens "^4.0.1"
+    schema-inspector "^2.0.2"
+    zone-file "^2.0.0-beta.3"
+
+"@stacks/storage@^6.17.0":
+  version "6.17.0"
+  resolved "https://registry.npmjs.org/@stacks/storage/-/storage-6.17.0.tgz"
+  integrity sha512-vhgV8C+1UahSWrafOHh/ZnTVYs8JadLsh5OZCVgtxWXV7z8ruQzVN24eeXbR+C7Vme2YpDP210ly7Wyqxd755Q==
+  dependencies:
+    "@stacks/auth" "^6.17.0"
+    "@stacks/common" "^6.16.0"
+    "@stacks/encryption" "^6.17.0"
+    "@stacks/network" "^6.17.0"
     base64-js "^1.5.1"
     jsontokens "^4.0.1"
 
-"@stacks/transactions@^6.1.1", "@stacks/transactions@^6.12.0":
-  version "6.12.0"
-  resolved "https://registry.npmjs.org/@stacks/transactions/-/transactions-6.12.0.tgz"
-  integrity sha512-gRP3SfTaAIoTdjMvOiLrMZb/senqB8JQlT5Y4C3/CiHhiprYwTx7TbOCSa7WsNOU99H4aNfHvatmymuggXQVkA==
+"@stacks/transactions-v6@npm:@stacks/transactions@^6.16.0":
+  version "6.17.0"
+  resolved "https://registry.npmjs.org/@stacks/transactions/-/transactions-6.17.0.tgz"
+  integrity sha512-FUah2BRgV66ApLcEXGNGhwyFTRXqX5Zco3LpiM3essw8PF0NQlHwwdPgtDko5RfrJl3LhGXXe/30nwsfNnB3+g==
   dependencies:
     "@noble/hashes" "1.1.5"
     "@noble/secp256k1" "1.7.1"
-    "@stacks/common" "^6.10.0"
-    "@stacks/network" "^6.11.3"
+    "@stacks/common" "^6.16.0"
+    "@stacks/network" "^6.17.0"
+    c32check "^2.0.0"
+    lodash.clonedeep "^4.5.0"
+
+"@stacks/transactions@^6.17.0":
+  version "6.17.0"
+  resolved "https://registry.npmjs.org/@stacks/transactions/-/transactions-6.17.0.tgz"
+  integrity sha512-FUah2BRgV66ApLcEXGNGhwyFTRXqX5Zco3LpiM3essw8PF0NQlHwwdPgtDko5RfrJl3LhGXXe/30nwsfNnB3+g==
+  dependencies:
+    "@noble/hashes" "1.1.5"
+    "@noble/secp256k1" "1.7.1"
+    "@stacks/common" "^6.16.0"
+    "@stacks/network" "^6.17.0"
+    c32check "^2.0.0"
+    lodash.clonedeep "^4.5.0"
+
+"@stacks/transactions@^7.0.0", "@stacks/transactions@^7.0.0-next.70":
+  version "7.0.0"
+  resolved "https://registry.npmjs.org/@stacks/transactions/-/transactions-7.0.0.tgz"
+  integrity sha512-9kGTnJLwRQPugLzbdJ8MmFED+eRhlJKIXpz2mshyy238hvBc4T0jynsoJMi4qGqvJYzsiRYCLDPJVkkUde85vA==
+  dependencies:
+    "@noble/hashes" "1.1.5"
+    "@noble/secp256k1" "1.7.1"
+    "@stacks/common" "^7.0.0"
+    "@stacks/network" "^7.0.0"
     c32check "^2.0.0"
     lodash.clonedeep "^4.5.0"
 

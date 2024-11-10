@@ -27,7 +27,8 @@ export default function PollComponent(props) {
         publicUrl,
         txStatus,
         noOfResultsLoaded,
-        setNoOfResultsLoaded } = props;
+        setNoOfResultsLoaded,
+        currentBlockHeight } = props;
     const [voteObject, setVoteObject] = useState({});
     const [errorMessage, setErrorMessage] = useState();
     const [txId, setTxId] = useState();
@@ -267,8 +268,9 @@ export default function PollComponent(props) {
                                                         <div style={{ display: "flex", alignItems: "center", marginTop: "30px" }}>
                                                             <Button variant="dark"
                                                                 disabled={(isPreview || !holdingTokenIdsArray || alreadyVoted || isProcessing ||
-                                                                    ((pollObject?.startAtDate || pollObject?.startAtDateUTC) && (new Date(pollObject?.startAtDateUTC ? pollObject?.startAtDateUTC : pollObject?.startAtDate) > new Date())) ||
-                                                                    ((pollObject?.endAtDate || pollObject?.endAtDateUTC) && (new Date(pollObject?.endAtDateUTC ? pollObject?.endAtDateUTC : pollObject?.endAtDate) < new Date()))) ? true : false}
+                                                                    (!currentBlockHeight || currentBlockHeight < pollObject?.startAtBlock) ||
+                                                                    (!currentBlockHeight || currentBlockHeight > pollObject?.endAtBlock)
+                                                                ) ? true : false}
                                                                 onClick={() => { castMyVote() }}>
                                                                 Vote
                                                             </Button>
@@ -401,7 +403,7 @@ export default function PollComponent(props) {
                                 {/* Right Side */}
                                 <div className="col-sm-12 col-md-4">
                                     {/* Information */}
-                                    <InformationComponent pollObject={pollObject} resultsByOption={resultsByOption} />
+                                    <InformationComponent pollObject={pollObject} resultsByOption={resultsByOption} currentBlockHeight={currentBlockHeight} />
                                 </div>
                             </div>
                         </div>

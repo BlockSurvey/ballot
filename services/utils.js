@@ -187,3 +187,13 @@ export function formatUtcDateTime(dateTimeStr) {
     // Construct the formatted string
     return `${day} ${month} ${year}, ${hourFormatted}:${minuteFormatted} ${amPm}`;
 }
+
+export const calculateDateByBlockHeight = (currentBlockHeight, targetBlockHeight) => {
+    if (targetBlockHeight && currentBlockHeight && targetBlockHeight > 0 && currentBlockHeight > 0 &&
+        targetBlockHeight > currentBlockHeight) {
+        const diff = targetBlockHeight - currentBlockHeight;
+        const minutes = diff * 10;
+
+        return new Date(new Date().getTime() + (minutes * 60 * 1000)).toISOString();
+    }
+}

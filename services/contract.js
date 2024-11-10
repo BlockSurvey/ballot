@@ -1,5 +1,6 @@
 import { openContractCall, openContractDeploy } from "@stacks/connect";
-import { AnchorMode, bufferCV, listCV, stringAsciiCV, uintCV } from "@stacks/transactions";
+import { AnchorMode, bufferCV, FungibleConditionCode, listCV, makeStandardSTXPostCondition, stringAsciiCV, uintCV } from "@stacks/transactions";
+import { Constants } from "../common/constants";
 import { getNetworkType } from "../services/auth";
 
 const cancelCallbackFunction = (data) => {
@@ -8,6 +9,15 @@ const cancelCallbackFunction = (data) => {
 
 export async function deployContract(pollObject, contractName, callbackFunction) {
     const contract = getContract(pollObject);
+
+    // Add an optional post condition
+    // See below for details on constructing post conditions
+    const postConditionAddress = Constants.STACKS_MAINNET_FLAG ? Constants.MAINNET_DONATION_ADDRESS : Constants.TESTNET_DONATION_ADDRESS;
+    const postConditionCode = FungibleConditionCode.GreaterEqual;
+    const postConditionAmount = 5000000n;
+    const postConditions = [
+        makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
+    ];
 
     // Transaction options
     const txOptions = {
@@ -19,6 +29,7 @@ export async function deployContract(pollObject, contractName, callbackFunction)
             name: "Ballot",
             icon: window.location.origin + "/images/logo/ballot.png"
         },
+        postConditions: postConditions,
         onFinish: callbackFunction,
         onCancel: cancelCallbackFunction
     };
@@ -63,10 +74,10 @@ function getContract(pollObject) {
         } else {
             // Fungible tokens
             if (pollObject?.votingStrategyTemplate == "stx") {
-                strategyFunction = getStrategyFunctionForStxHolders();
+                strategyFunction = getStrategyFunctionForStxHolders(pollObject?.snapshotBlockHeight || 0);
                 votingPowerVariable = `(voting-power (get-voting-power-by-stx-holdings))`;
             } else if (pollObject?.strategyContractName) {
-                strategyFunction = getStrategyFunctionForFT(pollObject?.strategyContractName);
+                strategyFunction = getStrategyFunctionForFT(pollObject?.strategyContractName, pollObject?.snapshotBlockHeight || 0);
                 votingPowerVariable = `(voting-power (get-voting-power-by-ft-holdings))`;
             }
         }
@@ -337,7 +348,12 @@ function getRawContract() {
     (var-set options (list &{optionIds}))
     (var-set start u&{startAtBlock})
     (var-set end u&{endAtBlock})
-    &{optionResults}`;
+    &{optionResults}
+    
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    ;; Supporting Ballot.gg
+    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+    (stx-transfer? u5000000 tx-sender '${Constants.STACKS_MAINNET_FLAG ? Constants.MAINNET_DONATION_ADDRESS : Constants.TESTNET_DONATION_ADDRESS})`;
 }
 
 function getStrategyFunctionForBtcHolders() {
@@ -392,7 +408,24 @@ function getStrategyFunctionForNFT(strategyContractName) {
     )`;
 }
 
-function getStrategyFunctionForStxHolders() {
+function getStrategyFunctionForStxHolders(snapshotBlockHeight) {
+    if (snapshotBlockHeight > 0) {
+        return `
+        (define-private (get-voting-power-by-stx-holdings)
+            (at-block (unwrap-panic (get-block-info? id-header-hash u${snapshotBlockHeight}))
+                (let
+                    (
+                        (stx-balance (stx-get-balance tx-sender))
+                    )
+                    (if (> stx-balance u0)
+                        (/ stx-balance u1000000)
+                        stx-balance
+                    )
+                )
+            )
+        )`;
+    }
+
     return `
     (define-private (get-voting-power-by-stx-holdings)
         (let
@@ -407,7 +440,29 @@ function getStrategyFunctionForStxHolders() {
     )`;
 }
 
-function getStrategyFunctionForFT(strategyContractName) {
+function getStrategyFunctionForFT(strategyContractName, snapshotBlockHeight) {
+    if (snapshotBlockHeight > 0) {
+        return `
+        (define-private (get-voting-power-by-ft-holdings)
+            (at-block (unwrap-panic (get-block-info? id-header-hash u${snapshotBlockHeight}))
+                (let
+                    (
+                        (ft-balance (unwrap-panic (contract-call? '${strategyContractName} get-balance tx-sender)))
+                        (ft-decimals (unwrap-panic (contract-call? '${strategyContractName} get-decimals)))
+                    )
+
+                    (if (> ft-balance u0)
+                        (if (> ft-decimals u0)
+                            (/ ft-balance (pow u10 ft-decimals))
+                            ft-balance
+                        )
+                        ft-balance
+                    )
+                )
+            )
+        )`;
+    }
+
     return `
     (define-private (get-voting-power-by-ft-holdings)
         (let

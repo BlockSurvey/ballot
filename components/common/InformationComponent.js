@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Table } from "react-bootstrap";
 import { Constants } from "../../common/constants";
-import { convertToDisplayDateFormat, formStacksExplorerUrl, formatUtcDateTime } from "../../services/utils";
+import { calculateDateByBlockHeight, convertToDisplayDateFormat, formStacksExplorerUrl, formatUtcDateTime } from "../../services/utils";
 
 
 export default function InformationComponent(props) {
     // Variables
-    const { pollObject, resultsByOption } = props;
+    const { pollObject, resultsByOption, currentBlockHeight } = props;
     const [votingSystemInfo, setVotingSystemInfo] = useState();
 
     // Function
@@ -104,16 +104,32 @@ export default function InformationComponent(props) {
                                 Voting System <span style={{ float: "right", fontWeight: "bold", textTransform: "capitalize" }}>{votingSystemInfo?.name}</span>
                             </div>
                             <div>
-                                Start Date <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.startAtDateUTC ? (formatUtcDateTime(pollObject?.startAtDateUTC) + " UTC") : convertToDisplayDateFormat(pollObject?.startAtDate)}</span>
+                                Start Date
+                                <span style={{ float: "right", fontWeight: "bold" }}>
+                                    {pollObject?.startAtDateUTC ? (formatUtcDateTime(pollObject?.startAtDateUTC) + " UTC") : convertToDisplayDateFormat(pollObject?.startAtDate)}
+                                </span>
                             </div>
                             <div>
-                                End Date <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.endAtDateUTC ? (formatUtcDateTime(pollObject?.endAtDateUTC) + " UTC") : convertToDisplayDateFormat(pollObject?.endAtDate)}</span>
+                                End Date
+                                <span style={{ float: "right", fontWeight: "bold" }}>
+                                    {pollObject?.endAtBlock && currentBlockHeight < pollObject?.endAtBlock ?
+                                        <>
+                                            {formatUtcDateTime(calculateDateByBlockHeight(currentBlockHeight, pollObject?.endAtBlock))} UTC
+                                        </> :
+                                        <>
+                                            {pollObject?.endAtDateUTC ? (formatUtcDateTime(pollObject?.endAtDateUTC) + " UTC") : convertToDisplayDateFormat(pollObject?.endAtDate)}
+                                        </>
+                                    }
+                                </span>
                             </div>
                             <div>
                                 Start Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.startAtBlock}</span>
                             </div>
                             <div>
                                 End Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.endAtBlock}</span>
+                            </div>
+                            <div>
+                                Current Block <span style={{ float: "right", fontWeight: "bold" }}>{currentBlockHeight}</span>
                             </div>
                             {pollObject?.contractAddress &&
                                 <div>

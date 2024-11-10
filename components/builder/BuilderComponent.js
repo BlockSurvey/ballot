@@ -39,41 +39,44 @@ export default function BuilderComponent(props) {
 
     const [currentProgressMessage, setCurrentProgressMessage] = useState();
 
+    // Current block height
+    const [currentBlockHeight, setCurrentBlockHeight] = useState(0);
+
+    // On page load
+    useEffect(() => {
+        getCurrentBlockHeight();
+    }, []);
+
     // Functions
     useEffect(() => {
-        let _pollId, _mode, isCancelled = false;
+        let isCancelled = false;
         if (pathParams && pathParams?.[0]) {
-            _pollId = pathParams[0];
-            setPollId(_pollId);
+            setPollId(pathParams[0]);
         }
 
         if (pathParams && pathParams?.[1]) {
-            _mode = pathParams[1];
-            setMode(_mode);
+            setMode(pathParams[1]);
         } else {
             setMode("");
         }
 
-        // Fetch from Gaia
-        if (_pollId) {
-            if (_pollId === "new") {
-                // Initialize new poll
-                setPollObject(initializeNewPoll());
-            } else if (_mode === "draft") {
-                getFileFromGaia(_pollId + ".json", {}).then(
-                    (response) => {
-                        if (response && !isCancelled) {
-                            setPollObject(JSON.parse(response));
-                        }
-                    },
-                    (error) => {
-                        // File does not exit in gaia
-                        if (error && error.code == "does_not_exist" && !isCancelled) {
-                            // Initialize new poll
-                            setPollObject(initializeNewPoll());
-                        }
-                    });
-            }
+        // Initialize new poll
+        if (pathParams?.[0] === "new") {
+            setPollObject(initializeNewPoll());
+        } else if (pathParams?.[1] === "draft") {
+            // Fetch from Gaia
+            getFileFromGaia(pathParams[0] + ".json", {}).then(
+                (response) => {
+                    if (response && !isCancelled) {
+                        setPollObject(JSON.parse(response));
+                    }
+                }, (error) => {
+                    // File does not exit in gaia
+                    if (error && error.code == "does_not_exist" && !isCancelled) {
+                        // Initialize new poll
+                        setPollObject(initializeNewPoll());
+                    }
+                });
         }
 
         return () => {
@@ -112,6 +115,12 @@ export default function BuilderComponent(props) {
         }
     }
 
+    const getCurrentBlockHeight = async () => {
+        // Get current block height
+        const currentBlock = await getRecentBlock();
+        setCurrentBlockHeight(currentBlock?.height || 0);
+    }
+
     const handleChange = e => {
         const { name, value } = e.target;
 
@@ -125,10 +134,12 @@ export default function BuilderComponent(props) {
                 pollObject["strategyTokenName"] = strategyTemplate["strategyTokenName"];
                 pollObject["strategyContractName"] = strategyTemplate["strategyContractName"];
                 pollObject["strategyTokenDecimals"] = strategyTemplate["strategyTokenDecimals"];
+                pollObject["snapshotBlockHeight"] = strategyTemplate["snapshotBlockHeight"];
             } else {
                 pollObject["strategyTokenName"] = "";
                 pollObject["strategyContractName"] = "";
                 pollObject["strategyTokenDecimals"] = "";
+                pollObject["snapshotBlockHeight"] = 0;
             }
         }
 
@@ -136,6 +147,9 @@ export default function BuilderComponent(props) {
         if (!value && pollObject) {
             // Delete key from JSON
             delete pollObject[name];
+        } else if (name == "startAtBlock" || name == "endAtBlock" || name == "snapshotBlockHeight") {
+            // Update the value
+            pollObject[name] = parseInt(value);
         } else {
             // Update the value
             pollObject[name] = value;
@@ -190,8 +204,7 @@ export default function BuilderComponent(props) {
                 if (response) {
                     updatePollIndex(JSON.parse(response));
                 }
-            },
-            (error) => {
+            }, (error) => {
                 // File does not exit in gaia
                 if (error && error.code == "does_not_exist") {
                     // Initialize new
@@ -272,14 +285,15 @@ export default function BuilderComponent(props) {
             }
         }
 
-        // Check for start and end date
-        if (!pollObject?.startAtDate || !pollObject?.endAtDate) {
-            return "Please select poll start and end date."
-        } else if (new Date() > new Date(pollObject?.startAtDate)) {
-            return "Start date should be a future date."
-        } else if (new Date() > new Date(pollObject?.endAtDate) ||
-            new Date(pollObject?.startAtDate) > new Date(pollObject?.endAtDate)) {
-            return "End date should be greater than start date."
+        // Check for start and end block
+        if (!pollObject?.startAtBlock || !pollObject?.endAtBlock) {
+            return "Please enter start and end block height."
+        } else if (pollObject?.startAtBlock < currentBlockHeight) {
+            return "Start block should be greater than current block height."
+        } else if (pollObject?.startAtBlock > pollObject?.endAtBlock) {
+            return "End block should be greater than start block height."
+        } else if (pollObject?.endAtBlock <= pollObject?.startAtBlock) {
+            return "End block should be greater than start block height."
         }
 
         // Check for voting strategy template
@@ -295,6 +309,14 @@ export default function BuilderComponent(props) {
             if (pollObject?.votingStrategyFlag && pollObject?.strategyTokenType == "ft" &&
                 (!pollObject?.strategyTokenDecimals || !Number.isInteger(parseInt(pollObject?.strategyTokenDecimals)))) {
                 return "Please enter positive integer value for strategy decimals"
+            }
+
+            // Fungible token
+            if (pollObject?.votingStrategyFlag && pollObject?.strategyTokenType == "ft") {
+                // Check for snapshotBlockHeight
+                if ((!pollObject?.snapshotBlockHeight || !Number.isInteger(parseInt(pollObject?.snapshotBlockHeight))) || pollObject?.snapshotBlockHeight <= 0) {
+                    return "Please enter positive integer value for snapshot block height"
+                }
             }
         } catch (e) {
             return "Please enter positive integer value for strategy decimals"
@@ -314,6 +336,18 @@ export default function BuilderComponent(props) {
         }
 
         return 0;
+    }
+
+    const calculateDate = (blockHeight, currentBlockHeight) => {
+        if (blockHeight && currentBlockHeight && blockHeight > 0 && currentBlockHeight > 0 &&
+            blockHeight > currentBlockHeight) {
+            const diff = blockHeight - currentBlockHeight;
+            const minutes = diff * 10;
+
+            return new Date(new Date().getTime() + (minutes * 60 * 1000));
+        }
+
+        return new Date();
     }
 
     const publishPoll = async () => {
@@ -336,15 +370,12 @@ export default function BuilderComponent(props) {
         // Show message
         setCurrentProgressMessage("Publishing contract ...");
 
-        // Get current Block
-        const currentBlock = await getRecentBlock();
-
-        // Calculate block time
-        if (pollObject?.startAtDate) {
-            pollObject['startAtBlock'] = calculateBlockTime(new Date(pollObject?.startAtDate).getTime(), currentBlock?.height);
+        // Calculate stand and end time based on block height
+        if (pollObject?.startAtBlock) {
+            pollObject['startAtDate'] = calculateDate(pollObject?.startAtBlock, currentBlockHeight);
         }
-        if (pollObject?.endAtDate) {
-            pollObject['endAtBlock'] = calculateBlockTime(new Date(pollObject?.endAtDate).getTime(), currentBlock?.height);
+        if (pollObject?.endAtBlock) {
+            pollObject['endAtDate'] = calculateDate(pollObject?.endAtBlock, currentBlockHeight);
         }
 
         // Convert local date to ISO date
@@ -520,25 +551,29 @@ export default function BuilderComponent(props) {
 
                                 {/* Voting Period */}
                                 <Form.Group className="mb-3">
-                                    <Form.Label className='ballot_labels'>Voting period</Form.Label>
+                                    <Form.Label className='ballot_labels'>
+                                        Voting period
+                                    </Form.Label>
+
+                                    {/* By Block Height */}
                                     <div style={{ display: "flex", flexWrap: "wrap", columnGap: "20px" }}>
-                                        <Form.Group className="mb-3">
-                                            <Form.Label style={{ width: "50px" }} className='ballot_labels'>Start *</Form.Label>
-                                            <Form.Control type="datetime-local" name="startAtDate" value={pollObject.startAtDate} style={{ width: "250px" }}
-                                                min={new Date().toISOString().slice(0, 16)}
+                                        <Form.Group>
+                                            <Form.Label style={{ width: "150px" }} className='ballot_labels'>Start block height *</Form.Label>
+                                            <Form.Control type="number" name="startAtBlock" value={pollObject.startAtBlock} style={{ width: "250px" }}
                                                 onChange={handleChange} className="ballot_input" />
                                         </Form.Group>
 
-                                        <Form.Group className="mb-3">
-                                            <Form.Label style={{ width: "50px" }} className='ballot_labels'>End *</Form.Label>
-                                            <Form.Control type="datetime-local" name="endAtDate" value={pollObject.endAtDate} style={{ width: "250px" }}
-                                                onChange={handleChange} disabled={!pollObject?.startAtDate} min={pollObject?.startAtDate} className="ballot_input" />
+                                        <Form.Group>
+                                            <Form.Label style={{ width: "150px" }} className='ballot_labels'>End block height *</Form.Label>
+                                            <Form.Control type="number" name="endAtBlock" value={pollObject.endAtBlock} style={{ width: "250px" }}
+                                                onChange={handleChange} className="ballot_input" />
                                         </Form.Group>
-
-                                        <small className="form-text text-muted" style={{ fontSize: "12px" }}>
-                                            The start and End date with time are stored in ISO date format(2022-10-21T17:19). It will be converted to a local date format for displaying.
-                                        </small>
                                     </div>
+
+                                    <small className="form-text text-muted" style={{ fontSize: "12px" }}>
+                                        {/* The start and End date with time are stored in ISO date format(2022-10-21T17:19). It will be converted to a local date format for displaying. */}
+                                        Current Block Height: <span style={{ fontWeight: 'bold' }}>{currentBlockHeight}</span>
+                                    </small>
                                 </Form.Group>
 
                                 {/* Voting Strategy */}
@@ -621,6 +656,18 @@ export default function BuilderComponent(props) {
                                                 }
                                             </>
                                         }
+
+                                        {/* Fungible Token - Snapshot block height */}
+                                        {pollObject?.strategyTokenType == "ft" &&
+                                            <>
+                                                <Form.Group className="mb-3">
+                                                    <Form.Label className='ballot_labels'>Snapshot block height</Form.Label>
+                                                    <Form.Control type="number" name="snapshotBlockHeight" value={pollObject.snapshotBlockHeight}
+                                                        onChange={handleChange}
+                                                        placeholder="0" className="ballot_input" min="0" />
+                                                </Form.Group>
+                                            </>
+                                        }
                                     </>
                                 }
                             </Form>
@@ -651,7 +698,7 @@ export default function BuilderComponent(props) {
                                     {/* Error Message */}
                                     {errorMessage &&
                                         <div style={{ marginTop: "10px" }}>
-                                            <span style={{ fontSize: "14px" }}>{errorMessage}</span>
+                                            <span style={{ fontSize: "14px", color: 'red' }}>{errorMessage}</span>
                                         </div>
                                     }
                                 </div>

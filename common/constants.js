@@ -146,5 +146,9 @@ export const Constants = {
       "name": "Weighted Voting",
       "link": "https://docs.ballot.gg/ballot.gg/voting-system/weighted-voting"
     }
-  }
+  },
+
+  // Ballot.gg wallet address for donations
+  MAINNET_DONATION_ADDRESS: "SP1FQ3G3MYSXW68CWPY4GW342T3Y9HQCCXXCKENPH",
+  TESTNET_DONATION_ADDRESS: "ST2FYE64JK2NMRS1640FE9SKJS37CYYJ3B1EHB6AR",
 };

@@ -9,10 +9,11 @@ import { DashboardNavBarComponent } from "../components/common/DashboardNavBarCo
 import PollComponent from "../components/poll/PollComponent";
 import { getIndividualResultByStartAndEndPosition } from "../components/poll/PollService";
 import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../services/auth";
+import { getRecentBlock } from "../services/utils";
 
 export default function Poll(props) {
     // Variables
-    const { pollObject, pollId, gaiaAddress } = props;
+    const { pollObject, pollId, gaiaAddress, currentBlockHeight } = props;
 
     // Contract transaction status
     const [txStatus, setTxStatus] = useState();
@@ -229,7 +230,8 @@ export default function Poll(props) {
                 // Fetch STX holdings
                 getSTXHolding();
             } else if (pollObject?.strategyContractName && pollObject?.strategyTokenName) {
-                const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/balances`);
+                const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/balances` +
+                    (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : ""));
                 const responseObject = await response.json();
 
                 if (responseObject?.fungible_tokens && responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName]) {
@@ -260,7 +262,8 @@ export default function Poll(props) {
     }
 
     const getSTXHolding = async () => {
-        const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/stx`);
+        const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/stx` +
+            (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : ""));
         const responseObject = await response.json();
 
         if (responseObject?.balance !== "0") {
@@ -411,7 +414,8 @@ export default function Poll(props) {
                             dns={dns} alreadyVoted={alreadyVoted} noHoldingToken={noHoldingToken}
                             holdingTokenIdsArray={holdingTokenIdsArray}
                             votingPower={votingPower} publicUrl={publicUrl} txStatus={txStatus}
-                            noOfResultsLoaded={noOfResultsLoaded} setNoOfResultsLoaded={setNoOfResultsLoaded} />
+                            noOfResultsLoaded={noOfResultsLoaded} setNoOfResultsLoaded={setNoOfResultsLoaded}
+                            currentBlockHeight={currentBlockHeight} />
                     </Col>
                 </Row>
             </Container>
@@ -443,12 +447,17 @@ export async function getServerSideProps(context) {
         pollObject = await response.json();
     }
 
+    // Get current block height
+    const currentBlock = await getRecentBlock();
+    const currentBlockHeight = currentBlock?.height || 0;
+
     // Pass data to the page via props
     return {
         props: {
             pollObject,
             pollId,
-            gaiaAddress
+            gaiaAddress,
+            currentBlockHeight
         },
     };
 }
