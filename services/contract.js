@@ -13,7 +13,7 @@ export async function deployContract(pollObject, contractName, callbackFunction)
     // Add an optional post condition
     // See below for details on constructing post conditions
     const postConditionAddress = Constants.STACKS_MAINNET_FLAG ? Constants.MAINNET_DONATION_ADDRESS : Constants.TESTNET_DONATION_ADDRESS;
-    const postConditionCode = FungibleConditionCode.GreaterEqual;
+    const postConditionCode = FungibleConditionCode.Equal;
     const postConditionAmount = 5000000n;
     const postConditions = [
         makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
@@ -24,7 +24,7 @@ export async function deployContract(pollObject, contractName, callbackFunction)
         contractName: contractName,
         codeBody: contract,
         network: getNetworkType(),
-        anchorMode: AnchorMode.Any,
+        // anchorMode: AnchorMode.Any,
         appDetails: {
             name: "Ballot",
             icon: window.location.origin + "/images/logo/ballot.png"
