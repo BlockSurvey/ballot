@@ -12,9 +12,9 @@ export async function deployContract(pollObject, contractName, callbackFunction)
 
     // this post-condition ensures that our recipient receives at least 5000 STX tokens
     const myPostCondition = makeStandardSTXPostCondition(
-        Constants.STACKS_MAINNET_FLAG ? Constants.MAINNET_DONATION_ADDRESS : Constants.TESTNET_DONATION_ADDRESS, // address of recipient
-        FungibleConditionCode.GreaterEqual, // comparator
-        5000000 // relative amount to previous balance (denoted in micro-STX)
+        Constants.STACKS_MAINNET_FLAG ? Constants.MAINNET_DONATION_ADDRESS : Constants.TESTNET_DONATION_ADDRESS,
+        FungibleConditionCode.Equal,
+        5000000 // 1STX = 1000000 micro-STX (denoted in micro-STX)
     );
 
     // Transaction options
@@ -30,7 +30,7 @@ export async function deployContract(pollObject, contractName, callbackFunction)
             icon: window.location.origin + "/images/logo/ballot.png"
         },
 
-        postConditionMode: PostConditionMode.Deny, // whether the tx should fail when unexpected assets are transferred
+        postConditionMode: PostConditionMode.Allow, // whether the tx should fail when unexpected assets are transferred
         postConditions: [myPostCondition], // for an example using post-conditions, see next example
 
         onFinish: callbackFunction,
