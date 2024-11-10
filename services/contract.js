@@ -10,15 +10,6 @@ const cancelCallbackFunction = (data) => {
 export async function deployContract(pollObject, contractName, callbackFunction) {
     const contract = getContract(pollObject);
 
-    // Add an optional post condition
-    // See below for details on constructing post conditions
-    const postConditionAddress = Constants.STACKS_MAINNET_FLAG ? Constants.MAINNET_DONATION_ADDRESS : Constants.TESTNET_DONATION_ADDRESS;
-    const postConditionCode = FungibleConditionCode.Equal;
-    const postConditionAmount = 5000000n;
-    const postConditions = [
-        makeStandardSTXPostCondition(postConditionAddress, postConditionCode, postConditionAmount),
-    ];
-
     // Transaction options
     const txOptions = {
         contractName: contractName,
@@ -29,8 +20,6 @@ export async function deployContract(pollObject, contractName, callbackFunction)
             name: "Ballot",
             icon: window.location.origin + "/images/logo/ballot.png"
         },
-        postConditions: postConditions,
-        PostConditionMode: PostConditionMode.Allow,
         onFinish: callbackFunction,
         onCancel: cancelCallbackFunction
     };
