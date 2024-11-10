@@ -102,8 +102,8 @@ export default function BuilderComponent(props) {
             votingStrategyFlag: true,
             strategyTokenType: "nft",
             strategyContractName: "",
-            startAtBlock: 0,
-            endAtBlock: 0,
+            // startAtBlock: 0,
+            // endAtBlock: 0,
             startAtDate: 0,
             endAtDate: 0,
 
@@ -289,7 +289,7 @@ export default function BuilderComponent(props) {
         if (!pollObject?.startAtBlock || !pollObject?.endAtBlock) {
             return "Please enter start and end block height."
         } else if (pollObject?.startAtBlock < currentBlockHeight) {
-            return "Start block should be greater than current block height."
+            return `Start block should be greater than or equal to current block height (${currentBlockHeight}).`
         } else if (pollObject?.startAtBlock > pollObject?.endAtBlock) {
             return "End block should be greater than start block height."
         } else if (pollObject?.endAtBlock <= pollObject?.startAtBlock) {
@@ -560,12 +560,14 @@ export default function BuilderComponent(props) {
                                         <Form.Group>
                                             <Form.Label style={{ width: "150px" }} className='ballot_labels'>Start block height *</Form.Label>
                                             <Form.Control type="number" name="startAtBlock" value={pollObject.startAtBlock} style={{ width: "250px" }}
+                                                placeholder="0"
                                                 onChange={handleChange} className="ballot_input" />
                                         </Form.Group>
 
                                         <Form.Group>
                                             <Form.Label style={{ width: "150px" }} className='ballot_labels'>End block height *</Form.Label>
                                             <Form.Control type="number" name="endAtBlock" value={pollObject.endAtBlock} style={{ width: "250px" }}
+                                                placeholder="0"
                                                 onChange={handleChange} className="ballot_input" />
                                         </Form.Group>
                                     </div>
@@ -677,6 +679,21 @@ export default function BuilderComponent(props) {
                         <div className={styles.builder_right}>
                             <div style={{ position: "sticky", top: "119px" }}>
                                 <div className={styles.builder_right_section}>
+                                    {/* Statement: I support ballot.gg with a 5 STX contribution. */}
+                                    <div style={{ fontSize: "14px", marginBottom: "6px" }}>
+                                        {/* Checkbox with ticked */}
+                                        <Form.Group>
+                                            <Form.Check
+                                                inline
+                                                type="checkbox"
+                                                name="votingStrategyFlag"
+                                                label="I support ballot.gg with a 5 STX contribution."
+                                                checked={true}
+                                            />
+                                        </Form.Group>
+
+                                    </div>
+
                                     {
                                         pollId !== "new" &&
                                         <Button style={{ width: "100%", marginBottom: "10px" }} className="action_secondary_btn"
