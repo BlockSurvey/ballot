@@ -1,5 +1,5 @@
 import { openContractCall, openContractDeploy } from "@stacks/connect";
-import { AnchorMode, bufferCV, FungibleConditionCode, listCV, makeStandardSTXPostCondition, stringAsciiCV, uintCV } from "@stacks/transactions";
+import { AnchorMode, bufferCV, FungibleConditionCode, listCV, makeStandardSTXPostCondition, PostConditionMode, stringAsciiCV, uintCV } from "@stacks/transactions";
 import { Constants } from "../common/constants";
 import { getNetworkType } from "../services/auth";
 
@@ -24,12 +24,13 @@ export async function deployContract(pollObject, contractName, callbackFunction)
         contractName: contractName,
         codeBody: contract,
         network: getNetworkType(),
-        // anchorMode: AnchorMode.Any,
+        anchorMode: AnchorMode.Any,
         appDetails: {
             name: "Ballot",
             icon: window.location.origin + "/images/logo/ballot.png"
         },
         postConditions: postConditions,
+        PostConditionMode: PostConditionMode.Allow,
         onFinish: callbackFunction,
         onCancel: cancelCallbackFunction
     };
