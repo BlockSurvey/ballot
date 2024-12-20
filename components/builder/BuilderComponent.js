@@ -118,7 +118,7 @@ export default function BuilderComponent(props) {
     const getCurrentBlockHeight = async () => {
         // Get current block height
         const currentBlock = await getRecentBlock();
-        setCurrentBlockHeight(currentBlock?.height || 0);
+        setCurrentBlockHeight(currentBlock?.tenure_height || 0);
     }
 
     const handleChange = e => {
