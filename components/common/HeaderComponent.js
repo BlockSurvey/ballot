@@ -56,7 +56,7 @@ export default function HeaderComponent(props) {
                             <div>
                                 <span style={{ color: "rgba(0,0,0, 0.7)" }}>Created by</span> {' '}
                                 {pollObject?.userStxAddress &&
-                                    <a className="ballot_link" target="_blank" rel="noreferrer" href={formStacksExplorerUrl(pollObject?.userStxAddress)}>
+                                    <a className="ballot_link" target="_blank" rel="noreferrer" href={formStacksExplorerUrl(pollObject?.userStxAddress, 'address')}>
                                         <span>
                                             {pollObject?.userStxAddress?.substring(0, 10)} { }
                                             <svg
