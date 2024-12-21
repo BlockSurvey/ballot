@@ -11,9 +11,11 @@ export async function getRecentBlock() {
     return responseObject?.results?.[0];
 }
 
-export function formStacksExplorerUrl(txId) {
+export function formStacksExplorerUrl(txId, type = 'txid') {
     return (
-        "https://explorer.stacks.co/txid/" +
+        "https://explorer.stxer.xyz/" +
+        type +
+        "/" +
         txId +
         "?chain=" +
         (Constants.STACKS_MAINNET_FLAG ? "mainnet" : "testnet")

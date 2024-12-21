@@ -123,13 +123,13 @@ export default function InformationComponent(props) {
                                 </span>
                             </div>
                             <div>
-                                Start Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.startAtBlock}</span>
+                                Start Tenure Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.startAtBlock}</span>
                             </div>
                             <div>
-                                End Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.endAtBlock}</span>
+                                End Tenure Block <span style={{ float: "right", fontWeight: "bold" }}>{pollObject?.endAtBlock}</span>
                             </div>
                             <div>
-                                Current Block <span style={{ float: "right", fontWeight: "bold" }}>{currentBlockHeight}</span>
+                                Current Tenure Block <span style={{ float: "right", fontWeight: "bold" }}>{currentBlockHeight}</span>
                             </div>
                             {pollObject?.contractAddress &&
                                 <div>
