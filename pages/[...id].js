@@ -449,7 +449,7 @@ export async function getServerSideProps(context) {
 
     // Get current block height
     const currentBlock = await getRecentBlock();
-    const currentBlockHeight = currentBlock?.height || 0;
+    const currentBlockHeight = currentBlock?.tenure_height || 0;
 
     // Pass data to the page via props
     return {

@@ -118,7 +118,7 @@ export default function BuilderComponent(props) {
     const getCurrentBlockHeight = async () => {
         // Get current block height
         const currentBlock = await getRecentBlock();
-        setCurrentBlockHeight(currentBlock?.height || 0);
+        setCurrentBlockHeight(currentBlock?.tenure_height || 0);
     }
 
     const handleChange = e => {
@@ -289,11 +289,11 @@ export default function BuilderComponent(props) {
         if (!pollObject?.startAtBlock || !pollObject?.endAtBlock) {
             return "Please enter start and end block height."
         } else if (pollObject?.startAtBlock < currentBlockHeight) {
-            return `Start block should be greater than or equal to current block height (${currentBlockHeight}).`
+            return `Start tenure block should be greater than or equal to current tenure block height (${currentBlockHeight}).`
         } else if (pollObject?.startAtBlock > pollObject?.endAtBlock) {
-            return "End block should be greater than start block height."
+            return "End tenure block should be greater than start tenure block height."
         } else if (pollObject?.endAtBlock <= pollObject?.startAtBlock) {
-            return "End block should be greater than start block height."
+            return "End tenure block should be greater than start tenure block height."
         }
 
         // Check for voting strategy template
@@ -315,7 +315,7 @@ export default function BuilderComponent(props) {
             if (pollObject?.votingStrategyFlag && pollObject?.strategyTokenType == "ft") {
                 // Check for snapshotBlockHeight
                 if ((!pollObject?.snapshotBlockHeight || !Number.isInteger(parseInt(pollObject?.snapshotBlockHeight))) || pollObject?.snapshotBlockHeight <= 0) {
-                    return "Please enter positive integer value for snapshot block height"
+                    return "Please enter positive integer value for snapshot stacks height"
                 }
             }
         } catch (e) {
@@ -558,14 +558,14 @@ export default function BuilderComponent(props) {
                                     {/* By Block Height */}
                                     <div style={{ display: "flex", flexWrap: "wrap", columnGap: "20px" }}>
                                         <Form.Group>
-                                            <Form.Label style={{ width: "150px" }} className='ballot_labels'>Start block height *</Form.Label>
+                                            <Form.Label style={{ width: "150px" }} className='ballot_labels'>Start tenure height *</Form.Label>
                                             <Form.Control type="number" name="startAtBlock" value={pollObject.startAtBlock} style={{ width: "250px" }}
                                                 placeholder="0"
                                                 onChange={handleChange} className="ballot_input" />
                                         </Form.Group>
 
                                         <Form.Group>
-                                            <Form.Label style={{ width: "150px" }} className='ballot_labels'>End block height *</Form.Label>
+                                            <Form.Label style={{ width: "150px" }} className='ballot_labels'>End tenure height *</Form.Label>
                                             <Form.Control type="number" name="endAtBlock" value={pollObject.endAtBlock} style={{ width: "250px" }}
                                                 placeholder="0"
                                                 onChange={handleChange} className="ballot_input" />
@@ -659,11 +659,11 @@ export default function BuilderComponent(props) {
                                             </>
                                         }
 
-                                        {/* Fungible Token - Snapshot block height */}
+                                        {/* Fungible Token - Snapshot stacks height */}
                                         {pollObject?.strategyTokenType == "ft" &&
                                             <>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label className='ballot_labels'>Snapshot block height</Form.Label>
+                                                    <Form.Label className='ballot_labels'>Snapshot stacks height</Form.Label>
                                                     <Form.Control type="number" name="snapshotBlockHeight" value={pollObject.snapshotBlockHeight}
                                                         onChange={handleChange}
                                                         placeholder="0" className="ballot_input" min="0" />
