@@ -138,12 +138,13 @@ export function putFileToGaia(fileName, file, options = {}) {
 
 /**
  * Get file from gaia storage
- *
- * @param {*} fileName
- * @param {*} options
- * @returns
  */
 export function getFileFromGaia(fileName, options) {
+  // Update the fileName to make it unique using timestamp query param
+  if (fileName) {
+    fileName = `${fileName}?timestamp=${Date.now()}`;
+  }
+
   return storage.getFile(fileName, options);
 }
 

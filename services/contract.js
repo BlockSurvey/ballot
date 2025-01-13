@@ -23,7 +23,7 @@ export async function deployContract(pollObject, contractName, callbackFunction)
             icon: window.location.origin + "/images/logo/ballot.png"
         },
 
-        postConditionMode: PostConditionMode.Allow, // whether the tx should fail when unexpected assets are transferred
+        postConditionMode: PostConditionMode.Deny, // whether the tx should fail when unexpected assets are transferred
         postConditions: [], // for an example using post-conditions, see next example
 
         onFinish: callbackFunction,
@@ -344,12 +344,7 @@ function getRawContract() {
     (var-set options (list &{optionIds}))
     (var-set start u&{startAtBlock})
     (var-set end u&{endAtBlock})
-    &{optionResults}
-    
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    ;; Supporting Ballot.gg
-    ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    (stx-transfer? u5000000 tx-sender '${Constants.STACKS_MAINNET_FLAG ? Constants.MAINNET_DONATION_ADDRESS : Constants.TESTNET_DONATION_ADDRESS})`;
+    &{optionResults}`;
 }
 
 function getStrategyFunctionForBtcHolders() {

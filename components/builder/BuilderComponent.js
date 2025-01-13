@@ -287,7 +287,7 @@ export default function BuilderComponent(props) {
 
         // Check for start and end block
         if (!pollObject?.startAtBlock || !pollObject?.endAtBlock) {
-            return "Please enter start and end block height."
+            return "Please enter start and end tenure height."
         } else if (pollObject?.startAtBlock < currentBlockHeight) {
             return `Start tenure block should be greater than or equal to current tenure block height (${currentBlockHeight}).`
         } else if (pollObject?.startAtBlock > pollObject?.endAtBlock) {
@@ -663,7 +663,7 @@ export default function BuilderComponent(props) {
                                         {pollObject?.strategyTokenType == "ft" &&
                                             <>
                                                 <Form.Group className="mb-3">
-                                                    <Form.Label className='ballot_labels'>Snapshot stacks height</Form.Label>
+                                                    <Form.Label className='ballot_labels'>Snapshot stacks height *</Form.Label>
                                                     <Form.Control type="number" name="snapshotBlockHeight" value={pollObject.snapshotBlockHeight}
                                                         onChange={handleChange}
                                                         placeholder="0" className="ballot_input" min="0" />
@@ -680,8 +680,7 @@ export default function BuilderComponent(props) {
                             <div style={{ position: "sticky", top: "119px" }}>
                                 <div className={styles.builder_right_section}>
                                     {/* Statement: I support ballot.gg with a 5 STX contribution. */}
-                                    <div style={{ fontSize: "14px", marginBottom: "6px" }}>
-                                        {/* Checkbox with ticked */}
+                                    {/* <div style={{ fontSize: "14px", marginBottom: "6px" }}>
                                         <Form.Group>
                                             <Form.Check
                                                 inline
@@ -691,8 +690,7 @@ export default function BuilderComponent(props) {
                                                 checked={true}
                                             />
                                         </Form.Group>
-
-                                    </div>
+                                    </div> */}
 
                                     {
                                         pollId !== "new" &&
