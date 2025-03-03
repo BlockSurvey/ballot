@@ -292,8 +292,8 @@ function getRawContract() {
             )
             ;; Validation
             (asserts! (and (> (len vote) u0) (is-eq (len vote) (len volume-by-voting-power)) (validate-vote-volume volume-by-voting-power)) ERR-NOT-VOTED)
-            (asserts! (>= block-height (var-get start)) ERR-NOT-STARTED)
-            (asserts! (<= block-height (var-get end)) ERR-ENDED)        
+            (asserts! (>= tenure-height (var-get start)) ERR-NOT-STARTED)
+            (asserts! (<= tenure-height (var-get end)) ERR-ENDED)        
             (asserts! (not (have-i-voted)) ERR-ALREADY-VOTED)
             &{votingPowerValidation}
             
