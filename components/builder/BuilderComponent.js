@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
-import { getFileFromGaia, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
+import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
 import { deployContract } from "../../services/contract";
 import { getRecentBlock, isValidUtf8 } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
@@ -241,9 +241,9 @@ export default function BuilderComponent(props) {
                 "ipfsLocation": pollObject?.ipfsLocation
             };
 
-            putFileToGaia("pollIndex.json", JSON.stringify(currentPollIndexObj), {}).then(response => {
+            putFileToGaia("pollIndex.json", JSON.stringify(currentPollIndexObj), {}).then(async (response) => {
                 if (pollObject?.ipfsLocation) {
-                    const gaiaAddress = getUserData()?.gaiaHubConfig?.address;
+                    const gaiaAddress = await getGaiaAddressFromPublicKey();
                     Router.replace("/" + pollObject?.id + "/" + gaiaAddress);
                 } else if (pollId === "new") {
                     Router.replace("/builder/" + pollObject.id + "/draft");

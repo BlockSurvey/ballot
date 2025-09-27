@@ -9,9 +9,11 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.896.0",
+    "@stacks/common": "^6.16.0",
     "@stacks/connect": "^7.8.0",
+    "@stacks/encryption": "^6.16.1",
     "@stacks/network": "^6.17.0",
-    "@stacks/storage": "^6.17.0",
     "@stacks/transactions": "^6.17.0",
     "bootstrap": "^5.2.0",
     "lodash": "^4.17.21",

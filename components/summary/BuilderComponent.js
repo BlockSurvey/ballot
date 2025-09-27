@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { Constants } from "../../common/constants";
-import { getFileFromGaia, getMyStxAddress, getStacksAPIPrefix, getUserData, putFileToGaia, userSession } from "../../services/auth";
+import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getStacksAPIPrefix, getUserData, putFileToGaia, userSession } from "../../services/auth";
 import { convertToDisplayDateFormat } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import dashboardStyles from "../../styles/Dashboard.module.css";
@@ -29,7 +29,7 @@ export default function SummaryBuilderComponent(props) {
     const [urlSuffix, setUrlSuffix] = useState();
 
     // Functions
-    useEffect(() => {
+    useEffect(async () => {
         let isCancelled = false;
 
         // Get Summary object
@@ -49,7 +49,7 @@ export default function SummaryBuilderComponent(props) {
 
         // Get gaia address
         if (userSession && userSession.isUserSignedIn()) {
-            setGaiaAddress(getUserData()?.gaiaHubConfig?.address);
+            setGaiaAddress(await getGaiaAddressFromPublicKey());
         }
 
         // Get .btc address
@@ -69,7 +69,7 @@ export default function SummaryBuilderComponent(props) {
 
         // Testnet code
         if (Constants.STACKS_MAINNET_FLAG == false) {
-            setUrlSuffix(getUserData()?.gaiaHubConfig?.address);
+            setUrlSuffix(await getGaiaAddressFromPublicKey());
             return;
         }
 
@@ -85,10 +85,10 @@ export default function SummaryBuilderComponent(props) {
 
                 setUrlSuffix(_dns);
             } else {
-                setUrlSuffix(getUserData()?.gaiaHubConfig?.address);
+                setUrlSuffix(await getGaiaAddressFromPublicKey());
             }
         } else {
-            setUrlSuffix(getUserData()?.gaiaHubConfig?.address);
+            setUrlSuffix(await getGaiaAddressFromPublicKey());
         }
     };
 
@@ -140,8 +140,6 @@ export default function SummaryBuilderComponent(props) {
     }
 
     function getEachRow(pollIndexObject) {
-        const gaiaAddress = getUserData()?.gaiaHubConfig?.address;
-
         return (
             <div>
                 {/* Title */}

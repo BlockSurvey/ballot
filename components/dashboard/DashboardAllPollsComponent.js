@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
-import { deleteFileToGaia, getFileFromGaia, getUserData, putFileToGaia } from "../../services/auth.js";
+import { deleteFileToGaia, getFileFromGaia, getGaiaAddressFromPublicKey, putFileToGaia } from "../../services/auth.js";
 import { convertToDisplayDateFormat } from "../../services/utils";
 import styles from "../../styles/Dashboard.module.css";
 
@@ -9,9 +9,12 @@ export default function DashboardAllPollsComponent() {
     // Variables
     const [allPolls, setAllPolls] = useState();
     const [isDeleting, setIsDeleting] = useState(false);
+    const [gaiaAddress, setGaiaAddress] = useState();
 
     // Functions
     useEffect(() => {
+        getGaiaAddress();
+
         getFileFromGaia("pollIndex.json", {}).then(
             (response) => {
                 if (response) {
@@ -29,9 +32,12 @@ export default function DashboardAllPollsComponent() {
             });
     }, []);
 
-    function getEachRow(pollIndexObject) {
-        const gaiaAddress = getUserData()?.gaiaHubConfig?.address;
+    async function getGaiaAddress() {
+        const _gaiaAddress = await getGaiaAddressFromPublicKey();
+        setGaiaAddress(_gaiaAddress);
+    }
 
+    function getEachRow(pollIndexObject) {
         function deletePoll(deletablePollIndexObject) {
             const index = allPolls?.list?.findIndex(pollId => pollId === deletablePollIndexObject.id);
 
@@ -105,7 +111,7 @@ export default function DashboardAllPollsComponent() {
             <div className={styles.dashboard_container}>
                 {/* List of all polls */}
                 <div style={{ padding: "10px 0 100px 0", maxWidth: "700px", width: "100%" }}>
-                    {allPolls?.list && allPolls?.ref ?
+                    {gaiaAddress && allPolls?.list && allPolls?.ref ?
                         allPolls?.list?.length > 0 ?
                             <>
                                 {/* Title */}

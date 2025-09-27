@@ -443,6 +443,8 @@ export async function getServerSideProps(context) {
         // Form gaia url            
         const pollGaiaUrl = Constants.GAIA_HUB_PREFIX + gaiaAddress + "/" + pollId + ".json";
 
+        console.log(pollGaiaUrl);
+
         const response = await fetch(pollGaiaUrl);
         pollObject = await response.json();
     }

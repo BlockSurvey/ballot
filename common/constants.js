@@ -2,7 +2,7 @@ export const Constants = {
   // Stacks mainnet network flag
   STACKS_MAINNET_FLAG: process.env.NEXT_PUBLIC_STACKS_MAINNET_FLAG === "false" ? false : true,
 
-  GAIA_HUB_PREFIX: "https://gaia.blockstack.org/hub/",
+  GAIA_HUB_PREFIX: "https://storage.ballot.gg/",
 
   // Stacks API URLs
   STACKS_MAINNET_API_URL: "https://api.mainnet.hiro.so",
