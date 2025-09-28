@@ -3,7 +3,6 @@ import {
 } from "@stacks/transactions";
 import Head from "next/head";
 import { useEffect, useState } from "react";
-import { Col, Container, Row } from "react-bootstrap";
 import { Constants } from "../common/constants";
 import { DashboardNavBarComponent } from "../components/common/DashboardNavBarComponent";
 import PollComponent from "../components/poll/PollComponent";
@@ -400,25 +399,29 @@ export default function Poll(props) {
                 {/* <meta name="twitter:site" content="@ballot_gg" /> */}
             </Head>
 
-            {/* Outer layer */}
-            <Container className="ballot_container">
-                <Row>
-                    <Col md={12}>
-                        {/* Nav bar */}
-                        <DashboardNavBarComponent />
-
-                        {/* Body */}
-                        <PollComponent pollObject={pollObject} optionsMap={optionsMap} resultsByOption={resultsByOption}
-                            resultsByPosition={resultsByPosition} setResultsByPosition={setResultsByPosition}
-                            totalVotes={totalVotes} totalUniqueVotes={totalUniqueVotes}
-                            dns={dns} alreadyVoted={alreadyVoted} noHoldingToken={noHoldingToken}
-                            holdingTokenIdsArray={holdingTokenIdsArray}
-                            votingPower={votingPower} publicUrl={publicUrl} txStatus={txStatus}
-                            noOfResultsLoaded={noOfResultsLoaded} setNoOfResultsLoaded={setNoOfResultsLoaded}
-                            currentBlockHeight={currentBlockHeight} />
-                    </Col>
-                </Row>
-            </Container>
+            {/* Navigation */}
+            <DashboardNavBarComponent />
+            
+            {/* Main Poll Content */}
+            <PollComponent 
+                pollObject={pollObject} 
+                optionsMap={optionsMap} 
+                resultsByOption={resultsByOption}
+                resultsByPosition={resultsByPosition} 
+                setResultsByPosition={setResultsByPosition}
+                totalVotes={totalVotes} 
+                totalUniqueVotes={totalUniqueVotes}
+                dns={dns} 
+                alreadyVoted={alreadyVoted} 
+                noHoldingToken={noHoldingToken}
+                holdingTokenIdsArray={holdingTokenIdsArray}
+                votingPower={votingPower} 
+                publicUrl={publicUrl} 
+                txStatus={txStatus}
+                noOfResultsLoaded={noOfResultsLoaded} 
+                setNoOfResultsLoaded={setNoOfResultsLoaded}
+                currentBlockHeight={currentBlockHeight} 
+            />
         </>
     );
 }
