@@ -1,5 +1,10 @@
 @import url("bootstrap/dist/css/bootstrap.min.css");
 
+/* Global font family */
+body, h1, h2, h3, h4, h5, h6, p, span, div {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 /* Design Tokens */
 :root {
   --color-primary: #000000;
@@ -36,8 +41,15 @@
 }
 
 .btn_big {
-    padding-left: 2rem;
-    padding-right: 2rem;
+    padding: 12px 32px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn_big:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .ballot_link {

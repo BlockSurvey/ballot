@@ -1,0 +1,257 @@
+.hero_visual_container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero_visual_content {
+  position: relative;
+  width: 100%;
+  height: 450px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero_svg {
+  max-width: 100%;
+  height: auto;
+  filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.hero_svg:hover {
+  transform: scale(1.02);
+}
+
+/* Animation classes for SVG elements */
+.network_lines {
+  opacity: 0.6;
+}
+
+.central_ballot {
+  animation: float 4s ease-in-out infinite;
+}
+
+.vote_animation {
+  animation: votePulse 4s ease-in-out infinite;
+}
+
+.voter_node {
+  animation: nodePulse 5s ease-in-out infinite;
+}
+
+.result_node {
+  animation: resultGlow 3s ease-in-out infinite;
+}
+
+.security_badge .pulse {
+  animation: securityPulse 3s ease-in-out infinite;
+}
+
+.token_gate {
+  animation: tokenGlow 4s ease-in-out infinite;
+}
+
+.vote_particles {
+  opacity: 0.8;
+}
+
+.wallet_indicators {
+  animation: walletPulse 6s ease-in-out infinite;
+}
+
+/* Floating stats */
+.floating_stats {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.stat_bubble {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  animation: floatBubble 6s ease-in-out infinite;
+}
+
+.stat_1 {
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.stat_2 {
+  top: 15%;
+  right: 15%;
+  animation-delay: 2s;
+}
+
+.stat_3 {
+  bottom: 25%;
+  left: 15%;
+  animation-delay: 4s;
+}
+
+.stat_icon {
+  font-size: 14px;
+}
+
+.stat_text {
+  white-space: nowrap;
+}
+
+/* Keyframe animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes votePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes nodePulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes resultGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.6));
+  }
+}
+
+@keyframes securityPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes tokenGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.4));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.8));
+    transform: scale(1.03);
+  }
+}
+
+@keyframes floatBubble {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  33% {
+    transform: translateY(-8px) rotate(1deg);
+  }
+  66% {
+    transform: translateY(-4px) rotate(-1deg);
+  }
+}
+
+@keyframes walletPulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .hero_visual_content {
+    height: 350px;
+  }
+  
+  .hero_svg {
+    width: 400px;
+    height: 300px;
+  }
+  
+  .stat_bubble {
+    font-size: 10px;
+    padding: 6px 10px;
+    gap: 4px;
+  }
+  
+  .stat_icon {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero_visual_content {
+    height: 280px;
+  }
+  
+  .hero_svg {
+    width: 350px;
+    height: 250px;
+  }
+  
+  .stat_bubble {
+    font-size: 9px;
+    padding: 4px 8px;
+  }
+  
+  .stat_1, .stat_2, .stat_3 {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin: 4px;
+  }
+  
+  .floating_stats {
+    position: static;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 16px;
+    pointer-events: auto;
+  }
+}

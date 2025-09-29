@@ -120,6 +120,14 @@ export const Constants = {
       answer: `Yes. There are no charges for creating polls in Ballot.`,
     },
     {
+      question: "Which wallets are supported?",
+      answer: `Ballot.gg supports all major Stacks wallets including <a href="https://hiro.so/wallet" target="_blank" rel="noreferrer">Hiro Wallet ↗</a>, <a href="https://xverse.app" target="_blank" rel="noreferrer">Xverse ↗</a>, and <a href="https://asigna.io" target="_blank" rel="noreferrer">Asigna ↗</a>. Connect with your preferred wallet to start creating and participating in polls.`,
+    },
+    {
+      question: "Do I need STX to use Ballot.gg?",
+      answer: `Yes, you'll need a small amount of STX in your wallet to pay for transaction fees when creating polls and casting votes. The platform itself is free to use, but blockchain transactions require gas fees.`,
+    },
+    {
       question: "Who are the developers of Ballot.gg?",
       answer: `We are developers from Team <a href="https://blocksurvey.io?ref=ballot" target="_blank" rel="noreferrer">BlockSurvey ↗</a> , 
       <a href="https://owl.link?ref=ballot" target="_blank" rel="noreferrer">Owl Link ↗</a> , 

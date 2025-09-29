@@ -1,0 +1,109 @@
+.ecosystem_logos {
+  margin-top: 48px;
+}
+
+.trustbar_text {
+  display: block;
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.logo_grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 16px;
+  max-width: 100%;
+}
+
+.logo_item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.logo_item:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.logo_item svg {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.2s ease;
+}
+
+.logo_item:hover svg {
+  transform: scale(1.1);
+}
+
+.logo_item span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .ecosystem_logos {
+    margin-top: 32px;
+  }
+  
+  .logo_grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  
+  .logo_item {
+    padding: 8px 6px;
+    gap: 6px;
+  }
+  
+  .logo_item svg {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .logo_item span {
+    font-size: 10px;
+  }
+  
+  .trustbar_text {
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo_grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  
+  .logo_item {
+    padding: 6px 4px;
+    gap: 4px;
+  }
+  
+  .logo_item svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .logo_item span {
+    font-size: 9px;
+  }
+}
