@@ -24,13 +24,13 @@ const EcosystemLogos = () => {
           <span>Bitcoin</span>
         </div>
 
-        {/* Hiro Wallet Logo */}
+        {/* Leather Wallet Logo */}
         <div className={styles.logo_item}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="20" height="20" rx="4" fill="#5546FF"/>
+            <rect x="2" y="2" width="20" height="20" rx="4" fill="#8B4513"/>
             <path d="M8 7h3v10H8V7zm5 0h3v4h-3V7zm0 6h3v4h-3v-4z" fill="white"/>
           </svg>
-          <span>Hiro</span>
+          <span>Leather</span>
         </div>
 
         {/* ALEX Logo */}

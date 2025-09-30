@@ -117,7 +117,7 @@ const HeroVisual = () => {
             
             {/* Multiple wallet indicators */}
             <g className={styles.wallet_indicators}>
-              {/* Hiro Wallet */}
+              {/* Leather Wallet */}
               <rect x="120" y="155" width="12" height="8" fill="#5546FF" rx="1"/>
               <rect x="121" y="156" width="10" height="6" fill="white" rx="0.5"/>
               
@@ -187,7 +187,7 @@ const HeroVisual = () => {
             <text x="375" y="95" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="600">Bitcoin Secured</text>
           </g>
 
-          {/* Enhanced Token Gating */}
+          {/* Enhanced Token Based */}
           <g className={styles.token_gate}>
             <rect x="50" y="50" width="40" height="40" fill="#8b5cf6" rx="8" filter="url(#shadow)"/>
             <rect x="52" y="52" width="36" height="36" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" rx="7"/>
@@ -205,7 +205,7 @@ const HeroVisual = () => {
               <animate attributeName="opacity" values="0.3;1;0.3" dur="3s" begin="1s" repeatCount="indefinite"/>
             </circle>
             
-            <text x="70" y="110" textAnchor="middle" fill="#8b5cf6" fontSize="11" fontWeight="600">Token Gated</text>
+            <text x="70" y="110" textAnchor="middle" fill="#8b5cf6" fontSize="11" fontWeight="600">Token Based</text>
           </g>
 
           {/* Floating Vote Particles */}
@@ -233,7 +233,7 @@ const HeroVisual = () => {
           </div>
           <div className={styles.stat_bubble + ' ' + styles.stat_2}>
             <div className={styles.stat_icon}>🔐</div>
-            <div className={styles.stat_text}>Token Gated</div>
+            <div className={styles.stat_text}>Token Based</div>
           </div>
           <div className={styles.stat_bubble + ' ' + styles.stat_3}>
             <div className={styles.stat_icon}>⛓️</div>

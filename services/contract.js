@@ -403,7 +403,7 @@ function getStrategyFunctionForStxHolders(snapshotBlockHeight) {
     if (snapshotBlockHeight > 0) {
         return `
         (define-private (get-voting-power-by-stx-holdings)
-            (at-block (unwrap-panic (get-block-info? id-header-hash u${snapshotBlockHeight}))
+            (at-block (unwrap-panic (get-stacks-block-info? id-header-hash u${snapshotBlockHeight}))
                 (let
                     (
                         (stx-balance (stx-get-balance tx-sender))
@@ -435,7 +435,7 @@ function getStrategyFunctionForFT(strategyContractName, snapshotBlockHeight) {
     if (snapshotBlockHeight > 0) {
         return `
         (define-private (get-voting-power-by-ft-holdings)
-            (at-block (unwrap-panic (get-block-info? id-header-hash u${snapshotBlockHeight}))
+            (at-block (unwrap-panic (get-stacks-block-info? id-header-hash u${snapshotBlockHeight}))
                 (let
                     (
                         (ft-balance (unwrap-panic (contract-call? '${strategyContractName} get-balance tx-sender)))

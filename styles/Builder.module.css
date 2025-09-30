@@ -593,7 +593,7 @@
     font-weight: 600;
 }
 
-/* Token Gating */
+/* Token Based */
 .strategy_config {
     padding-top: var(--space-6);
     border-top: 1px solid var(--color-border-light);

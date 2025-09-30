@@ -6,13 +6,13 @@ export default function SummaryBuilder() {
     // Design
     return (
         <>
-            {/* Outer layer */}
+            {/* Dashboard nav bar - Full width */}
+            <DashboardNavBarComponent />
+            
+            {/* Content container */}
             <Container className="ballot_container">
                 <Row>
                     <Col md={12}>
-                        {/* Dashboard nav bar */}
-                        <DashboardNavBarComponent />
-
                         {/* Body */}
                         <SummaryBuilderComponent />
                     </Col>

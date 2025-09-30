@@ -29,6 +29,13 @@ export const Constants = {
 
   STRATEGY_TEMPLATES: [
     {
+      "id": "stx",
+      "name": "STX",
+      "strategyTokenType": "ft",
+      "strategyTokenName": "STX",
+      "strategyContractName": "",
+      "strategyTokenDecimals": "6"
+    }, {
       "id": "alex",
       "name": "ALEX",
       "strategyTokenType": "ft",
@@ -80,13 +87,6 @@ export const Constants = {
       "strategyTokenName": "stacks-parrots",
       "strategyContractName": "SP2KAF9RF86PVX3NEE27DFV1CQX0T4WGR41X3S45C.byzantion-stacks-parrots"
     }, {
-      "id": "stx",
-      "name": "STX",
-      "strategyTokenType": "ft",
-      "strategyTokenName": "STX",
-      "strategyContractName": "",
-      "strategyTokenDecimals": "6"
-    }, {
       "id": "theexplorerguild",
       "name": "The Explorer Guild",
       "strategyTokenType": "nft",
@@ -121,7 +121,7 @@ export const Constants = {
     },
     {
       question: "Which wallets are supported?",
-      answer: `Ballot.gg supports all major Stacks wallets including <a href="https://hiro.so/wallet" target="_blank" rel="noreferrer">Hiro Wallet ↗</a>, <a href="https://xverse.app" target="_blank" rel="noreferrer">Xverse ↗</a>, and <a href="https://asigna.io" target="_blank" rel="noreferrer">Asigna ↗</a>. Connect with your preferred wallet to start creating and participating in polls.`,
+      answer: `Ballot.gg supports all major Stacks wallets including <a href="https://leather.io/wallet/extension" target="_blank" rel="noreferrer">Leather Wallet ↗</a>, <a href="https://xverse.app" target="_blank" rel="noreferrer">Xverse ↗</a>, and <a href="https://asigna.io" target="_blank" rel="noreferrer">Asigna ↗</a>. Connect with your preferred wallet to start creating and participating in polls.`,
     },
     {
       question: "Do I need STX to use Ballot.gg?",
