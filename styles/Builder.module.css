@@ -502,8 +502,8 @@
 }
 
 .option_delete {
-    width: 32px;
-    height: 32px;
+    width: 36px;
+    height: 36px;
     background: transparent;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -520,6 +520,21 @@
     background: #fee;
     border-color: #fcc;
     color: #c33;
+}
+
+.option_delete:focus {
+    outline: none;
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.option_delete:active {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #b91c1c;
+    transform: scale(0.95);
 }
 
 .add_option_btn {
@@ -543,6 +558,21 @@
     background: var(--color-surface);
     border-color: var(--color-primary);
     color: var(--color-primary);
+}
+
+.add_option_btn:focus {
+    outline: none;
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.add_option_btn:active {
+    background: var(--color-border-light);
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+    transform: scale(0.98);
 }
 
 /* Voting Period */
@@ -730,6 +760,7 @@
     gap: var(--space-3);
 }
 
+/* Base Button Styles - Monochrome Design System */
 .action_preview,
 .action_save,
 .action_publish {
@@ -741,23 +772,26 @@
     font-size: 16px;
     font-weight: 500;
     border-radius: var(--radius-md);
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     text-decoration: none;
     cursor: pointer;
     width: 100%;
     border: none;
+    position: relative;
+    overflow: hidden;
 }
 
+/* Preview Poll Button - Tertiary/Ghost Style */
 .action_preview {
-    background: transparent;
-    color: var(--color-tertiary);
+    background: var(--color-background);
+    color: var(--color-secondary);
     border: 1px solid var(--color-border);
 }
 
 .action_preview:hover:not(:disabled) {
     background: var(--color-surface);
     color: var(--color-primary);
-    border-color: var(--color-primary);
+    border-color: var(--color-secondary);
 }
 
 .action_preview:focus:not(:disabled) {
@@ -765,36 +799,44 @@
     color: var(--color-primary);
     border-color: var(--color-primary);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
+.action_preview:active:not(:disabled) {
+    background: var(--color-border-light);
+    transform: scale(0.98);
+}
+
+/* Save Draft Button - Secondary/Outline Style */
 .action_save {
-    background: transparent;
+    background: var(--color-background);
     color: var(--color-primary);
     border: 1px solid var(--color-primary);
 }
 
 .action_save:hover:not(:disabled) {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-background);
+    border-color: var(--color-primary);
 }
 
 .action_save:focus:not(:disabled) {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-background);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
 }
 
 .action_save:active:not(:disabled) {
     background: var(--color-secondary);
     border-color: var(--color-secondary);
-    transform: translateY(1px);
+    transform: scale(0.98);
 }
 
+/* Publish Poll Button - Primary/Solid Style */
 .action_publish {
     background: var(--color-primary);
-    color: white;
+    color: var(--color-background);
     border: 1px solid var(--color-primary);
 }
 
@@ -807,23 +849,26 @@
     background: var(--color-secondary);
     border-color: var(--color-secondary);
     outline: none;
-    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
 }
 
 .action_publish:active:not(:disabled) {
-    background: var(--color-secondary);
-    border-color: var(--color-secondary);
-    transform: translateY(1px);
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    transform: scale(0.98);
 }
 
+/* Disabled State - Clear and Visible Monochrome Design */
 .action_preview:disabled,
 .action_save:disabled,
 .action_publish:disabled {
-    opacity: 0.5;
     cursor: not-allowed;
     background: var(--color-border-light) !important;
     color: var(--color-tertiary) !important;
-    border-color: var(--color-border-light) !important;
+    border-color: var(--color-border) !important;
+    opacity: 1 !important;
+    transform: none !important;
+    box-shadow: none !important;
 }
 
 /* Button Loading States */

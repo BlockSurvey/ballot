@@ -105,35 +105,149 @@ div {
     border: none;
 }
 
-/* Secondary button */
-.action_secondary_btn {
-    padding: 6px 16px !important;
+/*
+   ============================================
+   MONOCHROME BUTTON DESIGN SYSTEM
+   ============================================
+
+   Primary Button: Solid black background
+   - Default: Black bg, white text
+   - Hover: Dark gray (#333)
+   - Focus: Dark gray + shadow ring
+   - Disabled: Light gray bg (#f0f0f0), gray text (#666)
+
+   Secondary Button: Outline black border
+   - Default: White bg, black text, black border
+   - Hover: Black bg, white text
+   - Focus: Black bg + shadow ring
+   - Disabled: Light gray bg (#f0f0f0), gray text (#666), gray border
+
+   Tertiary Button: Ghost style
+   - Default: White bg, gray text (#666), gray border
+   - Hover: Light surface (#fafafa), black text
+   - Focus: Surface + shadow ring
+   - Disabled: Light gray bg (#f0f0f0), gray text (#666), gray border
+*/
+
+/* Primary Button - Solid Black */
+.action_primary_btn {
+    padding: 10px 20px !important;
     border: 1px solid #000000 !important;
-    background-color: transparent;
-    color: black !important;
+    background-color: #000000;
+    color: #ffffff !important;
     font-size: 16px;
+    font-weight: 500;
     display: flex;
     align-items: center;
     justify-content: center;
-    column-gap: 6px;
+    column-gap: 8px;
+    box-shadow: none;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.action_primary_btn:hover:not(:disabled) {
+    background-color: #333333;
+    border-color: #333333;
+    color: #ffffff !important;
+}
+.action_primary_btn:focus:not(:disabled) {
+    background-color: #333333;
+    border-color: #333333;
+    color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
+}
+.action_primary_btn:active:not(:disabled) {
+    background-color: #000000;
+    border-color: #000000;
+    transform: scale(0.98);
+}
+.action_primary_btn:disabled {
+    background-color: #f0f0f0 !important;
+    border-color: #e6e6e6 !important;
+    color: #666666 !important;
+    cursor: not-allowed;
+    opacity: 1;
     box-shadow: none;
 }
-.action_secondary_btn:hover {
-    background-color: rgba(0, 0, 0, 0.04);
+
+/* Secondary Button - Exact Preview Button Style */
+.action_secondary_btn {
+    padding: 10px 20px !important;
+    border: 1px solid #e6e6e6 !important;
+    background-color: #ffffff;
+    color: #333333 !important;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    column-gap: 8px;
+    box-shadow: none;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
-.action_secondary_btn:focus {
-    color: black;
-    background-color: rgba(0, 0, 0, 0.04);
-    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+.action_secondary_btn:hover:not(:disabled) {
+    background-color: #fafafa;
+    color: #000000 !important;
+    border-color: #000000 !important;
 }
-.action_secondary_btn:active {
-    color: black;
-    background-color: rgba(0, 0, 0, 0.04);
-    box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
+.action_secondary_btn:focus:not(:disabled) {
+    background-color: #fafafa;
+    color: #000000 !important;
+    border-color: #000000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+.action_secondary_btn:active:not(:disabled) {
+    background-color: #f0f0f0;
+    transform: scale(0.98);
 }
 .action_secondary_btn:disabled {
+    background-color: #f0f0f0 !important;
+    border-color: #e6e6e6 !important;
+    color: #666666 !important;
+    cursor: not-allowed;
+    opacity: 1;
     box-shadow: none;
+}
+
+/* Tertiary Button - Ghost Style */
+.action_tertiary_btn {
+    padding: 10px 20px !important;
+    border: 1px solid #e6e6e6 !important;
     background-color: transparent;
+    color: #666666 !important;
+    font-size: 16px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    column-gap: 8px;
+    box-shadow: none;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.action_tertiary_btn:hover:not(:disabled) {
+    background-color: #fafafa;
+    color: #000000 !important;
+    border-color: #333333;
+}
+.action_tertiary_btn:focus:not(:disabled) {
+    background-color: #fafafa;
+    color: #000000 !important;
+    border-color: #000000;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+.action_tertiary_btn:active:not(:disabled) {
+    background-color: #f0f0f0;
+    transform: scale(0.98);
+}
+.action_tertiary_btn:disabled {
+    background-color: #f0f0f0 !important;
+    border-color: #e6e6e6 !important;
+    color: #666666 !important;
+    cursor: not-allowed;
+    opacity: 1;
+    box-shadow: none;
 }
 
 /* dashed button */
@@ -258,7 +372,7 @@ div {
     background: transparent !important;
     border: 1px solid var(--color-border) !important;
     border-radius: var(--radius-md);
-    padding: 6px 8px !important;
+    padding: var(--space-2) var(--space-3) !important;
     color: var(--color-primary) !important;
     transition: all 0.2s ease;
 }

@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
 import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
 import { deployContract } from "../../services/contract";
-import { getRecentBlock, isValidUtf8 } from "../../services/utils";
+import { getCurrentHeights, isValidUtf8 } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
 
@@ -48,7 +48,8 @@ export default function BuilderComponent(props) {
 
 
     // Current block height
-    const [currentBlockHeight, setCurrentBlockHeight] = useState(0);
+    const [stacksHeight, setStacksHeight] = useState(0);
+    const [bitcoinHeight, setBitcoinHeight] = useState(0);
 
     // Drag and drop state
     const [draggedIndex, setDraggedIndex] = useState(null);
@@ -127,9 +128,10 @@ export default function BuilderComponent(props) {
     }
 
     const getCurrentBlockHeight = async () => {
-        // Get current block height
-        const currentBlock = await getRecentBlock();
-        setCurrentBlockHeight(currentBlock?.tenure_height || 0);
+        // Get current block height from Hiro API
+        const { stacksHeight, bitcoinHeight } = await getCurrentHeights();
+        setStacksHeight(stacksHeight);
+        setBitcoinHeight(bitcoinHeight);
     }
 
     const handleChange = e => {
@@ -396,8 +398,8 @@ export default function BuilderComponent(props) {
         if (!pollObject?.startAtBlock) {
             errors.startAtBlock = "Start tenure block height is required";
             hasErrors = true;
-        } else if (pollObject?.startAtBlock < currentBlockHeight) {
-            errors.startAtBlock = `Start tenure block must be >= current block height (${currentBlockHeight})`;
+        } else if (pollObject?.startAtBlock < bitcoinHeight) {
+            errors.startAtBlock = `Start tenure block must be >= current block height (${bitcoinHeight})`;
             hasErrors = true;
         }
 
@@ -511,10 +513,10 @@ export default function BuilderComponent(props) {
 
         // Calculate stand and end time based on block height
         if (pollObject?.startAtBlock) {
-            pollObject['startAtDate'] = calculateDate(pollObject?.startAtBlock, currentBlockHeight);
+            pollObject['startAtDate'] = calculateDate(pollObject?.startAtBlock, bitcoinHeight);
         }
         if (pollObject?.endAtBlock) {
-            pollObject['endAtDate'] = calculateDate(pollObject?.endAtBlock, currentBlockHeight);
+            pollObject['endAtDate'] = calculateDate(pollObject?.endAtBlock, bitcoinHeight);
         }
 
         // Convert local date to ISO date
@@ -612,6 +614,7 @@ export default function BuilderComponent(props) {
         <>
             {pollObject && pollObject.id ?
                 <>
+                    {/* Data Found! */}
                     <div className={styles.builder_container}>
                         {/* Header Section */}
                         <div className={styles.builder_header}>
@@ -705,27 +708,41 @@ export default function BuilderComponent(props) {
                                                         })}
                                                     >
                                                         <div className={styles.voting_system_icon}>
-                                                            {/* Add appropriate icon based on voting system */}
+                                                            {/* Purposeful icons based on voting system functionality */}
                                                             {option.id === 'fptp' && (
                                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <circle cx="12" cy="12" r="3" fill="currentColor" />
-                                                                    <path d="M12 1v22m11-11H1" stroke="currentColor" strokeWidth="2" />
+                                                                    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                    <path d="M8 12l2 2 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    <circle cx="7" cy="8" r="1.5" fill="currentColor" />
+                                                                    <circle cx="7" cy="16" r="1.5" fill="currentColor" />
                                                                 </svg>
                                                             )}
                                                             {option.id === 'block' && (
                                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                    <path d="M9 12h6m-6-3h6m-6 6h4" stroke="currentColor" strokeWidth="2" />
+                                                                    <rect x="3" y="4" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                    <path d="M9 6h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                    <rect x="3" y="10" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="2" fill="currentColor" />
+                                                                    <path d="M9 12h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                    <rect x="3" y="16" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="2" fill="currentColor" />
+                                                                    <path d="M9 18h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                                                                 </svg>
                                                             )}
                                                             {option.id === 'quadratic' && (
                                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <path d="M3 18V6L21 12L3 18Z" fill="currentColor" />
+                                                                    <path d="M3 20V4M21 20V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                    <path d="M3 20h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                    <path d="M6 17Q9 8 12 11T18 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                                                                    <circle cx="6" cy="17" r="2" fill="currentColor" />
+                                                                    <circle cx="18" cy="8" r="2" fill="currentColor" />
                                                                 </svg>
                                                             )}
                                                             {option.id === 'weighted' && (
                                                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <path d="M12 2L15.09 8.26L22 9L17 14L18.18 21L12 17.77L5.82 21L7 14L2 9L8.91 8.26L12 2Z" fill="currentColor" />
+                                                                    <path d="M12 3v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                    <path d="M12 9l-8 6v4h16v-4l-8-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                                                                    <ellipse cx="7" cy="16" rx="2" ry="1" fill="currentColor" />
+                                                                    <ellipse cx="17" cy="17" rx="2" ry="1" fill="currentColor" />
+                                                                    <circle cx="12" cy="6" r="2" stroke="currentColor" strokeWidth="2" fill="none" />
                                                                 </svg>
                                                             )}
                                                         </div>
@@ -827,8 +844,8 @@ export default function BuilderComponent(props) {
                                                                         onClick={() => { deleteOption(index); }}
                                                                         title="Delete option"
                                                                     >
-                                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                            <path d="M12.854 3.146a.5.5 0 0 0-.708 0L8 7.293 3.854 3.146a.5.5 0 1 0-.708.708L7.293 8l-4.147 4.146a.5.5 0 0 0 .708.708L8 8.707l4.146 4.147a.5.5 0 0 0 .708-.708L8.707 8l4.147-4.146a.5.5 0 0 0 0-.708z" fill="currentColor" />
+                                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                                         </svg>
                                                                     </Button>
                                                                 )}
@@ -860,21 +877,21 @@ export default function BuilderComponent(props) {
                                                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" fill="currentColor" />
                                                         <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533L8.93 6.588zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" fill="currentColor" />
                                                     </svg>
-                                                    Current Tenure Block Height: <strong>{currentBlockHeight}</strong>
+                                                    Current Bitcoin Block Height: <strong>{bitcoinHeight}</strong>
                                                 </div>
                                             </div>
 
                                             <div className={styles.voting_period_grid}>
                                                 <Form.Group className={styles.form_group}>
-                                                    <Form.Label className={styles.form_label}>Start Block Height *</Form.Label>
+                                                    <Form.Label className={styles.form_label}>Start Bitcoin Block Height *</Form.Label>
                                                     <Form.Control
                                                         type="number"
                                                         name="startAtBlock"
                                                         value={pollObject.startAtBlock || ''}
-                                                        placeholder={`e.g. ${currentBlockHeight + 10}`}
+                                                        placeholder={`e.g. ${bitcoinHeight + 10}`}
                                                         onChange={handleChange}
                                                         className={`${styles.form_input} ${fieldErrors.startAtBlock ? styles.error : ''}`}
-                                                        min={currentBlockHeight}
+                                                        min={bitcoinHeight}
                                                     />
                                                     {fieldErrors.startAtBlock ? (
                                                         <small className={styles.field_error}>
@@ -882,21 +899,21 @@ export default function BuilderComponent(props) {
                                                         </small>
                                                     ) : (
                                                         <small className={styles.field_hint}>
-                                                            Must be {currentBlockHeight} or higher
+                                                            Must be {bitcoinHeight} or higher
                                                         </small>
                                                     )}
                                                 </Form.Group>
 
                                                 <Form.Group className={styles.form_group}>
-                                                    <Form.Label className={styles.form_label}>End Block Height *</Form.Label>
+                                                    <Form.Label className={styles.form_label}>End Bitcoin Block Height *</Form.Label>
                                                     <Form.Control
                                                         type="number"
                                                         name="endAtBlock"
                                                         value={pollObject.endAtBlock || ''}
-                                                        placeholder={`e.g. ${currentBlockHeight + 100}`}
+                                                        placeholder={`e.g. ${bitcoinHeight + 100}`}
                                                         onChange={handleChange}
                                                         className={`${styles.form_input} ${fieldErrors.endAtBlock ? styles.error : ''}`}
-                                                        min={pollObject.startAtBlock || currentBlockHeight + 1}
+                                                        min={pollObject.startAtBlock || bitcoinHeight + 1}
                                                     />
                                                     {fieldErrors.endAtBlock ? (
                                                         <small className={styles.field_error}>
@@ -965,14 +982,17 @@ export default function BuilderComponent(props) {
                                                                 <div className={styles.token_type_icon}>
                                                                     {option.id === 'ft' && (
                                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                            <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" />
-                                                                            <path d="M12 8v8m-4-4h8" stroke="currentColor" strokeWidth="2" />
+                                                                            <circle cx="8" cy="8" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                            <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                            <circle cx="16" cy="16" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                            <path d="M8 8l8 8" stroke="currentColor" strokeWidth="1" strokeDasharray="2,2" />
                                                                         </svg>
                                                                     )}
                                                                     {option.id === 'nft' && (
                                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                            <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="2" />
-                                                                            <path d="M9 9L15 15M15 9L9 15" stroke="currentColor" strokeWidth="2" />
+                                                                            <path d="M12 2L16 8L22 9L17 14L18 20L12 17L6 20L7 14L2 9L8 8L12 2Z" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                            <circle cx="12" cy="10" r="2" fill="currentColor" />
+                                                                            <path d="M10 13l2-1 2 1v2l-2 1-2-1v-2z" fill="currentColor" />
                                                                         </svg>
                                                                     )}
                                                                     {option.id === 'stx' && (
@@ -982,9 +1002,12 @@ export default function BuilderComponent(props) {
                                                                     )}
                                                                     {option.id === 'bns' && (
                                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                            <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" />
-                                                                            <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" />
+                                                                            <rect x="4" y="4" width="16" height="4" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                            <rect x="6" y="10" width="12" height="4" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                            <rect x="8" y="16" width="8" height="4" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                                            <circle cx="12" cy="6" r="1" fill="currentColor" />
+                                                                            <circle cx="12" cy="12" r="1" fill="currentColor" />
+                                                                            <circle cx="12" cy="18" r="1" fill="currentColor" />
                                                                         </svg>
                                                                     )}
                                                                 </div>
@@ -1093,13 +1116,13 @@ export default function BuilderComponent(props) {
                                                     {/* Fungible Token Snapshot Height */}
                                                     {pollObject?.strategyTokenType === "ft" && (
                                                         <Form.Group className={styles.form_group}>
-                                                            <Form.Label className={styles.form_label}>Snapshot Tenure Block Height *</Form.Label>
+                                                            <Form.Label className={styles.form_label}>Snapshot Stacks Block Height (Current Height: {stacksHeight}) *</Form.Label>
                                                             <Form.Control
                                                                 type="number"
                                                                 name="snapshotBlockHeight"
                                                                 value={pollObject.snapshotBlockHeight || ''}
                                                                 onChange={handleChange}
-                                                                placeholder={`e.g., ${currentBlockHeight - 100}`}
+                                                                placeholder={`e.g., ${stacksHeight - 100}`}
                                                                 className={`${styles.form_input} ${fieldErrors.snapshotBlockHeight ? styles.error : ''}`}
                                                                 min="0"
                                                             />
@@ -1109,7 +1132,7 @@ export default function BuilderComponent(props) {
                                                                 </small>
                                                             ) : (
                                                                 <small className={styles.field_hint}>
-                                                                    Block height for token balance snapshot
+                                                                    Block height for token balance snapshot (Stacks)
                                                                 </small>
                                                             )}
                                                         </Form.Group>
@@ -1137,9 +1160,9 @@ export default function BuilderComponent(props) {
                                                     onClick={() => { handleShow() }}
                                                     disabled={isProcessing}
                                                 >
-                                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                        <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="2" fill="none" />
+                                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path d="M1.25 10C1.25 10 4.375 3.75 10 3.75C15.625 3.75 18.75 10 18.75 10C18.75 10 15.625 16.25 10 16.25C4.375 16.25 1.25 10 1.25 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                                                     </svg>
                                                     Preview Poll
                                                 </Button>
@@ -1157,8 +1180,8 @@ export default function BuilderComponent(props) {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M12 3L6 9L4 7" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M15.625 5L7.5 13.125L4.375 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                                                         </svg>
                                                         Save Draft
                                                     </>
@@ -1177,8 +1200,8 @@ export default function BuilderComponent(props) {
                                                     </>
                                                 ) : (
                                                     <>
-                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M8 1V15M1 8L8 1L15 8" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path d="M10 3.75V16.25M3.75 10L10 3.75L16.25 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                                                         </svg>
                                                         Publish Poll
                                                     </>
@@ -1220,7 +1243,8 @@ export default function BuilderComponent(props) {
                 </>
                 :
                 <>
-                    {/* Space */}
+                    {/* No Data Found! */}
+                    {/* Loading space */}
                     <div style={{ height: "30px" }}></div>
 
                     <div style={{ width: "100%", maxWidth: "52px", height: "17px", marginBottom: "20px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>

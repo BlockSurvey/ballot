@@ -11,6 +11,21 @@ export async function getRecentBlock() {
     return responseObject?.results?.[0];
 }
 
+export async function getCurrentHeights() {
+    try {
+        const resp = await fetch("https://api.hiro.so/extended", {
+            headers: { "Accept": "application/json" }
+        });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const js = await resp.json();
+        const stacksHeight = js.chain_tip.block_height;
+        const bitcoinHeight = js.chain_tip.burn_block_height;
+        return { stacksHeight, bitcoinHeight };
+    } catch (error) {
+        console.error("Error fetching block heights:", error);
+    }
+}
+
 export function formStacksExplorerUrl(txId, type = 'txid') {
     return (
         "https://explorer.hiro.so/" +
