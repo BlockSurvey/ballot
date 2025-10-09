@@ -58,7 +58,6 @@ export default function BuilderComponent(props) {
         getCurrentBlockHeight();
     }, []);
 
-
     // Functions
     useEffect(() => {
         let isCancelled = false;
@@ -1221,6 +1220,9 @@ export default function BuilderComponent(props) {
                 </>
                 :
                 <>
+                    {/* Space */}
+                    <div style={{ height: "30px" }}></div>
+
                     <div style={{ width: "100%", maxWidth: "52px", height: "17px", marginBottom: "20px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>
 
                     <div style={{ width: "100px", height: "22px", marginBottom: "8px", backgroundColor: "#eceff1", borderRadius: "4px" }}></div>

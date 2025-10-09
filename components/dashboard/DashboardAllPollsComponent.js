@@ -6,15 +6,39 @@ import { convertToDisplayDateFormat } from "../../services/utils";
 import styles from "../../styles/Dashboard.module.css";
 
 export default function DashboardAllPollsComponent() {
+    // localStorage utility functions
+    const getDashboardPreferences = () => {
+        if (typeof window === 'undefined') return null;
+        try {
+            const prefs = localStorage.getItem('ballot_dashboard_preferences');
+            return prefs ? JSON.parse(prefs) : null;
+        } catch (error) {
+            console.warn('Failed to load dashboard preferences from localStorage:', error);
+            return null;
+        }
+    };
+
+    const saveDashboardPreferences = (preferences) => {
+        if (typeof window === 'undefined') return;
+        try {
+            localStorage.setItem('ballot_dashboard_preferences', JSON.stringify(preferences));
+        } catch (error) {
+            console.warn('Failed to save dashboard preferences to localStorage:', error);
+        }
+    };
+
+    // Load saved preferences or use defaults
+    const savedPreferences = getDashboardPreferences();
+    
     // Variables
     const [allPolls, setAllPolls] = useState();
     const [isDeleting, setIsDeleting] = useState(false);
     const [gaiaAddress, setGaiaAddress] = useState();
-    const [searchQuery, setSearchQuery] = useState("");
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [sortBy, setSortBy] = useState("date");
+    const [searchQuery, setSearchQuery] = useState(savedPreferences?.searchQuery || "");
+    const [statusFilter, setStatusFilter] = useState(savedPreferences?.statusFilter || "all");
+    const [sortBy, setSortBy] = useState(savedPreferences?.sortBy || "date");
     const [isSearchFocused, setIsSearchFocused] = useState(false);
-    const [viewMode, setViewMode] = useState("grid"); // "grid" or "list"
+    const [viewMode, setViewMode] = useState(savedPreferences?.viewMode || "grid"); // "grid" or "list"
 
     // Functions
     useEffect(() => {
@@ -36,6 +60,17 @@ export default function DashboardAllPollsComponent() {
                 }
             });
     }, []);
+
+    // Save preferences to localStorage whenever they change
+    useEffect(() => {
+        const preferences = {
+            searchQuery,
+            statusFilter,
+            sortBy,
+            viewMode
+        };
+        saveDashboardPreferences(preferences);
+    }, [searchQuery, statusFilter, sortBy, viewMode]);
 
     async function getGaiaAddress() {
         const _gaiaAddress = await getGaiaAddressFromPublicKey();

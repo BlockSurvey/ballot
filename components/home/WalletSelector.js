@@ -60,7 +60,7 @@ const WalletSelector = () => {
 
       <div className={styles.wallet_footer}>
         <p className={styles.wallet_note}>
-          Don't have a Stacks wallet? <a href="https://leather.io/install-extension" target="_blank" rel="noopener noreferrer">Get Leather Wallet</a> or <a href="https://xverse.app" target="_blank" rel="noopener noreferrer">Download Xverse</a>
+          Don't have a Stacks wallet? <a href="https://leather.io/wallet/extension" target="_blank" rel="noopener noreferrer">Get Leather Wallet</a> or <a href="https://xverse.app" target="_blank" rel="noopener noreferrer">Download Xverse</a>
         </p>
       </div>
     </div>

@@ -11,6 +11,8 @@ export function DashboardNavBarComponent() {
     // Variables
     const [displayUsername, setDisplayUsername] = useState();
     const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+    const [stacksHeight, setStacksHeight] = useState(null);
+    const [bitcoinHeight, setBitcoinHeight] = useState(null);
 
     // My votes popup
     const [showMyVotesPopup, setShowMyVotesPopup] = useState(false);
@@ -24,15 +26,39 @@ export function DashboardNavBarComponent() {
     // Functions
     useEffect(() => {
         getDisplayUsername();
+        getCurrentHeights();
 
         if (userSession && userSession.isUserSignedIn()) {
             setIsUserSignedIn(true)
         }
+
+        // Auto-refresh block heights every 30 seconds
+        const intervalId = setInterval(() => {
+            getCurrentHeights();
+        }, 30000);
+
+        return () => clearInterval(intervalId);
     }, []);
 
     const getDisplayUsername = async () => {
         const _username = await getDomainNamesFromBlockchain();
         setDisplayUsername(_username);
+    }
+
+    const getCurrentHeights = async () => {
+        try {
+            const resp = await fetch("https://api.hiro.so/extended", {
+                headers: { "Accept": "application/json" }
+            });
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const js = await resp.json();
+            const stacksHeight = js.chain_tip.block_height;
+            const bitcoinHeight = js.chain_tip.burn_block_height;
+            setStacksHeight(stacksHeight);
+            setBitcoinHeight(bitcoinHeight);
+        } catch (error) {
+            console.error("Error fetching block heights:", error);
+        }
     }
 
     // UI
@@ -48,6 +74,27 @@ export function DashboardNavBarComponent() {
 
                     {isUserSignedIn ? (
                         <div className="nav_actions">
+                            {/* Block Heights Section */}
+                            <div className="block_heights_section">
+                                <span className="block_height_label">Block Height</span>
+                                <div className="block_height_item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 20 20">
+                                        <path fill="#101010" d="M15.549 8.62826c.22-1.47106-.9-2.26187-2.4315-2.78942l.4968-1.99275-1.213-.3023-.4837 1.94023c-.3189-.07946-.6464-.15442-.9718-.2287l.4871-1.95302L10.2206 3l-.49716 1.99205c-.26395-.06011-.52306-.11953-.77458-.18206l.00139-.00622-1.67282-.4177-.32268 1.29556s.89998.20626.88097.21904c.49128.12265.58007.44774.56521.70547l-.5659 2.27018c.03386.00863.07774.02107.12611.04042-.04042-.01002-.08361-.02108-.12818-.03179l-.79323 3.18015c-.06012.1493-.21247.3731-.55588.2882.01209.0176-.88167-.2201-.88167-.2201L5 13.5217l1.57851.3935c.29366.0736.58144.1506.86474.2232l-.50198 2.0155 1.21161.3023.49715-1.9941c.33097.0898.65227.1727.96666.2508l-.49542 1.9848L10.3343 17l.5019-2.0117c2.0684.3914 3.6238.2335 4.2785-1.6373.5276-1.5063-.0263-2.3752-1.1145-2.9418.7925-.1827 1.3895-.70407 1.5488-1.78094Zm-2.7715 3.88634c-.3748 1.5063-2.91103.692-3.73328.4878l.66609-2.6702c.82229.2052 3.45899.6115 3.06719 2.1824Zm.3752-3.90811c-.342 1.37019-2.4529.67404-3.1377.50337l.6039-2.42183c.6848.17067 2.89.4892 2.5338 1.91846Z" />
+                                    </svg>
+                                    <span className="block_height_value">
+                                        {bitcoinHeight ? bitcoinHeight.toLocaleString() : '...'}
+                                    </span>
+                                </div>
+                                <div className="block_height_item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 20 20">
+                                        <path fill="#101010" d="m14.8897 16.0001-2.546-3.8575H16v-1.4554H4v1.4571h3.65512l-2.54485 3.8558h1.8986L10 11.4681l2.9911 4.532h1.8986ZM16 9.27468V7.80464h-3.582L14.929 4h-1.8986L9.99997 8.59149 6.96957 4H5.07099l2.51428 3.80805H4v1.46663h12Z" />
+                                    </svg>
+                                    <span className="block_height_value">
+                                        {stacksHeight ? stacksHeight.toLocaleString() : '...'}
+                                    </span>
+                                </div>
+                            </div>
+
                             <Link href="/builder/new">
                                 <Button className="action_secondary_btn">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -63,8 +110,8 @@ export function DashboardNavBarComponent() {
                                     title={
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <div style={{
-                                                width: '32px',
-                                                height: '32px',
+                                                width: '24px',
+                                                height: '24px',
                                                 borderRadius: '50%',
                                                 background: 'linear-gradient(135deg, #000 0%, #666 100%)',
                                                 display: 'flex',

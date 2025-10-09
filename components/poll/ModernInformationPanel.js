@@ -20,15 +20,15 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
 
     const getContractLink = (contractName, txId) => {
         return (
-            <a 
-                className="ballot_link" 
-                target="_blank" 
-                rel="noreferrer" 
+            <a
+                className="ballot_link"
+                target="_blank"
+                rel="noreferrer"
                 href={formStacksExplorerUrl(txId)}
-                style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 'var(--space-1)' 
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-1)'
                 }}
             >
                 {formatAddress(contractName)}
@@ -52,15 +52,15 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
 
     const getIpfsLink = (ipfsLocation) => {
         return (
-            <a 
-                className="ballot_link" 
-                target="_blank" 
-                rel="noreferrer" 
+            <a
+                className="ballot_link"
+                target="_blank"
+                rel="noreferrer"
                 href={`${Constants.IPFS_GATEWAY}${ipfsLocation}`}
-                style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 'var(--space-1)' 
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 'var(--space-1)'
                 }}
             >
                 #{ipfsLocation.substring(0, 8)}...
@@ -91,36 +91,36 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                 </div>
                 <div className={styles.info_card_content}>
                     {/* Contract */}
-                    {pollObject?.publishedInfo?.contractAddress && 
-                     pollObject?.publishedInfo?.contractName && 
-                     pollObject?.publishedInfo?.txId && (
-                        <div className={styles.info_item}>
-                            <span className={styles.info_label}>Contract</span>
-                            <span className={styles.info_value}>
-                                {getContractLink(pollObject.publishedInfo.contractName, pollObject.publishedInfo.txId)}
-                            </span>
-                        </div>
-                    )}
+                    {pollObject?.publishedInfo?.contractAddress &&
+                        pollObject?.publishedInfo?.contractName &&
+                        pollObject?.publishedInfo?.txId && (
+                            <div className={styles.info_item}>
+                                <span className={styles.info_label}>Contract</span>
+                                <span className={styles.info_value}>
+                                    {getContractLink(pollObject.publishedInfo.contractName, pollObject.publishedInfo.txId)}
+                                </span>
+                            </div>
+                        )}
 
                     {/* IPFS */}
-                    {pollObject?.ipfsLocation && (
+                    {/* {pollObject?.ipfsLocation && (
                         <div className={styles.info_item}>
                             <span className={styles.info_label}>IPFS</span>
                             <span className={styles.info_value}>
                                 {getIpfsLink(pollObject.ipfsLocation)}
                             </span>
                         </div>
-                    )}
+                    )} */}
 
                     {/* Strategy Contract */}
                     {pollObject?.strategyContractName && (
                         <div className={styles.info_item}>
                             <span className={styles.info_label}>Token Strategy</span>
                             <span className={styles.info_value}>
-                                <a 
-                                    className="ballot_link" 
-                                    target="_blank" 
-                                    rel="noreferrer" 
+                                <a
+                                    className="ballot_link"
+                                    target="_blank"
+                                    rel="noreferrer"
                                     href={formStacksExplorerUrl(pollObject.strategyContractName)}
                                 >
                                     {formatAddress(pollObject.strategyContractName)}
@@ -141,7 +141,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                     <div className={styles.info_item}>
                         <span className={styles.info_label}>Start Date</span>
                         <span className={styles.info_value}>
-                            {pollObject?.startAtDateUTC 
+                            {pollObject?.startAtDateUTC
                                 ? formatUtcDateTime(pollObject.startAtDateUTC) + " UTC"
                                 : convertToDisplayDateFormat(pollObject?.startAtDate)
                             }
@@ -155,7 +155,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                             {pollObject?.endAtBlock && currentBlockHeight < pollObject?.endAtBlock ? (
                                 formatUtcDateTime(calculateDateByBlockHeight(currentBlockHeight, pollObject.endAtBlock)) + " UTC"
                             ) : (
-                                pollObject?.endAtDateUTC 
+                                pollObject?.endAtDateUTC
                                     ? formatUtcDateTime(pollObject.endAtDateUTC) + " UTC"
                                     : convertToDisplayDateFormat(pollObject?.endAtDate)
                             )}
@@ -260,14 +260,14 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                             </span>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Progress Bar */}
                                     <div className={styles.progress_bar} style={{ height: '4px' }}>
-                                        <div 
+                                        <div
                                             className={styles.progress_fill}
-                                            style={{ 
+                                            style={{
                                                 width: `${result.percentage}%`,
-                                                background: index === 0 && result.votes > 0 ? 
+                                                background: index === 0 && result.votes > 0 ?
                                                     'linear-gradient(90deg, #059669 0%, #047857 100%)' :
                                                     'linear-gradient(90deg, var(--color-primary) 0%, var(--color-secondary) 100%)'
                                             }}
@@ -276,17 +276,17 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
 
                                     {/* Winner Badge */}
                                     {index === 0 && result.votes > 0 && (
-                                        <div style={{ 
-                                            marginTop: 'var(--space-1)', 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
+                                        <div style={{
+                                            marginTop: 'var(--space-1)',
+                                            display: 'flex',
+                                            alignItems: 'center',
                                             gap: 'var(--space-1)',
                                             color: '#059669',
                                             fontSize: '0.75rem',
                                             fontWeight: '600'
                                         }}>
                                             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                                             </svg>
                                             Leading
                                         </div>
@@ -297,10 +297,10 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                     </div>
 
                     {/* Voting System Info */}
-                    <div style={{ 
-                        marginTop: 'var(--space-4)', 
-                        padding: 'var(--space-3)', 
-                        background: 'var(--color-surface)', 
+                    <div style={{
+                        marginTop: 'var(--space-4)',
+                        padding: 'var(--space-3)',
+                        background: 'var(--color-surface)',
                         borderRadius: 'var(--radius-sm)',
                         fontSize: '0.75rem',
                         color: 'var(--color-tertiary)'
@@ -342,7 +342,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                 {pollObject.strategyTokenName}
                             </span>
                         </div>
-                        
+
                         {pollObject?.strategyTokenType && (
                             <div className={styles.info_item}>
                                 <span className={styles.info_label}>Token Type</span>

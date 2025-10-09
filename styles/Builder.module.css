@@ -821,6 +821,9 @@
 .action_publish:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background: var(--color-border-light) !important;
+    color: var(--color-tertiary) !important;
+    border-color: var(--color-border-light) !important;
 }
 
 /* Button Loading States */
@@ -840,14 +843,20 @@
     margin-right: var(--space-2);
 }
 
+/* Disabled button spinner uses tertiary color */
+.action_save:disabled .button_spinner,
+.action_publish:disabled .button_spinner {
+    border-top-color: var(--color-tertiary);
+}
+
 /* Loading state color adjustments */
-.action_save.loading {
+.action_save.loading:not(:disabled) {
     background: var(--color-primary);
     color: white;
     border-color: var(--color-primary);
 }
 
-.action_publish.loading {
+.action_publish.loading:not(:disabled) {
     background: var(--color-secondary);
     color: white;
     border-color: var(--color-secondary);

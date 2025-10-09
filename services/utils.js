@@ -13,7 +13,7 @@ export async function getRecentBlock() {
 
 export function formStacksExplorerUrl(txId, type = 'txid') {
     return (
-        (Constants.STACKS_MAINNET_FLAG ? "https://explorer.stxer.xyz/" : "https://testnet-explorer.stxer.xyz/") +
+        "https://explorer.hiro.so/" +
         type +
         "/" +
         txId +

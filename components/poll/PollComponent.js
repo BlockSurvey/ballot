@@ -3,11 +3,10 @@ import { Modal } from "react-bootstrap";
 import { getFileFromGaia, putFileToGaia } from "../../services/auth";
 import { formStacksExplorerUrl } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
-import ModernPollHeader from "./ModernPollHeader";
-import ModernVotingInterface from "./ModernVotingInterface";
-import ModernResultsVisualization from "./ModernResultsVisualization";
-import ModernVotingActivity from "./ModernVotingActivity";
 import ModernInformationPanel from "./ModernInformationPanel";
+import ModernPollHeader from "./ModernPollHeader";
+import ModernVotingActivity from "./ModernVotingActivity";
+import ModernVotingInterface from "./ModernVotingInterface";
 
 export default function PollComponent(props) {
     const {
@@ -93,14 +92,14 @@ export default function PollComponent(props) {
                         {/* Main Content */}
                         <div>
                             {/* Modern Poll Header */}
-                            <ModernPollHeader 
-                                pollObject={pollObject} 
-                                publicUrl={publicUrl} 
-                                txStatus={txStatus} 
+                            <ModernPollHeader
+                                pollObject={pollObject}
+                                publicUrl={publicUrl}
+                                txStatus={txStatus}
                             />
 
                             {/* Modern Voting Interface */}
-                            <ModernVotingInterface 
+                            <ModernVotingInterface
                                 pollObject={pollObject}
                                 isPreview={isPreview}
                                 alreadyVoted={alreadyVoted}
@@ -114,7 +113,7 @@ export default function PollComponent(props) {
 
 
                             {/* Modern Voting Activity */}
-                            <ModernVotingActivity 
+                            <ModernVotingActivity
                                 pollObject={pollObject}
                                 optionsMap={optionsMap}
                                 resultsByPosition={resultsByPosition}
@@ -127,9 +126,9 @@ export default function PollComponent(props) {
 
                         {/* Sidebar */}
                         <div>
-                            <ModernInformationPanel 
-                                pollObject={pollObject} 
-                                resultsByOption={resultsByOption} 
+                            <ModernInformationPanel
+                                pollObject={pollObject}
+                                resultsByOption={resultsByOption}
                                 currentBlockHeight={currentBlockHeight}
                                 totalVotes={totalVotes}
                                 totalUniqueVotes={totalUniqueVotes}
@@ -147,7 +146,7 @@ export default function PollComponent(props) {
                         }}>
                             <div className={styles.pulse}>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                                    <circle cx="12" cy="12" r="10" opacity="0.3" />
                                 </svg>
                             </div>
                             Loading poll data...
@@ -159,22 +158,22 @@ export default function PollComponent(props) {
             {/* Success Modal */}
             <Modal show={show} onHide={handleClose} centered>
                 <Modal.Header closeButton style={{ border: 'none', paddingBottom: 0 }}>
-                    <Modal.Title style={{ 
-                        fontSize: '1.25rem', 
+                    <Modal.Title style={{
+                        fontSize: '1.25rem',
                         fontWeight: '600',
                         color: 'var(--color-primary)'
                     }}>
-                        Vote Submitted Successfully! 
+                        Vote Submitted Successfully!
                         <span style={{ fontSize: '1.5rem', marginLeft: '8px' }}>🎉</span>
                     </Modal.Title>
                 </Modal.Header>
                 <Modal.Body style={{ padding: '0 24px 24px', fontSize: '1rem', lineHeight: '1.6' }}>
                     <div style={{ marginBottom: '16px', color: 'var(--color-secondary)' }}>
-                        Your vote has been successfully recorded on the Stacks blockchain. 
+                        Your vote has been successfully recorded on the Stacks blockchain.
                     </div>
-                    <div style={{ 
-                        padding: '16px', 
-                        background: 'var(--color-surface)', 
+                    <div style={{
+                        padding: '16px',
+                        background: 'var(--color-surface)',
                         borderRadius: 'var(--radius-md)',
                         border: '1px solid var(--color-border)'
                     }}>
@@ -182,8 +181,8 @@ export default function PollComponent(props) {
                             Transaction ID:
                         </div>
                         <a
-                            style={{ 
-                                color: 'var(--color-primary)', 
+                            style={{
+                                color: 'var(--color-primary)',
                                 textDecoration: 'none',
                                 fontFamily: 'monospace',
                                 fontSize: '0.875rem',
