@@ -1,6 +1,7 @@
 import Head from 'next/head'
 import { SSRProvider } from 'react-bootstrap'
 import '../styles/globals.css'
+import '../styles/quill-overrides.css'
 
 function MyApp({ Component, pageProps }) {
   return <>

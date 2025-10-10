@@ -10,6 +10,7 @@ import {
     openWhatsappUrl
 } from "../../services/utils";
 import QRCodePopup from "./QRCodePopup";
+import RichTextDisplay from "../common/RichTextDisplay";
 import styles from "../../styles/Poll.module.css";
 
 export default function ModernPollHeader({ pollObject, publicUrl, txStatus }) {
@@ -24,13 +25,6 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus }) {
         }
     };
 
-    const convertToHrefLink = (text) => {
-        if (!text) return "";
-        const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-        return text.replace(urlRegex, function (url) {
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-        });
-    };
 
     const getStatusInfo = () => {
         if (!txStatus) return null;
@@ -215,11 +209,10 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus }) {
                     
                     {/* Poll Description */}
                     {pollObject?.description && (
-                        <div 
+                        <RichTextDisplay 
+                            content={pollObject.description}
                             className={styles.poll_description}
-                            dangerouslySetInnerHTML={{ 
-                                __html: convertToHrefLink(pollObject.description) 
-                            }}
+                            convertLinks={true}
                         />
                     )}
                 </div>

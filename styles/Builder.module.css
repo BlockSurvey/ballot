@@ -196,6 +196,89 @@
     transition: width 0.3s ease;
 }
 
+/* Rich Text Editor Specific Styles - Match title field exactly */
+.rich_text_editor {
+    margin-bottom: var(--space-2, 8px);
+    border: 1px solid var(--color-border) !important;
+    border-radius: var(--radius-md) !important;
+    transition: all 0.2s ease !important;
+    overflow: hidden !important;
+}
+
+.rich_text_editor .ql-toolbar {
+    border: none !important;
+    border-bottom: 1px solid var(--color-border) !important;
+    border-radius: 0 !important;
+    background-color: var(--color-surface) !important;
+    padding: var(--space-3) !important;
+}
+
+.rich_text_editor .ql-container {
+    border: none !important;
+    border-radius: 0 !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif !important;
+    background: var(--color-background) !important;
+}
+
+.rich_text_editor .ql-editor {
+    color: var(--color-primary) !important;
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+    padding: var(--space-3) var(--space-4) !important;
+    transition: all 0.2s ease !important;
+}
+
+.rich_text_editor .ql-editor.ql-blank::before {
+    color: var(--color-tertiary, #9ca3af) !important;
+    font-style: normal !important;
+}
+
+.rich_text_editor .ql-toolbar button:hover,
+.rich_text_editor .ql-toolbar button.ql-active {
+    color: var(--color-primary, #000000) !important;
+}
+
+.rich_text_editor .ql-toolbar button:hover .ql-stroke,
+.rich_text_editor .ql-toolbar button.ql-active .ql-stroke {
+    stroke: var(--color-primary, #000000) !important;
+}
+
+.rich_text_editor .ql-toolbar button:hover .ql-fill,
+.rich_text_editor .ql-toolbar button.ql-active .ql-fill {
+    fill: var(--color-primary, #000000) !important;
+}
+
+.rich_text_editor.error .ql-container,
+.rich_text_editor.error .ql-toolbar {
+    border-color: #ef4444 !important;
+}
+
+/* Focus state for rich text editor - Match title field exactly */
+.rich_text_editor:focus-within {
+    border-color: var(--color-primary) !important;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
+    outline: none !important;
+}
+
+/* Error state focus styles */
+.rich_text_editor.error {
+    border-color: #ef4444 !important;
+}
+
+.rich_text_editor.error:focus-within {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* Remove focus outlines from all Quill toolbar elements */
+.rich_text_editor .ql-toolbar button:focus,
+.rich_text_editor .ql-toolbar .ql-picker:focus,
+.rich_text_editor .ql-toolbar .ql-picker-label:focus,
+.rich_text_editor .ql-toolbar .ql-picker-options:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
 /* Main Content Layout */
 .builder_main {
     max-width: 1200px;

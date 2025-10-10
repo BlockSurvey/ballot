@@ -1,0 +1,68 @@
+/* Quill Editor Focus Override Styles */
+/* This file ensures no blue focus outlines appear and no conflicting borders */
+
+/* Remove all default Quill borders - we handle them on the wrapper */
+.ql-snow {
+    border: none !important;
+}
+
+.ql-snow .ql-toolbar {
+    border: none !important;
+}
+
+.ql-snow .ql-container {
+    border: none !important;
+}
+
+/* Remove default focus styles from Quill components */
+.ql-snow .ql-picker,
+.ql-snow .ql-picker-label,
+.ql-snow .ql-picker-options,
+.ql-snow .ql-picker-item,
+.ql-snow button,
+.ql-snow button:hover,
+.ql-snow button:focus,
+.ql-snow button:active,
+.ql-snow .ql-active,
+.ql-editor:focus,
+.ql-container:focus,
+.ql-toolbar:focus {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+/* Override any focus-visible styles */
+.ql-snow *:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* Let the component handle its own toolbar and container borders */
+
+/* Remove any webkit focus styles */
+.ql-snow *::-webkit-input-placeholder,
+.ql-snow *:-moz-placeholder,
+.ql-snow *::-moz-placeholder,
+.ql-snow *:-ms-input-placeholder {
+    outline: none !important;
+}
+
+/* Ensure clean dropdown and tooltip styles */
+.ql-snow .ql-tooltip {
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Remove focus outline from toolbar elements only */
+.rich-text-editor .ql-toolbar *,
+.rich-text-editor .ql-toolbar *:focus,
+.rich-text-editor .ql-toolbar *:active,
+.rich-text-editor .ql-toolbar *:hover {
+    outline: none !important;
+}

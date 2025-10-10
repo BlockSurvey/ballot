@@ -10,6 +10,7 @@ import { deployContract } from "../../services/contract";
 import { getCurrentBlockHeights, isValidUtf8 } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
+import RichTextEditor, { stripHtmlTags, isEditorEmpty } from "../common/RichTextEditor";
 
 export default function BuilderComponent(props) {
     // Variables
@@ -186,6 +187,25 @@ export default function BuilderComponent(props) {
         if (fieldErrors[name]) {
             const newErrors = { ...fieldErrors };
             delete newErrors[name];
+            setFieldErrors(newErrors);
+        }
+    };
+
+    // Handle rich text editor changes for description
+    const handleRichTextChange = (htmlContent, textContent) => {
+        // Update the description with HTML content
+        if (isEditorEmpty(htmlContent)) {
+            delete pollObject["description"];
+        } else {
+            pollObject["description"] = htmlContent;
+        }
+        
+        setPollObject({ ...pollObject });
+        
+        // Clear description field error when user starts typing
+        if (fieldErrors.description) {
+            const newErrors = { ...fieldErrors };
+            delete newErrors.description;
             setFieldErrors(newErrors);
         }
     };
@@ -382,11 +402,14 @@ export default function BuilderComponent(props) {
             if (!firstErrorField) firstErrorField = 'title';
         }
 
-        // Check description UTF-8
-        if (pollObject?.description && isValidUtf8(pollObject?.description) == false) {
-            errors.description = "Please enter valid UTF-8 characters";
-            hasErrors = true;
-            if (!firstErrorField) firstErrorField = 'description';
+        // Check description UTF-8 (convert HTML to text for validation)
+        if (pollObject?.description) {
+            const textContent = stripHtmlTags(pollObject.description);
+            if (textContent && isValidUtf8(textContent) == false) {
+                errors.description = "Please enter valid UTF-8 characters";
+                hasErrors = true;
+                if (!firstErrorField) firstErrorField = 'description';
+            }
         }
 
         // Check for options
@@ -744,16 +767,15 @@ export default function BuilderComponent(props) {
 
                                             <Form.Group className={styles.form_group}>
                                                 <Form.Label className={styles.form_label}>Description</Form.Label>
-                                                <Form.Control
-                                                    as="textarea"
-                                                    name="description"
-                                                    value={pollObject.description}
-                                                    rows={4}
-                                                    onChange={handleChange}
-                                                    placeholder="Provide context and details about what you're polling"
-                                                    className={`${styles.form_textarea} ${fieldErrors.description ? styles.error : ''}`}
-                                                    ref={descriptionRef}
-                                                />
+                                                <div ref={descriptionRef}>
+                                                    <RichTextEditor
+                                                        value={pollObject.description || ''}
+                                                        onChange={handleRichTextChange}
+                                                        placeholder="Provide context and details about what you're polling. Use the toolbar to format your text, add links, lists, and more."
+                                                        error={!!fieldErrors.description}
+                                                        className={styles.rich_text_editor}
+                                                    />
+                                                </div>
                                                 {fieldErrors.description && (
                                                     <small className={styles.field_error}>
                                                         {fieldErrors.description}
