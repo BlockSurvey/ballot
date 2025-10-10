@@ -292,8 +292,8 @@ function getRawContract() {
             )
             ;; Validation
             (asserts! (and (> (len vote) u0) (is-eq (len vote) (len volume-by-voting-power)) (validate-vote-volume volume-by-voting-power)) ERR-NOT-VOTED)
-            (asserts! (>= tenure-height (var-get start)) ERR-NOT-STARTED)
-            (asserts! (<= tenure-height (var-get end)) ERR-ENDED)        
+            (asserts! (>= burn-block-height (var-get start)) ERR-NOT-STARTED)
+            (asserts! (<= burn-block-height (var-get end)) ERR-ENDED)        
             (asserts! (not (have-i-voted)) ERR-ALREADY-VOTED)
             &{votingPowerValidation}
             
@@ -406,7 +406,10 @@ function getStrategyFunctionForStxHolders(snapshotBlockHeight) {
             (at-block (unwrap-panic (get-stacks-block-info? id-header-hash u${snapshotBlockHeight}))
                 (let
                     (
-                        (stx-balance (stx-get-balance tx-sender))
+                        (acct (stx-account tx-sender))
+                        (locked (get locked acct))
+                        (unlocked (get unlocked acct))
+                        (stx-balance (+ (get unlocked acct) (get locked acct)))
                     )
                     (if (> stx-balance u0)
                         (/ stx-balance u1000000)
@@ -421,7 +424,10 @@ function getStrategyFunctionForStxHolders(snapshotBlockHeight) {
     (define-private (get-voting-power-by-stx-holdings)
         (let
             (
-                (stx-balance (stx-get-balance tx-sender))
+                (acct (stx-account tx-sender))
+                (locked (get locked acct))
+                (unlocked (get unlocked acct))
+                (stx-balance (+ (get unlocked acct) (get locked acct)))
             )
             (if (> stx-balance u0)
                 (/ stx-balance u1000000)

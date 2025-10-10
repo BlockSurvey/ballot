@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { Constants } from "../../common/constants";
-import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getStacksAPIPrefix, getUserData, putFileToGaia, userSession } from "../../services/auth";
+import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getStacksAPIPrefix, getStacksAPIHeaders, getUserData, putFileToGaia, userSession } from "../../services/auth";
 import { convertToDisplayDateFormat } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import dashboardStyles from "../../styles/Dashboard.module.css";
@@ -61,33 +61,46 @@ export default function SummaryBuilderComponent(props) {
     }, []);
 
     const getBTCDomainFromBlockchain = async () => {
-        // Get btc domain for logged in user
-        const response = await fetch(
-            getStacksAPIPrefix() + "/v1/addresses/stacks/" + getMyStxAddress()
-        );
-        const responseObject = await response.json();
+        try {
+            // Testnet code - return early
+            if (Constants.STACKS_MAINNET_FLAG == false) {
+                setUrlSuffix(await getGaiaAddressFromPublicKey());
+                return;
+            }
 
-        // Testnet code
-        if (Constants.STACKS_MAINNET_FLAG == false) {
-            setUrlSuffix(await getGaiaAddressFromPublicKey());
-            return;
-        }
-
-        // Get btc dns
-        if (responseObject?.names?.length > 0) {
-            const btcDNS = responseObject.names.filter((bns) =>
-                bns.endsWith(".btc")
+            // Get btc domain for logged in user
+            const response = await fetch(
+                getStacksAPIPrefix() + "/v1/addresses/stacks/" + getMyStxAddress(),
+                { headers: getStacksAPIHeaders() }
             );
 
-            // Check does BTC dns is available
-            if (btcDNS && btcDNS.length > 0) {
-                const _dns = btcDNS[0];
+            if (!response.ok) {
+                console.warn(`Failed to fetch BTC domain: ${response.status} ${response.statusText}`);
+                setUrlSuffix(await getGaiaAddressFromPublicKey());
+                return;
+            }
 
-                setUrlSuffix(_dns);
+            const responseObject = await response.json();
+
+            // Get btc dns
+            if (responseObject?.names?.length > 0) {
+                const btcDNS = responseObject.names.filter((bns) =>
+                    bns.endsWith(".btc")
+                );
+
+                // Check does BTC dns is available
+                if (btcDNS && btcDNS.length > 0) {
+                    const _dns = btcDNS[0];
+                    setUrlSuffix(_dns);
+                } else {
+                    setUrlSuffix(await getGaiaAddressFromPublicKey());
+                }
             } else {
                 setUrlSuffix(await getGaiaAddressFromPublicKey());
             }
-        } else {
+        } catch (error) {
+            console.error("Error fetching BTC domain from blockchain:", error);
+            // Fallback to Gaia address
             setUrlSuffix(await getGaiaAddressFromPublicKey());
         }
     };

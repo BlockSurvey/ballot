@@ -7,12 +7,12 @@ import { Constants } from "../common/constants";
 import { DashboardNavBarComponent } from "../components/common/DashboardNavBarComponent";
 import PollComponent from "../components/poll/PollComponent";
 import { getIndividualResultByStartAndEndPosition } from "../components/poll/PollService";
-import { getMyStxAddress, getStacksAPIPrefix, userSession } from "../services/auth";
-import { getRecentBlock } from "../services/utils";
+import { getMyStxAddress, getStacksAPIPrefix, getStacksAPIHeaders, userSession } from "../services/auth";
+import { getCurrentBlockHeights } from "../services/utils";
 
 export default function Poll(props) {
     // Variables
-    const { pollObject, pollId, gaiaAddress, currentBlockHeight } = props;
+    const { pollObject, pollId, gaiaAddress, currentBitcoinBlockHeight, currentStacksBlockHeight } = props;
 
     // Contract transaction status
     const [txStatus, setTxStatus] = useState();
@@ -72,12 +72,22 @@ export default function Poll(props) {
             return;
         }
 
-        // Get btc domain for logged in user
-        const response = await fetch(
-            getStacksAPIPrefix() + "/extended/v1/tx/" + pollObject?.publishedInfo?.txId
-        );
-        const responseObject = await response.json();
-        setTxStatus(responseObject?.tx_status);
+        try {
+            const response = await fetch(
+                getStacksAPIPrefix() + "/extended/v1/tx/" + pollObject?.publishedInfo?.txId,
+                { headers: getStacksAPIHeaders() }
+            );
+
+            if (!response.ok) {
+                console.error(`Failed to fetch transaction status: ${response.status} ${response.statusText}`);
+                return;
+            }
+
+            const responseObject = await response.json();
+            setTxStatus(responseObject?.tx_status);
+        } catch (error) {
+            console.error("Error fetching contract transaction status:", error);
+        }
     }
 
     const fetchTokenHoldings = (pollObject) => {
@@ -158,10 +168,23 @@ export default function Poll(props) {
 
     const makeFetchCall = (url) => {
         return new Promise(async (resolve, reject) => {
-            const response = await fetch(url);
-            const responseObject = await response.json();
-            resolve(responseObject);
-        })
+            try {
+                const response = await fetch(url, {
+                    headers: getStacksAPIHeaders()
+                });
+
+                if (!response.ok) {
+                    reject(new Error(`HTTP ${response.status}: ${response.statusText}`));
+                    return;
+                }
+
+                const responseObject = await response.json();
+                resolve(responseObject);
+            } catch (error) {
+                console.error(`Error fetching ${url}:`, error);
+                reject(error);
+            }
+        });
     }
 
     const getBTCDomainFromBlockchain = async (pollObject) => {
@@ -170,160 +193,214 @@ export default function Poll(props) {
             return;
         }
 
-        // Get btc domain for logged in user
-        const response = await fetch(
-            getStacksAPIPrefix() + "/v1/addresses/stacks/" + getMyStxAddress()
-        );
-        const responseObject = await response.json();
-
-        // Testnet code
-        if (Constants.STACKS_MAINNET_FLAG == false) {
-            const _dns = getMyStxAddress().substr(-5) + ".btc";
-            setDns(_dns);
-            return;
-        }
-
-        // Get btc dns
-        if (responseObject?.names?.length > 0) {
-            const btcDNS = responseObject.names.filter((bns) =>
-                bns.endsWith(".btc")
+        try {
+            // Get btc domain for logged in user
+            const response = await fetch(
+                getStacksAPIPrefix() + "/v1/addresses/stacks/" + getMyStxAddress(),
+                { headers: getStacksAPIHeaders() }
             );
 
-            // Check does BTC dns is available
-            if (btcDNS && btcDNS.length > 0) {
-                // BTC holder
-                const _dns = btcDNS[0];
+            if (!response.ok) {
+                console.error(`Failed to fetch BTC domain: ${response.status} ${response.statusText}`);
+                // On testnet or error, use mock data
+                if (Constants.STACKS_MAINNET_FLAG === false) {
+                    const _dns = getMyStxAddress().substr(-5) + ".btc";
+                    setDns(_dns);
+                }
+                return;
+            }
 
-                // Take the btc dns name
+            const responseObject = await response.json();
+
+            // Testnet code
+            if (Constants.STACKS_MAINNET_FLAG === false) {
+                const _dns = getMyStxAddress().substr(-5) + ".btc";
                 setDns(_dns);
+                return;
+            }
 
-                // Allow to vote
-                if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
-                    setHoldingTokenIdsArray([]);
-                    setVotingPower(1);
+            // Get btc dns
+            if (responseObject?.names?.length > 0) {
+                const btcDNS = responseObject.names.filter((bns) =>
+                    bns.endsWith(".btc")
+                );
+
+                // Check if BTC dns is available
+                if (btcDNS && btcDNS.length > 0) {
+                    // BTC holder
+                    const _dns = btcDNS[0];
+
+                    // Take the btc dns name
+                    setDns(_dns);
+
+                    // Allow to vote
+                    if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
+                        setHoldingTokenIdsArray([]);
+                        setVotingPower(1);
+                    }
+                } else {
+                    // Not a BTC holder
+                    // Turn flag on
+                    if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
+                        setNoHoldingToken(true);
+                    }
                 }
             } else {
                 // Not a BTC holder
-
                 // Turn flag on
                 if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
-                    // No holdings to vote
                     setNoHoldingToken(true);
                 }
             }
-        } else {
-            // Not a BTC holder
-
-            // Turn flag on
-            if (pollObject?.votingStrategyFlag && pollObject?.votingStrategyTemplate === "btcholders") {
-                // No holdings to vote
-                setNoHoldingToken(true);
+        } catch (error) {
+            console.error("Error fetching BTC domain from blockchain:", error);
+            // On error with testnet, still set mock data
+            if (Constants.STACKS_MAINNET_FLAG === false) {
+                const _dns = getMyStxAddress().substr(-5) + ".btc";
+                setDns(_dns);
             }
         }
     }
 
     const getFTHolding = async (pollObject) => {
         if (pollObject?.votingStrategyTemplate) {
-            // BTC holders check
-            if (pollObject?.votingStrategyTemplate === "stx") {
-                // Fetch STX holdings
-                getSTXHolding();
-            } else if (pollObject?.strategyContractName && pollObject?.strategyTokenName) {
-                const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/balances` +
-                    (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : ""));
-                const responseObject = await response.json();
+            try {
+                if (pollObject?.votingStrategyTemplate === "stx") {
+                    // Fetch STX holdings
+                    await getSTXHolding();
+                } else if (pollObject?.strategyContractName && pollObject?.strategyTokenName) {
+                    const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/balances` +
+                        (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : ""),
+                        { headers: getStacksAPIHeaders() });
 
-                if (responseObject?.fungible_tokens && responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName]) {
-                    const tokenInfo = responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName];
+                    if (!response.ok) {
+                        console.error(`Failed to fetch FT holdings: ${response.status} ${response.statusText}`);
+                        setNoHoldingToken(true);
+                        return;
+                    }
 
-                    if (tokenInfo?.balance !== "0") {
-                        // Default value
-                        let tokenDecimalsPowerOfTen = 1000000;
-                        if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) >= 0) {
-                            tokenDecimalsPowerOfTen = Math.pow(10, parseInt(pollObject?.strategyTokenDecimals));
-                        } else if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) === 0) {
-                            tokenDecimalsPowerOfTen = 1;
+                    const responseObject = await response.json();
+
+                    if (responseObject?.fungible_tokens && responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName]) {
+                        const tokenInfo = responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName];
+
+                        if (tokenInfo?.balance !== "0") {
+                            // Default value
+                            let tokenDecimalsPowerOfTen = 1000000;
+                            if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) >= 0) {
+                                tokenDecimalsPowerOfTen = Math.pow(10, parseInt(pollObject?.strategyTokenDecimals));
+                            } else if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) === 0) {
+                                tokenDecimalsPowerOfTen = 1;
+                            }
+
+                            const tokenBalance = Math.floor((parseInt(tokenInfo?.balance) / tokenDecimalsPowerOfTen));
+                            setHoldingTokenIdsArray([]);
+                            setVotingPower(tokenBalance);
+                        } else {
+                            setNoHoldingToken(true);
                         }
-
-                        const tokenBalance = Math.floor((parseInt(tokenInfo?.balance) / tokenDecimalsPowerOfTen));
-                        setHoldingTokenIdsArray([]);
-                        setVotingPower(tokenBalance);
                     } else {
-                        // No holdings to vote
                         setNoHoldingToken(true);
                     }
-                } else {
-                    // No holdings to vote
-                    setNoHoldingToken(true);
                 }
+            } catch (error) {
+                console.error("Error fetching FT holdings:", error);
+                setNoHoldingToken(true);
             }
         }
     }
 
     const getSTXHolding = async () => {
-        const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/stx` +
-            (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : ""));
-        const responseObject = await response.json();
+        try {
+            const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/stx` +
+                (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : ""),
+                { headers: getStacksAPIHeaders() });
 
-        if (responseObject?.balance !== "0") {
-            const stxBalance = Math.floor((parseInt(responseObject?.balance) / 1000000));
-            setHoldingTokenIdsArray([]);
-            setVotingPower(stxBalance);
-        } else {
-            // No holdings to vote
+            if (!response.ok) {
+                console.error(`Failed to fetch STX holdings: ${response.status} ${response.statusText}`);
+                setNoHoldingToken(true);
+                return;
+            }
+
+            const responseObject = await response.json();
+
+            if (responseObject?.balance !== "0") {
+                const stxBalance = Math.floor((parseInt(responseObject?.balance) / 1000000));
+                setHoldingTokenIdsArray([]);
+                setVotingPower(stxBalance);
+            } else {
+                setNoHoldingToken(true);
+            }
+        } catch (error) {
+            console.error("Error fetching STX holdings:", error);
             setNoHoldingToken(true);
         }
     }
 
     const getPollResults = async (pollObject) => {
         if (pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName) {
-            const contractAddress = pollObject?.publishedInfo?.contractAddress;
-            const contractName = pollObject?.publishedInfo?.contractName;
-            let url = getStacksAPIPrefix() +
-                "/v2/contracts/call-read/" +
-                contractAddress +
-                "/" +
-                contractName +
-                "/get-results";
+            try {
+                const contractAddress = pollObject?.publishedInfo?.contractAddress;
+                const contractName = pollObject?.publishedInfo?.contractName;
+                const url = getStacksAPIPrefix() +
+                    "/v2/contracts/call-read/" +
+                    contractAddress +
+                    "/" +
+                    contractName +
+                    "/get-results";
 
-            // Fetch gaia URL from stacks blockchain
-            const rawResponse = await fetch(url, {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    sender: contractAddress,
-                    arguments: []
-                }),
-            });
-            const content = await rawResponse.json();
-
-            // If data found on stacks blockchain
-            if (content && content.okay) {
-                const results = cvToValue(parseReadOnlyResponse(content)).value;
-
-                const total = parseInt(results?.["total-votes"]?.value ? (results?.["total-votes"]?.value) : (results?.total?.value));
-                setTotalVotes(total);
-
-                // Total unique vote
-                totalUniqueVotes = results?.total?.value;
-                setTotalUniqueVotes(results?.total?.value);
-
-                let resultsObj = {};
-                results?.options?.value.forEach((option, index) => {
-                    resultsObj[option?.value] = {
-                        total: results?.results?.value?.[index]?.value,
-                        percentage: results?.results?.value?.[index]?.value == 0 ? 0 : ((results?.results?.value?.[index]?.value / total) * 100).toFixed(2)
-                    };
+                // Fetch poll results from stacks blockchain
+                const rawResponse = await fetch(url, {
+                    method: "POST",
+                    headers: getStacksAPIHeaders({
+                        "Content-Type": "application/json"
+                    }),
+                    body: JSON.stringify({
+                        sender: contractAddress,
+                        arguments: []
+                    }),
                 });
-                setResultsByOption(resultsObj);
 
-                // Get list of individual vote
-                getIndividualResultByStartAndEndPosition(results?.total?.value, (results?.total?.value > 10 ? (results?.total?.value - 10) : 0), totalUniqueVotes,
-                    contractAddress, contractName, resultsByPosition, setResultsByPosition, noOfResultsLoaded, setNoOfResultsLoaded);
-            } else {
+                if (!rawResponse.ok) {
+                    console.error(`Failed to fetch poll results: ${rawResponse.status} ${rawResponse.statusText}`);
+                    setTotalVotes(0);
+                    setTotalUniqueVotes(0);
+                    setNoOfResultsLoaded(0);
+                    return;
+                }
+
+                const content = await rawResponse.json();
+
+                // If data found on stacks blockchain
+                if (content && content.okay) {
+                    const results = cvToValue(parseReadOnlyResponse(content)).value;
+
+                    const total = parseInt(results?.["total-votes"]?.value ? (results?.["total-votes"]?.value) : (results?.total?.value));
+                    setTotalVotes(total);
+
+                    // Total unique vote
+                    totalUniqueVotes = results?.total?.value;
+                    setTotalUniqueVotes(results?.total?.value);
+
+                    let resultsObj = {};
+                    results?.options?.value.forEach((option, index) => {
+                        resultsObj[option?.value] = {
+                            total: results?.results?.value?.[index]?.value,
+                            percentage: results?.results?.value?.[index]?.value === 0 ? 0 : ((results?.results?.value?.[index]?.value / total) * 100).toFixed(2)
+                        };
+                    });
+                    setResultsByOption(resultsObj);
+
+                    // Get list of individual vote
+                    getIndividualResultByStartAndEndPosition(results?.total?.value, (results?.total?.value > 10 ? (results?.total?.value - 10) : 0), totalUniqueVotes,
+                        contractAddress, contractName, resultsByPosition, setResultsByPosition, noOfResultsLoaded, setNoOfResultsLoaded);
+                } else {
+                    setTotalVotes(0);
+                    setTotalUniqueVotes(0);
+                    setNoOfResultsLoaded(0);
+                }
+            } catch (error) {
+                console.error("Error fetching poll results:", error);
                 setTotalVotes(0);
                 setTotalUniqueVotes(0);
                 setNoOfResultsLoaded(0);
@@ -334,36 +411,46 @@ export default function Poll(props) {
     const getResultByUser = async (pollObject) => {
         if (userSession.isUserSignedIn() &&
             pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName) {
-            const contractAddress = pollObject?.publishedInfo?.contractAddress;
-            const contractName = pollObject?.publishedInfo?.contractName;
-            let url = getStacksAPIPrefix() +
-                "/v2/contracts/call-read/" +
-                contractAddress +
-                "/" +
-                contractName +
-                "/get-result-by-user";
+            try {
+                const contractAddress = pollObject?.publishedInfo?.contractAddress;
+                const contractName = pollObject?.publishedInfo?.contractName;
+                const url = getStacksAPIPrefix() +
+                    "/v2/contracts/call-read/" +
+                    contractAddress +
+                    "/" +
+                    contractName +
+                    "/get-result-by-user";
 
-            // Fetch gaia URL from stacks blockchain
-            const rawResponse = await fetch(url, {
-                method: "POST",
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    sender: contractAddress,
-                    arguments: [cvToHex(standardPrincipalCV(getMyStxAddress()))]
-                }),
-            });
-            const content = await rawResponse.json();
+                // Fetch user vote status from stacks blockchain
+                const rawResponse = await fetch(url, {
+                    method: "POST",
+                    headers: getStacksAPIHeaders({
+                        "Content-Type": "application/json"
+                    }),
+                    body: JSON.stringify({
+                        sender: contractAddress,
+                        arguments: [cvToHex(standardPrincipalCV(getMyStxAddress()))]
+                    }),
+                });
 
-            // If data found on stacks blockchain
-            if (content && content.okay) {
-                const results = cvToValue(parseReadOnlyResponse(content)).value;
-
-                if (results) {
-                    setAlreadyVoted(true);
+                if (!rawResponse.ok) {
+                    console.error(`Failed to fetch user vote status: ${rawResponse.status} ${rawResponse.statusText}`);
+                    return;
                 }
+
+                const content = await rawResponse.json();
+
+                // If data found on stacks blockchain
+                if (content && content.okay) {
+                    const results = cvToValue(parseReadOnlyResponse(content)).value;
+
+                    if (results) {
+                        setAlreadyVoted(true);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching user vote status:", error);
+                // Don't set alreadyVoted on error - allow user to try voting
             }
         }
     };
@@ -401,26 +488,27 @@ export default function Poll(props) {
 
             {/* Navigation */}
             <DashboardNavBarComponent />
-            
+
             {/* Main Poll Content */}
-            <PollComponent 
-                pollObject={pollObject} 
-                optionsMap={optionsMap} 
+            <PollComponent
+                pollObject={pollObject}
+                optionsMap={optionsMap}
                 resultsByOption={resultsByOption}
-                resultsByPosition={resultsByPosition} 
+                resultsByPosition={resultsByPosition}
                 setResultsByPosition={setResultsByPosition}
-                totalVotes={totalVotes} 
+                totalVotes={totalVotes}
                 totalUniqueVotes={totalUniqueVotes}
-                dns={dns} 
-                alreadyVoted={alreadyVoted} 
+                dns={dns}
+                alreadyVoted={alreadyVoted}
                 noHoldingToken={noHoldingToken}
                 holdingTokenIdsArray={holdingTokenIdsArray}
-                votingPower={votingPower} 
-                publicUrl={publicUrl} 
+                votingPower={votingPower}
+                publicUrl={publicUrl}
                 txStatus={txStatus}
-                noOfResultsLoaded={noOfResultsLoaded} 
+                noOfResultsLoaded={noOfResultsLoaded}
                 setNoOfResultsLoaded={setNoOfResultsLoaded}
-                currentBlockHeight={currentBlockHeight} 
+                currentBitcoinBlockHeight={currentBitcoinBlockHeight}
+                currentStacksBlockHeight={currentStacksBlockHeight}
             />
         </>
     );
@@ -431,7 +519,7 @@ export async function getServerSideProps(context) {
     // Get path param
     const { params } = context;
     const { id: pathParams } = params;
-    let pollObject;
+    let pollObject = null;
     let pollId, gaiaAddress;
 
     if (pathParams && pathParams?.[0]) {
@@ -443,18 +531,37 @@ export async function getServerSideProps(context) {
 
     // Fetch from Gaia
     if (pollId && gaiaAddress) {
-        // Form gaia url            
-        const pollGaiaUrl = Constants.GAIA_HUB_PREFIX + gaiaAddress + "/" + pollId + ".json";
+        try {
+            // Form gaia url
+            const pollGaiaUrl = Constants.GAIA_HUB_PREFIX + gaiaAddress + "/" + pollId + ".json";
 
-        console.log(pollGaiaUrl);
+            console.log("Fetching poll from:", pollGaiaUrl);
 
-        const response = await fetch(pollGaiaUrl);
-        pollObject = await response.json();
+            const response = await fetch(pollGaiaUrl);
+
+            if (!response.ok) {
+                console.error(`Failed to fetch poll data: ${response.status} ${response.statusText}`);
+            } else {
+                pollObject = await response.json();
+            }
+        } catch (error) {
+            console.error("Error fetching poll data from Gaia:", error);
+            // pollObject remains null, page will show loading/error state
+        }
     }
 
     // Get current block height
-    const currentBlock = await getRecentBlock();
-    const currentBlockHeight = currentBlock?.tenure_height || 0;
+    let currentBitcoinBlockHeight = 0;
+    let currentStacksBlockHeight = 0;
+
+    try {
+        const currentBlock = await getCurrentBlockHeights();
+        currentBitcoinBlockHeight = currentBlock?.bitcoinHeight || 0;
+        currentStacksBlockHeight = currentBlock?.stacksHeight || 0;
+    } catch (error) {
+        console.error("Error fetching current block heights:", error);
+        // Default values already set
+    }
 
     // Pass data to the page via props
     return {
@@ -462,7 +569,8 @@ export async function getServerSideProps(context) {
             pollObject,
             pollId,
             gaiaAddress,
-            currentBlockHeight
+            currentBitcoinBlockHeight,
+            currentStacksBlockHeight
         },
     };
 }

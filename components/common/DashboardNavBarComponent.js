@@ -4,7 +4,7 @@ import { Button } from "react-bootstrap";
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import { authenticate, signOut, switchAccount, userSession } from "../../services/auth";
-import { getDomainNamesFromBlockchain } from "../../services/utils";
+import { getCurrentBlockHeights, getDomainNamesFromBlockchain } from "../../services/utils";
 import ModernMyVotesModal from "./ModernMyVotesModal";
 
 export function DashboardNavBarComponent() {
@@ -26,18 +26,11 @@ export function DashboardNavBarComponent() {
     // Functions
     useEffect(() => {
         getDisplayUsername();
-        getCurrentHeights();
+        getCurrentBlockHeight();
 
         if (userSession && userSession.isUserSignedIn()) {
             setIsUserSignedIn(true)
         }
-
-        // Auto-refresh block heights every 30 seconds
-        const intervalId = setInterval(() => {
-            getCurrentHeights();
-        }, 30000);
-
-        return () => clearInterval(intervalId);
     }, []);
 
     const getDisplayUsername = async () => {
@@ -45,15 +38,10 @@ export function DashboardNavBarComponent() {
         setDisplayUsername(_username);
     }
 
-    const getCurrentHeights = async () => {
+    const getCurrentBlockHeight = async () => {
         try {
-            const resp = await fetch("https://api.hiro.so/extended", {
-                headers: { "Accept": "application/json" }
-            });
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const js = await resp.json();
-            const stacksHeight = js.chain_tip.block_height;
-            const bitcoinHeight = js.chain_tip.burn_block_height;
+            // Get current block height from Hiro API
+            const { stacksHeight, bitcoinHeight } = await getCurrentBlockHeights();
             setStacksHeight(stacksHeight);
             setBitcoinHeight(bitcoinHeight);
         } catch (error) {
@@ -98,7 +86,7 @@ export function DashboardNavBarComponent() {
                             <Link href="/builder/new">
                                 <Button className="action_secondary_btn">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M10 4.375V15.625M4.375 10H15.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                        <path d="M10 4.375V15.625M4.375 10H15.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                     New Poll
                                 </Button>
@@ -154,7 +142,10 @@ export function DashboardNavBarComponent() {
                                     </Dropdown.Item> */}
                                     <Dropdown.Item onClick={() => switchAccount(window?.location?.href)}>
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path fillRule="evenodd" clipRule="evenodd" d="M3 8a5 5 0 015-5v2l3-3-3-3v2A7 7 0 001 8h2zM13 8a7 7 0 01-7 7v-2l-3 3 3 3v-2a5 5 0 005-5h2z" fill="currentColor" />
+                                            <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" fill="currentColor"/>
+                                            <path d="M3 14C3 11.7909 4.79086 10 7 10H9C11.2091 10 13 11.7909 13 14V15H3V14Z" fill="currentColor"/>
+                                            <path d="M13.5 4C14.3284 4 15 3.32843 15 2.5C15 1.67157 14.3284 1 13.5 1C12.6716 1 12 1.67157 12 2.5C12 3.32843 12.6716 4 13.5 4Z" fill="currentColor"/>
+                                            <path d="M14 6H13C12.4477 6 12 6.44772 12 7V8H16V7C16 6.44772 15.5523 6 15 6H14Z" fill="currentColor"/>
                                         </svg>
                                         Switch account
                                     </Dropdown.Item>

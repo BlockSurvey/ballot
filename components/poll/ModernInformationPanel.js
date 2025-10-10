@@ -4,11 +4,11 @@ import {
     calculateDateByBlockHeight,
     convertToDisplayDateFormat,
     formStacksExplorerUrl,
-    formatUtcDateTime
+    formatLocalDateTime
 } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 
-export default function ModernInformationPanel({ pollObject, resultsByOption, currentBlockHeight, totalVotes, totalUniqueVotes }) {
+export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes }) {
     const votingSystemInfo = useMemo(() => {
         return Constants.VOTING_SYSTEMS.find(system => system.id === pollObject?.votingSystem);
     }, [pollObject?.votingSystem]);
@@ -142,7 +142,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                         <span className={styles.info_label}>Start Date</span>
                         <span className={styles.info_value}>
                             {pollObject?.startAtDateUTC
-                                ? formatUtcDateTime(pollObject.startAtDateUTC) + " UTC"
+                                ? formatLocalDateTime(pollObject.startAtDateUTC)
                                 : convertToDisplayDateFormat(pollObject?.startAtDate)
                             }
                         </span>
@@ -152,11 +152,11 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                     <div className={styles.info_item}>
                         <span className={styles.info_label}>End Date</span>
                         <span className={styles.info_value}>
-                            {pollObject?.endAtBlock && currentBlockHeight < pollObject?.endAtBlock ? (
-                                formatUtcDateTime(calculateDateByBlockHeight(currentBlockHeight, pollObject.endAtBlock)) + " UTC"
+                            {pollObject?.endAtBlock && currentBitcoinBlockHeight < pollObject?.endAtBlock ? (
+                                formatLocalDateTime(calculateDateByBlockHeight(currentBitcoinBlockHeight, pollObject.endAtBlock))
                             ) : (
                                 pollObject?.endAtDateUTC
-                                    ? formatUtcDateTime(pollObject.endAtDateUTC) + " UTC"
+                                    ? formatLocalDateTime(pollObject.endAtDateUTC)
                                     : convertToDisplayDateFormat(pollObject?.endAtDate)
                             )}
                         </span>
@@ -175,7 +175,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
 
                     <div className={styles.info_item}>
                         <span className={styles.info_label}>Current Block</span>
-                        <span className={styles.info_value}>{currentBlockHeight}</span>
+                        <span className={styles.info_value}>{currentBitcoinBlockHeight}</span>
                     </div>
                 </div>
             </div>

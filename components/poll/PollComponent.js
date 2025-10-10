@@ -27,7 +27,8 @@ export default function PollComponent(props) {
         txStatus,
         noOfResultsLoaded,
         setNoOfResultsLoaded,
-        currentBlockHeight
+        currentBitcoinBlockHeight,
+        currentStacksBlockHeight
     } = props;
 
     const [txId, setTxId] = useState();
@@ -83,7 +84,6 @@ export default function PollComponent(props) {
         );
     };
 
-
     return (
         <>
             <div className={styles.poll_container}>
@@ -107,7 +107,8 @@ export default function PollComponent(props) {
                                 holdingTokenIdsArray={holdingTokenIdsArray}
                                 votingPower={votingPower}
                                 dns={dns}
-                                currentBlockHeight={currentBlockHeight}
+                                currentBitcoinBlockHeight={currentBitcoinBlockHeight}
+                                currentStacksBlockHeight={currentStacksBlockHeight}
                                 onVoteSuccess={handleVoteSuccess}
                             />
 
@@ -129,7 +130,8 @@ export default function PollComponent(props) {
                             <ModernInformationPanel
                                 pollObject={pollObject}
                                 resultsByOption={resultsByOption}
-                                currentBlockHeight={currentBlockHeight}
+                                currentBitcoinBlockHeight={currentBitcoinBlockHeight}
+                                currentStacksBlockHeight={currentStacksBlockHeight}
                                 totalVotes={totalVotes}
                                 totalUniqueVotes={totalUniqueVotes}
                             />
@@ -171,39 +173,80 @@ export default function PollComponent(props) {
                     <div style={{ marginBottom: '16px', color: 'var(--color-secondary)' }}>
                         Your vote has been successfully recorded on the Stacks blockchain.
                     </div>
-                    <div style={{
-                        padding: '16px',
-                        background: 'var(--color-surface)',
-                        borderRadius: 'var(--radius-md)',
-                        border: '1px solid var(--color-border)'
-                    }}>
-                        <div style={{ fontSize: '0.875rem', color: 'var(--color-tertiary)', marginBottom: '8px' }}>
-                            Transaction ID:
-                        </div>
+                    <div style={{ marginTop: '20px' }}>
                         <a
                             style={{
-                                color: 'var(--color-primary)',
+                                display: 'block',
+                                width: '100%',
+                                padding: '14px 20px',
+                                background: '#000000',
+                                color: '#ffffff',
                                 textDecoration: 'none',
-                                fontFamily: 'monospace',
-                                fontSize: '0.875rem',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid #000000',
+                                fontSize: '15px',
+                                fontWeight: '500',
+                                textAlign: 'center',
+                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                cursor: 'pointer'
                             }}
                             href={formStacksExplorerUrl(txId)}
                             target="_blank"
                             rel="noreferrer"
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = '#333333';
+                                e.currentTarget.style.borderColor = '#333333';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = '#000000';
+                                e.currentTarget.style.borderColor = '#000000';
+                                e.currentTarget.style.transform = 'translateY(0)';
+                                e.currentTarget.style.boxShadow = 'none';
+                            }}
                         >
-                            {txId}
-                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                                <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M3.5044 0.743397C3.5044 0.33283 3.83723 -6.71395e-08 4.2478 0L11.2566 6.60206e-07C11.6672 6.60206e-07 12 0.33283 12 0.743397L12 7.7522C12 8.16277 11.6672 8.4956 11.2566 8.4956C10.846 8.4956 10.5132 8.16277 10.5132 7.7522V2.53811L1.26906 11.7823C0.978742 12.0726 0.50805 12.0726 0.217736 11.7823C-0.0725787 11.4919 -0.0725784 11.0213 0.217736 10.7309L9.46189 1.48679L4.2478 1.48679C3.83723 1.48679 3.5044 1.15396 3.5044 0.743397Z"
-                                    fill="currentColor"
-                                />
-                            </svg>
+                            <span style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '8px'
+                            }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                    <polyline points="15 3 21 3 21 9" />
+                                    <line x1="10" y1="14" x2="21" y2="3" />
+                                </svg>
+                                View Transaction on Explorer
+                            </span>
                         </a>
+                        <div style={{
+                            marginTop: '12px',
+                            padding: '12px',
+                            background: 'var(--color-surface)',
+                            borderRadius: 'var(--radius-md)',
+                            border: '1px solid var(--color-border)'
+                        }}>
+                            <div style={{
+                                fontSize: '0.75rem',
+                                color: 'var(--color-tertiary)',
+                                marginBottom: '6px',
+                                fontWeight: '500',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                            }}>
+                                Transaction ID
+                            </div>
+                            <div style={{
+                                fontFamily: 'monospace',
+                                fontSize: '0.75rem',
+                                color: 'var(--color-secondary)',
+                                wordBreak: 'break-all',
+                                lineHeight: '1.4'
+                            }}>
+                                {txId}
+                            </div>
+                        </div>
                     </div>
                 </Modal.Body>
             </Modal>

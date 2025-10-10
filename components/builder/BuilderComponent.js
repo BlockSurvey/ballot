@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
 import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
 import { deployContract } from "../../services/contract";
-import { getCurrentHeights, isValidUtf8 } from "../../services/utils";
+import { getCurrentBlockHeights, isValidUtf8 } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
 
@@ -129,7 +129,7 @@ export default function BuilderComponent(props) {
 
     const getCurrentBlockHeight = async () => {
         // Get current block height from Hiro API
-        const { stacksHeight, bitcoinHeight } = await getCurrentHeights();
+        const { stacksHeight, bitcoinHeight } = await getCurrentBlockHeights();
         setStacksHeight(stacksHeight);
         setBitcoinHeight(bitcoinHeight);
     }

@@ -2,7 +2,7 @@ import Head from "next/head";
 import { Col, Container, Row } from "react-bootstrap";
 import { Constants } from "../common/constants";
 import SummaryComponent from "../components/summary/SummaryComponent";
-import { getStacksAPIPrefix } from "../services/auth";
+import { getStacksAPIPrefix, getStacksAPIHeaders } from "../services/auth";
 
 export default function SummaryPage(props) {
     // Variables
@@ -72,15 +72,29 @@ export async function getServerSideProps(context) {
         try {
             // Get name details
             const getZoneFileUrl = `${getStacksAPIPrefix()}/v1/names/${param}/zonefile`;
-            const response = await fetch(getZoneFileUrl);
+            const response = await fetch(getZoneFileUrl, {
+                headers: getStacksAPIHeaders()
+            });
+
+            if (!response.ok) {
+                console.warn(`Failed to fetch zone file for ${param}: ${response.status} ${response.statusText}`);
+                return;
+            }
+
             const zoneFile = await response.json();
 
             // Get profile details
             if (zoneFile && zoneFile["zonefile"]) {
                 const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
                 const profileUrl = zoneFile["zonefile"].match(urlRegex)[0];
-                const response = await fetch(profileUrl);
-                const profileObject = await response.json();
+                const profileResponse = await fetch(profileUrl);
+
+                if (!profileResponse.ok) {
+                    console.warn(`Failed to fetch profile from ${profileUrl}: ${profileResponse.status} ${profileResponse.statusText}`);
+                    return;
+                }
+
+                const profileObject = await profileResponse.json();
 
                 // Get gaia address
                 if (profileObject[0]['decodedToken']?.['payload']?.["claim"]?.['apps']?.["https://ballot.gg"]) {

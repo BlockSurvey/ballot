@@ -2,6 +2,9 @@ export const Constants = {
   // Stacks mainnet network flag
   STACKS_MAINNET_FLAG: process.env.NEXT_PUBLIC_STACKS_MAINNET_FLAG === "false" ? false : true,
 
+  // Stacks API key
+  STACKS_API_KEY: "ce353435b067f317c947d6338cab220d",
+
   GAIA_HUB_PREFIX: "https://storage.ballot.gg/",
 
   // Stacks API URLs

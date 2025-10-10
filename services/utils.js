@@ -1,28 +1,40 @@
 import { Constants } from "../common/constants";
-import { getMyStxAddress, getStacksAPIPrefix, getUserData, userSession } from "../services/auth";
+import { getMyStxAddress, getStacksAPIPrefix, getStacksAPIHeaders, getUserData, userSession } from "../services/auth";
 
 export async function getRecentBlock() {
-    // Get btc domain for logged in user
-    const response = await fetch(
-        getStacksAPIPrefix() + "/extended/v1/block?limit=1"
-    );
-    const responseObject = await response.json();
+    try {
+        const response = await fetch(
+            getStacksAPIPrefix() + "/extended/v1/block?limit=1",
+            { headers: getStacksAPIHeaders() }
+        );
 
-    return responseObject?.results?.[0];
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const responseObject = await response.json();
+        return responseObject?.results?.[0];
+    } catch (error) {
+        console.error("Error fetching recent block:", error);
+        return null;
+    }
 }
 
-export async function getCurrentHeights() {
+export async function getCurrentBlockHeights() {
     try {
-        const resp = await fetch("https://api.hiro.so/extended", {
-            headers: { "Accept": "application/json" }
+        const resp = await fetch(getStacksAPIPrefix() + "/extended", {
+            headers: getStacksAPIHeaders()
         });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        if (!resp.ok) {
+            throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
+        }
         const js = await resp.json();
         const stacksHeight = js.chain_tip.block_height;
         const bitcoinHeight = js.chain_tip.burn_block_height;
         return { stacksHeight, bitcoinHeight };
     } catch (error) {
         console.error("Error fetching block heights:", error);
+        return null;
     }
 }
 
@@ -53,35 +65,52 @@ export async function getDomainNamesFromBlockchain() {
         return;
     }
 
-    // Get btc domain for logged in user
-    const response = await fetch(
-        getStacksAPIPrefix() + "/v1/addresses/stacks/" + getMyStxAddress()
-    );
-    const responseObject = await response.json();
+    try {
+        // Testnet code - return early for testnet
+        if (Constants.STACKS_MAINNET_FLAG == false) {
+            displayUsername = getMyStxAddress().substr(-5) + ".btc";
+            return displayUsername;
+        }
 
-    // Testnet code
-    if (Constants.STACKS_MAINNET_FLAG == false) {
-        displayUsername = getMyStxAddress().substr(-5) + ".btc";
-        return displayUsername;
-    }
-
-    // Get btc dns
-    if (responseObject?.names?.length > 0) {
-        const btcDNS = responseObject.names.filter((bns) =>
-            bns.endsWith(".btc")
+        // Get btc domain for logged in user
+        const response = await fetch(
+            getStacksAPIPrefix() + "/v1/addresses/stacks/" + getMyStxAddress(),
+            { headers: getStacksAPIHeaders() }
         );
 
-        // Check does BTC dns is available
-        if (btcDNS && btcDNS.length > 0) {
-            // BTC holder
-            displayUsername = btcDNS[0];
-
-        } else {
-            // Not a BTC holder
-            displayUsername = responseObject.names?.[0];
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
-    } else {
-        displayUsername = getUserData().identityAddress;
+
+        const responseObject = await response.json();
+
+        // Get btc dns
+        if (responseObject?.names?.length > 0) {
+            const btcDNS = responseObject.names.filter((bns) =>
+                bns.endsWith(".btc")
+            );
+
+            // Check does BTC dns is available
+            if (btcDNS && btcDNS.length > 0) {
+                // BTC holder
+                displayUsername = btcDNS[0];
+            } else {
+                // Not a BTC holder
+                displayUsername = responseObject.names?.[0];
+            }
+        } else {
+            // Fallback to identity address
+            displayUsername = getUserData()?.identityAddress;
+        }
+    } catch (error) {
+        console.error("Error fetching domain names from blockchain:", error);
+        // Fallback to identity address on error
+        try {
+            displayUsername = getUserData()?.identityAddress || getMyStxAddress();
+        } catch (fallbackError) {
+            console.error("Error getting fallback identity:", fallbackError);
+            displayUsername = getMyStxAddress();
+        }
     }
 
     return displayUsername;
@@ -195,6 +224,26 @@ export function formatUtcDateTime(dateTimeStr) {
     const year = date.getUTCFullYear();
     const hours = date.getUTCHours();
     const minutes = date.getUTCMinutes();
+
+    // Format the time in 12-hour format with AM/PM
+    const hourFormatted = hours % 12 || 12; // Convert 0 (midnight) to 12
+    const minuteFormatted = minutes < 10 ? '0' + minutes : minutes;
+    const amPm = hours < 12 ? 'am' : 'pm';
+
+    // Construct the formatted string
+    return `${day} ${month} ${year}, ${hourFormatted}:${minuteFormatted} ${amPm}`;
+}
+
+export function formatLocalDateTime(dateTimeStr) {
+    // Parse the date-time string and convert to local time
+    const date = new Date(dateTimeStr);
+
+    // Extract and format the components in local timezone
+    const day = date.getDate();
+    const month = date.toLocaleString('en-US', { month: 'short' });
+    const year = date.getFullYear();
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
 
     // Format the time in 12-hour format with AM/PM
     const hourFormatted = hours % 12 || 12; // Convert 0 (midnight) to 12

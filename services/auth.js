@@ -271,6 +271,17 @@ export function getStacksAPIPrefix() {
 }
 
 /**
+ * Get headers for Stacks API calls with API key
+ */
+export function getStacksAPIHeaders(additionalHeaders = {}) {
+  return {
+    "x-api-key": Constants.STACKS_API_KEY,
+    "Accept": "application/json",
+    ...additionalHeaders
+  };
+}
+
+/**
  * Encrypt content using user's public key
  */
 async function encryptContent(content, options) {

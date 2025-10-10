@@ -12,7 +12,8 @@ export default function ModernVotingInterface({
     holdingTokenIdsArray,
     votingPower,
     dns,
-    currentBlockHeight,
+    currentBitcoinBlockHeight,
+    currentStacksBlockHeight,
     onVoteSuccess
 }) {
     const [selectedOptions, setSelectedOptions] = useState({});
@@ -70,8 +71,8 @@ export default function ModernVotingInterface({
             alreadyVoted ||
             isProcessing ||
             noHoldingToken ||
-            (!currentBlockHeight || currentBlockHeight < pollObject?.startAtBlock) ||
-            (!currentBlockHeight || currentBlockHeight > pollObject?.endAtBlock)
+            (!currentBitcoinBlockHeight || currentBitcoinBlockHeight < pollObject?.startAtBlock) ||
+            (!currentBitcoinBlockHeight || currentBitcoinBlockHeight > pollObject?.endAtBlock)
         );
     };
 
@@ -141,18 +142,18 @@ export default function ModernVotingInterface({
     };
 
     const isPollActive = () => {
-        if (!currentBlockHeight) return false;
-        return currentBlockHeight >= pollObject?.startAtBlock && 
-               currentBlockHeight <= pollObject?.endAtBlock;
+        if (!currentBitcoinBlockHeight) return false;
+        return currentBitcoinBlockHeight >= pollObject?.startAtBlock && 
+               currentBitcoinBlockHeight <= pollObject?.endAtBlock;
     };
 
     const getPollStatusMessage = () => {
-        if (!currentBlockHeight) return "";
+        if (!currentBitcoinBlockHeight) return "";
         
-        if (currentBlockHeight < pollObject?.startAtBlock) {
+        if (currentBitcoinBlockHeight < pollObject?.startAtBlock) {
             return "Poll has not started yet";
         }
-        if (currentBlockHeight > pollObject?.endAtBlock) {
+        if (currentBitcoinBlockHeight > pollObject?.endAtBlock) {
             return "Poll has ended";
         }
         return "";
@@ -268,7 +269,7 @@ export default function ModernVotingInterface({
                     <div style={{ marginTop: "var(--space-6)" }}>
                         {isUserSignedIn ? (
                             <Button
-                                className={styles.vote_button}
+                                className="action_primary_btn w-100"
                                 disabled={isDisabled() || Object.keys(selectedOptions).length === 0}
                                 onClick={handleVote}
                             >
@@ -293,7 +294,7 @@ export default function ModernVotingInterface({
                             </Button>
                         ) : (
                             <Button
-                                className={styles.vote_button_secondary}
+                                className="action_secondary_btn w-100"
                                 onClick={() => authenticate(window?.location?.href)}
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
