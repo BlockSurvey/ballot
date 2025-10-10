@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import Link from 'next/link.js';
 import Router from 'next/router';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button, Form } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
@@ -45,6 +45,18 @@ export default function BuilderComponent(props) {
     const [show, setShow] = useState(false);
     const handleShow = () => setShow(true);
     const handleClose = () => setShow(false);
+
+    // Refs for form fields to manage focus
+    const titleRef = useRef(null);
+    const descriptionRef = useRef(null);
+    const startAtBlockRef = useRef(null);
+    const endAtBlockRef = useRef(null);
+    const votingStrategyTemplateRef = useRef(null);
+    const strategyTokenNameRef = useRef(null);
+    const strategyContractNameRef = useRef(null);
+    const strategyTokenDecimalsRef = useRef(null);
+    const snapshotBlockHeightRef = useRef(null);
+    const optionRefs = useRef([]);
 
 
     // Current block height
@@ -352,6 +364,7 @@ export default function BuilderComponent(props) {
     const validatePoll = () => {
         const errors = {};
         let hasErrors = false;
+        let firstErrorField = null;
 
         if (!pollObject) {
             setErrorMessage("Poll is not yet created.");
@@ -362,15 +375,18 @@ export default function BuilderComponent(props) {
         if (!pollObject?.title || pollObject.title.trim() === '') {
             errors.title = "Poll title is required";
             hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'title';
         } else if (isValidUtf8(pollObject?.title) == false) {
             errors.title = "Please enter valid UTF-8 characters";
             hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'title';
         }
 
         // Check description UTF-8
         if (pollObject?.description && isValidUtf8(pollObject?.description) == false) {
             errors.description = "Please enter valid UTF-8 characters";
             hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'description';
         }
 
         // Check for options
@@ -384,9 +400,11 @@ export default function BuilderComponent(props) {
                 if (!pollObject.options[i].value || pollObject.options[i].value.trim() === '') {
                     optionErrors[i] = "Option text is required";
                     hasErrors = true;
+                    if (!firstErrorField) firstErrorField = `option-${i}`;
                 } else if (isValidUtf8(pollObject.options[i].value) == false) {
                     optionErrors[i] = "Please enter valid UTF-8 characters";
                     hasErrors = true;
+                    if (!firstErrorField) firstErrorField = `option-${i}`;
                 }
             }
             if (Object.keys(optionErrors).length > 0) {
@@ -398,17 +416,21 @@ export default function BuilderComponent(props) {
         if (!pollObject?.startAtBlock) {
             errors.startAtBlock = "Start tenure block height is required";
             hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'startAtBlock';
         } else if (pollObject?.startAtBlock < bitcoinHeight) {
             errors.startAtBlock = `Start tenure block must be >= current block height (${bitcoinHeight})`;
             hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'startAtBlock';
         }
 
         if (!pollObject?.endAtBlock) {
             errors.endAtBlock = "End tenure block height is required";
             hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'endAtBlock';
         } else if (pollObject?.startAtBlock && pollObject?.endAtBlock <= pollObject?.startAtBlock) {
             errors.endAtBlock = "End tenure block must be greater than start tenure block";
             hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'endAtBlock';
         }
 
         // Check for voting strategy
@@ -416,16 +438,19 @@ export default function BuilderComponent(props) {
             if (pollObject?.strategyTokenType && !pollObject?.votingStrategyTemplate) {
                 errors.votingStrategyTemplate = "Please select a default strategy or choose 'Other'";
                 hasErrors = true;
+                if (!firstErrorField) firstErrorField = 'votingStrategyTemplate';
             }
 
             if (pollObject?.votingStrategyTemplate == "other") {
                 if (!pollObject?.strategyTokenName || pollObject.strategyTokenName.trim() === '') {
                     errors.strategyTokenName = "Strategy token name is required when using custom strategy";
                     hasErrors = true;
+                    if (!firstErrorField) firstErrorField = 'strategyTokenName';
                 }
                 if (!pollObject?.strategyContractName || pollObject.strategyContractName.trim() === '') {
                     errors.strategyContractName = "Strategy contract address is required when using custom strategy";
                     hasErrors = true;
+                    if (!firstErrorField) firstErrorField = 'strategyContractName';
                 }
             }
 
@@ -435,15 +460,18 @@ export default function BuilderComponent(props) {
                     if (!pollObject?.strategyTokenDecimals || !Number.isInteger(parseInt(pollObject?.strategyTokenDecimals))) {
                         errors.strategyTokenDecimals = "Please enter a positive integer for strategy decimals";
                         hasErrors = true;
+                        if (!firstErrorField) firstErrorField = 'strategyTokenDecimals';
                     }
 
                     if (!pollObject?.snapshotBlockHeight || !Number.isInteger(parseInt(pollObject?.snapshotBlockHeight)) || pollObject?.snapshotBlockHeight <= 0) {
                         errors.snapshotBlockHeight = "Please enter a positive integer for snapshot block height";
                         hasErrors = true;
+                        if (!firstErrorField) firstErrorField = 'snapshotBlockHeight';
                     }
                 } catch (e) {
                     errors.strategyTokenDecimals = "Please enter a positive integer for strategy decimals";
                     hasErrors = true;
+                    if (!firstErrorField) firstErrorField = 'strategyTokenDecimals';
                 }
             }
         }
@@ -452,6 +480,9 @@ export default function BuilderComponent(props) {
         setFieldErrors(errors);
 
         if (hasErrors) {
+            // Focus on the first field with an error
+            focusOnErrorField(firstErrorField);
+
             // Set a general error message
             setErrorMessage("Please fix the highlighted fields below and try again.");
             return "Please fix the highlighted fields below and try again.";
@@ -460,6 +491,46 @@ export default function BuilderComponent(props) {
         // Clear any previous errors if validation passes
         setFieldErrors({});
         return null;
+    }
+
+    const focusOnErrorField = (fieldName) => {
+        // Use setTimeout to ensure the DOM has updated with the error state
+        setTimeout(() => {
+            if (fieldName === 'title' && titleRef.current) {
+                titleRef.current.focus();
+                titleRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (fieldName === 'description' && descriptionRef.current) {
+                descriptionRef.current.focus();
+                descriptionRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (fieldName.startsWith('option-') && optionRefs.current.length > 0) {
+                const optionIndex = parseInt(fieldName.split('-')[1]);
+                if (optionRefs.current[optionIndex]) {
+                    optionRefs.current[optionIndex].focus();
+                    optionRefs.current[optionIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            } else if (fieldName === 'startAtBlock' && startAtBlockRef.current) {
+                startAtBlockRef.current.focus();
+                startAtBlockRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (fieldName === 'endAtBlock' && endAtBlockRef.current) {
+                endAtBlockRef.current.focus();
+                endAtBlockRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (fieldName === 'votingStrategyTemplate' && votingStrategyTemplateRef.current) {
+                votingStrategyTemplateRef.current.focus();
+                votingStrategyTemplateRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (fieldName === 'strategyTokenName' && strategyTokenNameRef.current) {
+                strategyTokenNameRef.current.focus();
+                strategyTokenNameRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (fieldName === 'strategyContractName' && strategyContractNameRef.current) {
+                strategyContractNameRef.current.focus();
+                strategyContractNameRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (fieldName === 'strategyTokenDecimals' && strategyTokenDecimalsRef.current) {
+                strategyTokenDecimalsRef.current.focus();
+                strategyTokenDecimalsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else if (fieldName === 'snapshotBlockHeight' && snapshotBlockHeightRef.current) {
+                snapshotBlockHeightRef.current.focus();
+                snapshotBlockHeightRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }, 100);
     }
 
     const calculateBlockTime = (targetTimestamp, currentBlockHeight) => {
@@ -662,6 +733,7 @@ export default function BuilderComponent(props) {
                                                     onChange={handleChange}
                                                     placeholder="Enter a compelling title for your poll"
                                                     className={`${styles.form_input} ${fieldErrors.title ? styles.error : ''}`}
+                                                    ref={titleRef}
                                                 />
                                                 {fieldErrors.title && (
                                                     <small className={styles.field_error}>
@@ -680,6 +752,7 @@ export default function BuilderComponent(props) {
                                                     onChange={handleChange}
                                                     placeholder="Provide context and details about what you're polling"
                                                     className={`${styles.form_textarea} ${fieldErrors.description ? styles.error : ''}`}
+                                                    ref={descriptionRef}
                                                 />
                                                 {fieldErrors.description && (
                                                     <small className={styles.field_error}>
@@ -831,6 +904,7 @@ export default function BuilderComponent(props) {
                                                                         value={option?.value}
                                                                         onChange={e => handleOptionChange(e, option)}
                                                                         className={`${styles.option_input} ${fieldErrors.optionItems?.[index] ? styles.error : ''}`}
+                                                                        ref={el => optionRefs.current[index] = el}
                                                                     />
                                                                     {fieldErrors.optionItems?.[index] && (
                                                                         <small className={styles.field_error}>
@@ -892,6 +966,7 @@ export default function BuilderComponent(props) {
                                                         onChange={handleChange}
                                                         className={`${styles.form_input} ${fieldErrors.startAtBlock ? styles.error : ''}`}
                                                         min={bitcoinHeight}
+                                                        ref={startAtBlockRef}
                                                     />
                                                     {fieldErrors.startAtBlock ? (
                                                         <small className={styles.field_error}>
@@ -914,6 +989,7 @@ export default function BuilderComponent(props) {
                                                         onChange={handleChange}
                                                         className={`${styles.form_input} ${fieldErrors.endAtBlock ? styles.error : ''}`}
                                                         min={pollObject.startAtBlock || bitcoinHeight + 1}
+                                                        ref={endAtBlockRef}
                                                     />
                                                     {fieldErrors.endAtBlock ? (
                                                         <small className={styles.field_error}>
@@ -1031,6 +1107,7 @@ export default function BuilderComponent(props) {
                                                             value={pollObject?.votingStrategyTemplate || ""}
                                                             onChange={handleChange}
                                                             className={`${styles.form_select} ${fieldErrors.votingStrategyTemplate ? styles.error : ''}`}
+                                                            ref={votingStrategyTemplateRef}
                                                         >
                                                             <option disabled value="">Choose a token template</option>
                                                             {Constants.STRATEGY_TEMPLATES
@@ -1059,6 +1136,7 @@ export default function BuilderComponent(props) {
                                                                     onChange={handleChange}
                                                                     placeholder="e.g., APower"
                                                                     className={`${styles.form_input} ${fieldErrors.strategyTokenName ? styles.error : ''}`}
+                                                                    ref={strategyTokenNameRef}
                                                                 />
                                                                 {fieldErrors.strategyTokenName ? (
                                                                     <small className={styles.field_error}>
@@ -1080,6 +1158,7 @@ export default function BuilderComponent(props) {
                                                                     onChange={handleChange}
                                                                     placeholder="ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.contract"
                                                                     className={`${styles.form_input} ${fieldErrors.strategyContractName ? styles.error : ''}`}
+                                                                    ref={strategyContractNameRef}
                                                                 />
                                                                 {fieldErrors.strategyContractName && (
                                                                     <small className={styles.field_error}>
@@ -1101,6 +1180,7 @@ export default function BuilderComponent(props) {
                                                                             placeholder="6"
                                                                             className={`${styles.form_input} ${fieldErrors.strategyTokenDecimals ? styles.error : ''}`}
                                                                             min="0"
+                                                                            ref={strategyTokenDecimalsRef}
                                                                         />
                                                                         {fieldErrors.strategyTokenDecimals && (
                                                                             <small className={styles.field_error}>
@@ -1125,6 +1205,7 @@ export default function BuilderComponent(props) {
                                                                 placeholder={`e.g., ${stacksHeight - 100}`}
                                                                 className={`${styles.form_input} ${fieldErrors.snapshotBlockHeight ? styles.error : ''}`}
                                                                 min="0"
+                                                                ref={snapshotBlockHeightRef}
                                                             />
                                                             {fieldErrors.snapshotBlockHeight ? (
                                                                 <small className={styles.field_error}>
