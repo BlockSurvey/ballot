@@ -208,6 +208,126 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                         </div>
                     </div>
 
+                    {/* Total Locked/Unlocked Summary */}
+                    {(() => {
+                        if (!resultsByOption || Object.keys(resultsByOption).length === 0) return null;
+
+                        const totals = Object.values(resultsByOption).reduce((acc, result) => ({
+                            locked: acc.locked + (parseInt(result.lockedStx) || 0),
+                            unlocked: acc.unlocked + (parseInt(result.unlockedStx) || 0)
+                        }), { locked: 0, unlocked: 0 });
+
+                        if (totals.locked === 0 && totals.unlocked === 0) return null;
+
+                        return (
+                            <div style={{
+                                marginBottom: 'var(--space-4)',
+                                padding: 'var(--space-3)',
+                                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(16, 185, 129, 0.08) 100%)',
+                                borderRadius: 'var(--radius-md)',
+                                border: '1px solid rgba(0, 0, 0, 0.06)'
+                            }}>
+                                <div style={{
+                                    fontSize: '0.6875rem',
+                                    fontWeight: '600',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                    color: 'var(--color-tertiary)',
+                                    marginBottom: 'var(--space-2)',
+                                    textAlign: 'center'
+                                }}>
+                                    Total Voting Power Distribution
+                                </div>
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: '1fr 1fr',
+                                    gap: 'var(--space-4)'
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: 'var(--space-1)'
+                                    }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 'var(--space-1)',
+                                            fontSize: '0.6875rem',
+                                            fontWeight: '600',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                            color: '#F59E0B'
+                                        }}>
+                                            <div style={{
+                                                width: '8px',
+                                                height: '8px',
+                                                borderRadius: '50%',
+                                                background: '#F59E0B',
+                                                boxShadow: '0 0 8px rgba(245, 158, 11, 0.4)'
+                                            }} />
+                                            Locked
+                                        </div>
+                                        <div style={{
+                                            fontSize: '1.25rem',
+                                            fontWeight: '700',
+                                            color: 'var(--color-primary)',
+                                            letterSpacing: '-0.02em'
+                                        }}>
+                                            {totals.locked}
+                                            <span style={{
+                                                marginLeft: '4px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: '600',
+                                                color: 'var(--color-tertiary)'
+                                            }}>STX</span>
+                                        </div>
+                                    </div>
+                                    <div style={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        gap: 'var(--space-1)'
+                                    }}>
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 'var(--space-1)',
+                                            fontSize: '0.6875rem',
+                                            fontWeight: '600',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px',
+                                            color: '#10B981'
+                                        }}>
+                                            <div style={{
+                                                width: '8px',
+                                                height: '8px',
+                                                borderRadius: '50%',
+                                                background: '#10B981',
+                                                boxShadow: '0 0 8px rgba(16, 185, 129, 0.4)'
+                                            }} />
+                                            Unlocked
+                                        </div>
+                                        <div style={{
+                                            fontSize: '1.25rem',
+                                            fontWeight: '700',
+                                            color: 'var(--color-primary)',
+                                            letterSpacing: '-0.02em'
+                                        }}>
+                                            {totals.unlocked}
+                                            <span style={{
+                                                marginLeft: '4px',
+                                                fontSize: '0.75rem',
+                                                fontWeight: '600',
+                                                color: 'var(--color-tertiary)'
+                                            }}>STX</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
                     {/* Results Options with Progress Bars */}
                     <div className={styles.results_options}>
                         {(() => {
@@ -226,12 +346,14 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
 
                             // Calculate and sort results
                             const resultsData = pollObject.options.map(option => {
-                                const result = resultsByOption[option.id] || { total: 0, percentage: 0 };
+                                const result = resultsByOption[option.id] || { total: 0, percentage: 0, lockedStx: 0, unlockedStx: 0 };
                                 return {
                                     id: option.id,
                                     name: option.value,
                                     votes: parseInt(result.total) || 0,
-                                    percentage: parseFloat(result.percentage) || 0
+                                    percentage: parseFloat(result.percentage) || 0,
+                                    lockedStx: parseInt(result.lockedStx) || 0,
+                                    unlockedStx: parseInt(result.unlockedStx) || 0
                                 };
                             }).sort((a, b) => b.votes - a.votes);
 
@@ -273,6 +395,99 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                             }}
                                         />
                                     </div>
+
+                                    {/* Locked/Unlocked Breakdown */}
+                                    {(result.lockedStx > 0 || result.unlockedStx > 0) && (
+                                        <div style={{
+                                            marginTop: 'var(--space-3)',
+                                            padding: 'var(--space-2)',
+                                            background: 'rgba(0, 0, 0, 0.02)',
+                                            borderRadius: 'var(--radius-sm)',
+                                            display: 'grid',
+                                            gridTemplateColumns: '1fr 1fr',
+                                            gap: 'var(--space-3)',
+                                            fontSize: '0.8125rem'
+                                        }}>
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 'var(--space-1)'
+                                            }}>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 'var(--space-1)',
+                                                    color: 'var(--color-tertiary)',
+                                                    fontSize: '0.6875rem',
+                                                    fontWeight: '500',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.5px'
+                                                }}>
+                                                    <div style={{
+                                                        width: '6px',
+                                                        height: '6px',
+                                                        borderRadius: '50%',
+                                                        background: '#F59E0B',
+                                                        flexShrink: 0
+                                                    }} />
+                                                    Locked
+                                                </div>
+                                                <div style={{
+                                                    fontWeight: '700',
+                                                    fontSize: '0.875rem',
+                                                    color: 'var(--color-primary)',
+                                                    letterSpacing: '-0.01em'
+                                                }}>
+                                                    {result.lockedStx}
+                                                    <span style={{
+                                                        marginLeft: '4px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '600',
+                                                        color: 'var(--color-tertiary)'
+                                                    }}>STX</span>
+                                                </div>
+                                            </div>
+                                            <div style={{
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: 'var(--space-1)'
+                                            }}>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: 'var(--space-1)',
+                                                    color: 'var(--color-tertiary)',
+                                                    fontSize: '0.6875rem',
+                                                    fontWeight: '500',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.5px'
+                                                }}>
+                                                    <div style={{
+                                                        width: '6px',
+                                                        height: '6px',
+                                                        borderRadius: '50%',
+                                                        background: '#10B981',
+                                                        flexShrink: 0
+                                                    }} />
+                                                    Unlocked
+                                                </div>
+                                                <div style={{
+                                                    fontWeight: '700',
+                                                    fontSize: '0.875rem',
+                                                    color: 'var(--color-primary)',
+                                                    letterSpacing: '-0.01em'
+                                                }}>
+                                                    {result.unlockedStx}
+                                                    <span style={{
+                                                        marginLeft: '4px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '600',
+                                                        color: 'var(--color-tertiary)'
+                                                    }}>STX</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
 
                                     {/* Winner Badge */}
                                     {index === 0 && result.votes > 0 && (

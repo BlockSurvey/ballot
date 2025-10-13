@@ -7,7 +7,7 @@ import { Constants } from "../common/constants";
 import { DashboardNavBarComponent } from "../components/common/DashboardNavBarComponent";
 import PollComponent from "../components/poll/PollComponent";
 import { getIndividualResultByStartAndEndPosition } from "../components/poll/PollService";
-import { getMyStxAddress, getStacksAPIPrefix, getStacksAPIHeaders, userSession } from "../services/auth";
+import { getMyStxAddress, getStacksAPIHeaders, getStacksAPIPrefix, userSession } from "../services/auth";
 import { getCurrentBlockHeights } from "../services/utils";
 
 export default function Poll(props) {
@@ -386,7 +386,9 @@ export default function Poll(props) {
                     results?.options?.value.forEach((option, index) => {
                         resultsObj[option?.value] = {
                             total: results?.results?.value?.[index]?.value,
-                            percentage: results?.results?.value?.[index]?.value === 0 ? 0 : ((results?.results?.value?.[index]?.value / total) * 100).toFixed(2)
+                            percentage: results?.results?.value?.[index]?.value === 0 ? 0 : ((results?.results?.value?.[index]?.value / total) * 100).toFixed(2),
+                            lockedStx: results?.["results-with-locked-and-unlocked-stx"]?.value?.[index]?.value?.["locked-stx"]?.value || "0",
+                            unlockedStx: results?.["results-with-locked-and-unlocked-stx"]?.value?.[index]?.value?.["unlocked-stx"]?.value || "0"
                         };
                     });
                     setResultsByOption(resultsObj);
