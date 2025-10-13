@@ -8,6 +8,7 @@ export default function ModernVotingInterface({
     pollObject,
     isPreview,
     alreadyVoted,
+    userVoteData,
     noHoldingToken,
     holdingTokenIdsArray,
     votingPower,
@@ -26,6 +27,13 @@ export default function ModernVotingInterface({
             setIsUserSignedIn(true);
         }
     }, []);
+
+    // Pre-select user's previous votes when already voted
+    useEffect(() => {
+        if (alreadyVoted && userVoteData && Object.keys(userVoteData).length > 0) {
+            setSelectedOptions(userVoteData);
+        }
+    }, [alreadyVoted, userVoteData]);
 
     const handleOptionSelect = (optionId, optionValue) => {
         if (isDisabled()) return;
@@ -162,13 +170,67 @@ export default function ModernVotingInterface({
     return (
         <div className={`${styles.card} ${styles.fade_in}`}>
             <div className={styles.card_content}>
-                <div className={styles.voting_section}>
-                    <h2 className={styles.section_title}>Cast Your Vote</h2>
+                <div className={styles.voting_section} style={alreadyVoted ? {
                     
+                    pointerEvents: 'none',
+                    position: 'relative'
+                } : {}}>
+                    {/* Overlay for already voted */}
+                    {alreadyVoted && (
+                        <div style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            background: 'linear-gradient(135deg, rgba(255,255,255,0.6) 0%, rgba(240,240,240,0.6) 100%)',
+                            borderRadius: 'var(--radius-md)',
+                            zIndex: 1,
+                            pointerEvents: 'none'
+                        }} />
+                    )}
+
+                    <h2 className={styles.section_title}>
+                        {alreadyVoted ? 'Your Vote' : 'Cast Your Vote'}
+                    </h2>
+
+                    {/* Already Voted Banner */}
+                    {alreadyVoted && (
+                        <div style={{
+                            padding: 'var(--space-4)',
+                            marginBottom: 'var(--space-4)',
+                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'white',
+                            boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)',
+                            position: 'relative',
+                            zIndex: 2
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 'var(--space-2)',
+                                marginBottom: 'var(--space-2)'
+                            }}>
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                </svg>
+                                <div>
+                                    <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
+                                        Vote Successfully Recorded
+                                    </div>
+                                    <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '4px' }}>
+                                        Your vote has been recorded on the blockchain and is displayed below
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Voting System Description */}
                     <div className={styles.voting_power}>
                         <div className={styles.voting_power_title}>
-                            {getVotingSystemDescription()}
+                            {alreadyVoted ? 'You voted with:' : getVotingSystemDescription()}
                         </div>
                         {votingPower && (
                             <div className={styles.voting_power_value}>
@@ -247,19 +309,13 @@ export default function ModernVotingInterface({
                     )}
 
                     {/* Status Messages */}
-                    {noHoldingToken && (
+                    {noHoldingToken && !alreadyVoted && (
                         <div className={styles.error_message}>
                             You must hold {pollObject?.strategyTokenName || "the required tokens"} to vote in this poll.
                         </div>
                     )}
 
-                    {alreadyVoted && (
-                        <div className={styles.warning_message}>
-                            <strong>Already Voted:</strong> You have already cast your vote for this poll.
-                        </div>
-                    )}
-
-                    {!isPollActive() && getPollStatusMessage() && (
+                    {!alreadyVoted && !isPollActive() && getPollStatusMessage() && (
                         <div className={styles.warning_message}>
                             <strong>Poll Status:</strong> {getPollStatusMessage()}
                         </div>

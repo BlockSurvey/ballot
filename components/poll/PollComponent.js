@@ -20,6 +20,7 @@ export default function PollComponent(props) {
         totalUniqueVotes,
         dns,
         alreadyVoted,
+        userVoteData,
         noHoldingToken,
         holdingTokenIdsArray,
         votingPower,
@@ -103,6 +104,7 @@ export default function PollComponent(props) {
                                 pollObject={pollObject}
                                 isPreview={isPreview}
                                 alreadyVoted={alreadyVoted}
+                                userVoteData={userVoteData}
                                 noHoldingToken={noHoldingToken}
                                 holdingTokenIdsArray={holdingTokenIdsArray}
                                 votingPower={votingPower}

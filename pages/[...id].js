@@ -30,6 +30,7 @@ export default function Poll(props) {
 
     // TokenIds
     const [alreadyVoted, setAlreadyVoted] = useState(false);
+    const [userVoteData, setUserVoteData] = useState(null);
     const [noHoldingToken, setNoHoldingToken] = useState(false);
     const [holdingTokenIdsArray, setHoldingTokenIdsArray] = useState();
 
@@ -448,6 +449,16 @@ export default function Poll(props) {
 
                     if (results) {
                         setAlreadyVoted(true);
+
+                        // Parse user's vote data
+                        const userVote = {};
+                        results?.value?.vote?.value?.forEach((optionId, index) => {
+                            const voteValue = results?.value?.volume?.value?.[index]?.value;
+                            if (optionId?.value && voteValue) {
+                                userVote[optionId.value] = voteValue;
+                            }
+                        });
+                        setUserVoteData(userVote);
                     }
                 }
             } catch (error) {
@@ -502,6 +513,7 @@ export default function Poll(props) {
                 totalUniqueVotes={totalUniqueVotes}
                 dns={dns}
                 alreadyVoted={alreadyVoted}
+                userVoteData={userVoteData}
                 noHoldingToken={noHoldingToken}
                 holdingTokenIdsArray={holdingTokenIdsArray}
                 votingPower={votingPower}
