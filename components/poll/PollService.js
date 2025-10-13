@@ -4,7 +4,7 @@ import {
 import { Constants } from "../../common/constants";
 import { getStacksAPIPrefix, getStacksAPIHeaders } from "../../services/auth";
 
-const getIndividualResultByStartAndEndPosition = (start, end, totalUniqueVotes, contractAddress, contractName,
+const getIndividualResultByStartAndEndPosition = async (start, end, totalUniqueVotes, contractAddress, contractName,
     resultsByPosition, setResultsByPosition, noOfResultsLoaded, setNoOfResultsLoaded) => {
     // Store, "end" as number of results loaded
     if (!noOfResultsLoaded) {
@@ -15,11 +15,16 @@ const getIndividualResultByStartAndEndPosition = (start, end, totalUniqueVotes, 
         setNoOfResultsLoaded(noOfResultsLoaded);
     }
 
+    // Create array of promises for all position fetches
+    const promises = [];
     for (let i = start; i > end; i--) {
         if (i >= 1) {
-            getResultAtPosition(i, contractAddress, contractName, resultsByPosition, setResultsByPosition);
+            promises.push(getResultAtPosition(i, contractAddress, contractName, resultsByPosition, setResultsByPosition));
         }
     }
+
+    // Wait for all fetches to complete
+    await Promise.allSettled(promises);
 }
 
 const getResultAtPosition = async (position, contractAddress, contractName,
@@ -71,7 +76,9 @@ const getResultAtPosition = async (position, contractAddress, contractName,
                 "dns": results?.bns?.value,
                 "address": results?.user?.value,
                 "vote": resultsObj,
-                "votingPower": results?.["voting-power"]?.value
+                "votingPower": results?.["voting-power"]?.value,
+                "lockedStx": results?.["locked-stx"]?.value || "0",
+                "unlockedStx": results?.["unlocked-stx"]?.value || "0"
             };
 
             // Fetch BNS (Bitcoin Name System) information

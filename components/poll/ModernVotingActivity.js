@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formStacksExplorerUrl } from "../../services/utils";
 import { getIndividualResultByStartAndEndPosition } from "./PollService";
 import styles from "../../styles/Poll.module.css";
@@ -11,6 +12,8 @@ export default function ModernVotingActivity({
     noOfResultsLoaded,
     setNoOfResultsLoaded
 }) {
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
     const generateUserAvatar = (address) => {
         if (!address) return "?";
         return address.substring(0, 2).toUpperCase();
@@ -22,10 +25,16 @@ export default function ModernVotingActivity({
         return `${address.substring(0, 8)}...${address.substring(address.length - 6)}`;
     };
 
-    const loadMoreResults = () => {
+    const loadMoreResults = async () => {
         if (!pollObject?.publishedInfo?.contractAddress || !pollObject?.publishedInfo?.contractName) {
             return;
         }
+
+        if (isLoadingMore) {
+            return; // Prevent multiple simultaneous loads
+        }
+
+        setIsLoadingMore(true);
 
         const contractAddress = pollObject.publishedInfo.contractAddress;
         const contractName = pollObject.publishedInfo.contractName;
@@ -38,36 +47,37 @@ export default function ModernVotingActivity({
             end = 0;
         }
 
-        // Load next batch of results
-        getIndividualResultByStartAndEndPosition(
-            start, 
-            end, 
-            totalUniqueVotes,
-            contractAddress, 
-            contractName,
-            resultsByPosition, 
-            setResultsByPosition, 
-            noOfResultsLoaded, 
-            setNoOfResultsLoaded
-        );
+        try {
+            // Load next batch of results
+            await getIndividualResultByStartAndEndPosition(
+                start,
+                end,
+                totalUniqueVotes,
+                contractAddress,
+                contractName,
+                resultsByPosition,
+                setResultsByPosition,
+                noOfResultsLoaded,
+                setNoOfResultsLoaded
+            );
+        } finally {
+            // Always clear loading state after completion or error
+            setIsLoadingMore(false);
+        }
     };
 
     const hasMoreResults = () => {
         return totalUniqueVotes > Object.keys(resultsByPosition).length;
     };
 
-    const isLoading = () => {
-        return noOfResultsLoaded !== Object.keys(resultsByPosition).length;
-    };
-
     return (
         <div className={`${styles.card} ${styles.fade_in}`}>
             <div className={styles.card_header}>
                 <h2 className={styles.section_title}>
-                    Voting Activity 
+                    Voting Activity
                     {totalUniqueVotes >= 0 && (
-                        <span style={{ 
-                            fontWeight: 'normal', 
+                        <span style={{
+                            fontWeight: 'normal',
                             fontSize: '1rem',
                             color: 'var(--color-tertiary)',
                             marginLeft: 'var(--space-2)'
@@ -80,11 +90,19 @@ export default function ModernVotingActivity({
 
             <div className={styles.activity_table}>
                 {/* Table Header */}
-                <div className={styles.activity_header}>
+                <div
+                    className={styles.activity_header}
+                    style={pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" ? {
+                        gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.2fr'
+                    } : {}}
+                >
                     <span>Voter</span>
                     <span>Choice</span>
                     <span>Votes</span>
                     <span>Power</span>
+                    {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" && (
+                        <span>Lock Status</span>
+                    )}
                 </div>
 
                 {/* Activity Rows */}
@@ -96,12 +114,18 @@ export default function ModernVotingActivity({
                                 .map((position, index) => {
                                     const result = resultsByPosition[position];
                                     const username = result?.username || formatAddress(result?.address);
-                                    
+
                                     return (
-                                        <div key={index} className={styles.activity_row}>
+                                        <div
+                                            key={index}
+                                            className={styles.activity_row}
+                                            style={pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" ? {
+                                                gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.2fr'
+                                            } : {}}
+                                        >
                                             {/* User Info */}
                                             <div className={styles.user_info}>
-                                                <div 
+                                                <div
                                                     className={styles.user_avatar}
                                                     style={{
                                                         background: `hsl(${(result?.address?.charCodeAt(0) || 0) * 7}, 50%, 45%)`
@@ -111,10 +135,10 @@ export default function ModernVotingActivity({
                                                 </div>
                                                 <div>
                                                     {result?.address ? (
-                                                        <a 
+                                                        <a
                                                             className={styles.user_address}
-                                                            target="_blank" 
-                                                            rel="noreferrer" 
+                                                            target="_blank"
+                                                            rel="noreferrer"
                                                             href={formStacksExplorerUrl(result.address, 'address')}
                                                         >
                                                             {username}
@@ -139,6 +163,16 @@ export default function ModernVotingActivity({
                                                 {Object.values(result?.vote || {}).map((value, voteIndex) => (
                                                     <div key={voteIndex} style={{ marginBottom: voteIndex < Object.values(result.vote).length - 1 ? '2px' : '0' }}>
                                                         {value}
+                                                        {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.strategyTokenName && (
+                                                            <span style={{
+                                                                marginLeft: '4px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: '600',
+                                                                color: 'var(--color-tertiary)'
+                                                            }}>
+                                                                {pollObject.strategyTokenName}
+                                                            </span>
+                                                        )}
                                                     </div>
                                                 ))}
                                             </div>
@@ -146,7 +180,86 @@ export default function ModernVotingActivity({
                                             {/* Voting Power */}
                                             <div className={styles.voting_power_display}>
                                                 {result?.votingPower || 0}
+
+                                                {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && (
+                                                    // Show strategy token name
+                                                    <span style={{
+                                                        marginLeft: '4px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: '600',
+                                                        color: 'var(--color-tertiary)'
+                                                    }}>
+                                                        {pollObject.strategyTokenName}
+                                                    </span>
+                                                )}
                                             </div>
+
+                                            {/* Locked/Unlocked Status */}
+                                            {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" && (
+                                                <div className={styles.lock_status}>
+                                                    <div style={{
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '4px',
+                                                        fontSize: '0.75rem'
+                                                    }}>
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px'
+                                                        }}>
+                                                            <div style={{
+                                                                width: '6px',
+                                                                height: '6px',
+                                                                borderRadius: '50%',
+                                                                background: '#F59E0B',
+                                                                flexShrink: 0
+                                                            }} />
+                                                            <span style={{
+                                                                fontWeight: '600',
+                                                                color: 'var(--color-primary)'
+                                                            }}>
+                                                                {result?.lockedStx}
+                                                                <span style={{
+                                                                    marginLeft: '4px',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: '600',
+                                                                    color: 'var(--color-tertiary)'
+                                                                }}>
+                                                                    {pollObject.strategyTokenName}
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px'
+                                                        }}>
+                                                            <div style={{
+                                                                width: '6px',
+                                                                height: '6px',
+                                                                borderRadius: '50%',
+                                                                background: '#10B981',
+                                                                flexShrink: 0
+                                                            }} />
+                                                            <span style={{
+                                                                fontWeight: '600',
+                                                                color: 'var(--color-primary)'
+                                                            }}>
+                                                                {result?.unlockedStx}
+                                                                <span style={{
+                                                                    marginLeft: '4px',
+                                                                    fontSize: '0.75rem',
+                                                                    fontWeight: '600',
+                                                                    color: 'var(--color-tertiary)'
+                                                                }}>
+                                                                    {pollObject.strategyTokenName}
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     );
                                 })
@@ -161,7 +274,7 @@ export default function ModernVotingActivity({
                                     color: 'var(--color-tertiary)'
                                 }}>
                                     <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" opacity="0.3">
-                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z" />
                                     </svg>
                                     <div>
                                         <div style={{ fontWeight: '600', marginBottom: '4px' }}>No votes yet</div>
@@ -181,7 +294,7 @@ export default function ModernVotingActivity({
                             }}>
                                 <div className={styles.pulse}>
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                        <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                                        <circle cx="12" cy="12" r="10" opacity="0.3" />
                                     </svg>
                                 </div>
                                 Loading voting activity...
@@ -190,33 +303,39 @@ export default function ModernVotingActivity({
                     )}
 
                     {/* Loading More Results */}
-                    {isLoading() && (
+                    {isLoadingMore && (
                         <div className={styles.loading_row}>
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 gap: 'var(--space-2)',
-                                padding: 'var(--space-4)'
+                                padding: 'var(--space-4)',
+                                borderTop: '1px solid var(--color-border-light)'
                             }}>
                                 <div className={styles.pulse}>
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                        <circle cx="12" cy="12" r="10" opacity="0.3"/>
+                                        <circle cx="12" cy="12" r="10" opacity="0.3" />
                                     </svg>
                                 </div>
-                                Loading more results...
+                                <span style={{ fontSize: '0.875rem', color: 'var(--color-tertiary)' }}>
+                                    Loading more results...
+                                </span>
                             </div>
                         </div>
                     )}
 
                     {/* Load More Button */}
-                    {!isLoading() && hasMoreResults() && (
+                    {!isLoadingMore && hasMoreResults() && (
                         <div style={{ padding: 'var(--space-4)', textAlign: 'center', borderTop: '1px solid var(--color-border-light)' }}>
                             <button
                                 className={styles.load_more_button}
                                 onClick={loadMoreResults}
                             >
                                 Load More Results
+                                <span style={{ marginLeft: '4px', opacity: 0.7 }}>
+                                    ({Object.keys(resultsByPosition).length} of {totalUniqueVotes})
+                                </span>
                             </button>
                         </div>
                     )}

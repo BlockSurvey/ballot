@@ -580,7 +580,13 @@
 
 .voting_power_display {
     font-size: 0.875rem;
-    color: var(--color-tertiary);
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.lock_status {
+    font-size: 0.75rem;
+    color: var(--color-secondary);
 }
 
 /* Loading States */
