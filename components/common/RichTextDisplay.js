@@ -1,19 +1,27 @@
 import React from 'react';
+import { sanitizeHtml, sanitizeTextWithLinks, SANITIZE_CONFIGS } from '../../utils/htmlSanitizer';
 
 const RichTextDisplay = ({ 
     content, 
     className = '',
-    convertLinks = true 
+    convertLinks = true,
+    securityLevel = 'PERMISSIVE', // 'STRICT', 'MODERATE', or 'PERMISSIVE'
+    isPlainText = false // Set to true if content is plain text, false if it's rich HTML
 }) => {
-    const convertToHrefLink = (text) => {
-        if (!text || !convertLinks) return text;
-        const urlRegex = /(https?:\/\/[^\s<>"{}|\\^`\[\]]*)/gi;
-        return text.replace(urlRegex, function (url) {
-            return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
-        });
+    const processContent = () => {
+        if (!content) return '';
+        
+        if (isPlainText) {
+            // For plain text content, use sanitizeTextWithLinks for safe URL conversion
+            return sanitizeTextWithLinks(content, convertLinks);
+        } else {
+            // For rich HTML content, use sanitizeHtml with appropriate security level
+            const config = SANITIZE_CONFIGS[securityLevel] || {};
+            return sanitizeHtml(content, config);
+        }
     };
 
-    const processedContent = convertLinks ? convertToHrefLink(content) : content;
+    const processedContent = processContent();
 
     return (
         <div className={`rich-text-display ${className}`}>

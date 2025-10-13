@@ -42,10 +42,10 @@ function getContract(pollObject) {
     pollObject?.options?.forEach(option => {
         if (!optionIds) {
             optionIds = `"${option?.id}"`
-            optionResults = `(map-set results {id: "${option?.id}"} {count: u0, name: u"${getStringByLength(encodeURIComponent(option?.value), 512)}"})`
+            optionResults = `(map-set results {id: "${option?.id}"} {count: u0, name: u"${getStringByLength(encodeURIComponent(option?.value), 512)}", locked-stx: u0, unlocked-stx: u0})`
         } else {
             optionIds = optionIds + ` "${option?.id}"`;
-            optionResults = optionResults + ` (map-set results {id: "${option?.id}"} {count: u0, name: u"${getStringByLength(encodeURIComponent(option?.value), 512)}"})`
+            optionResults = optionResults + ` (map-set results {id: "${option?.id}"} {count: u0, name: u"${getStringByLength(encodeURIComponent(option?.value), 512)}", locked-stx: u0, unlocked-stx: u0})`
         }
     });
 
@@ -55,6 +55,10 @@ function getContract(pollObject) {
     let volumeByVotingPower = "";
     let myVotes = "";
     let votingPowerValidation = "";
+    let stxBalanceWithLockedAndUnlockedFunction = "";
+    let stxBalanceWithLockedAndUnlockedLetVariable = "";
+    let registerStxWithLockedAndUnlockedFunction = "";
+    let registerStxWithLockedAndUnlockedWithUserFunction = ", locked-stx: u0, unlocked-stx: u0";
 
     // Strategy
     if (pollObject?.votingStrategyFlag && pollObject?.strategyTokenType) {
@@ -72,6 +76,12 @@ function getContract(pollObject) {
             if (pollObject?.votingStrategyTemplate == "stx") {
                 strategyFunction = getStrategyFunctionForStxHolders(pollObject?.snapshotBlockHeight || 0);
                 votingPowerVariable = `(voting-power (get-voting-power-by-stx-holdings))`;
+
+                // Get the stx balance with locked and unlocked
+                stxBalanceWithLockedAndUnlockedFunction = getStxBalanceWithLockedAndUnlockedFunction(pollObject?.snapshotBlockHeight || 0);
+                stxBalanceWithLockedAndUnlockedLetVariable = getStxBalanceWithLockedAndUnlockedLetVariable(pollObject?.snapshotBlockHeight || 0);
+                registerStxWithLockedAndUnlockedFunction = getRegisterStxWithLockedAndUnlockedFunction(pollObject?.snapshotBlockHeight || 0);
+                registerStxWithLockedAndUnlockedWithUserFunction = getRegisterStxWithLockedAndUnlockedWithUserFunction(pollObject?.snapshotBlockHeight || 0);
             } else if (pollObject?.strategyContractName) {
                 strategyFunction = getStrategyFunctionForFT(pollObject?.strategyContractName, pollObject?.snapshotBlockHeight || 0);
                 votingPowerVariable = `(voting-power (get-voting-power-by-ft-holdings))`;
@@ -160,7 +170,11 @@ function getContract(pollObject) {
         votingPowerVariable,
         volumeByVotingPower,
         myVotes,
-        votingPowerValidation
+        votingPowerValidation,
+        stxBalanceWithLockedAndUnlockedFunction,
+        stxBalanceWithLockedAndUnlockedLetVariable,
+        registerStxWithLockedAndUnlockedFunction,
+        registerStxWithLockedAndUnlockedWithUserFunction
     }
 
     for (let key in placeholder) {
@@ -207,9 +221,9 @@ function getRawContract() {
     (define-data-var end uint u0)
     (define-map token-ids-map {token-id: uint} {user: principal, vote-id: uint})
     (define-map btc-holder-map {domain: (buff 20), namespace: (buff 48)} {user: principal, vote-id: uint})
-    (define-map results {id: (string-ascii 36)} {count: uint, name: (string-utf8 256)} )
-    (define-map users {id: principal} {id: uint, vote: (list &{noOfOptions} (string-ascii 36)), volume: (list &{noOfOptions} uint), voting-power: uint})
-    (define-map register {id: uint} {user: principal, vote: (list &{noOfOptions} (string-ascii 36)), volume: (list &{noOfOptions} uint), voting-power: uint})
+    (define-map results {id: (string-ascii 36)} {count: uint, name: (string-utf8 256), locked-stx: uint, unlocked-stx: uint} )
+    (define-map users {id: principal} {id: uint, vote: (list &{noOfOptions} (string-ascii 36)), volume: (list &{noOfOptions} uint), voting-power: uint, locked-stx: uint, unlocked-stx: uint})
+    (define-map register {id: uint} {user: principal, vote: (list &{noOfOptions} (string-ascii 36)), volume: (list &{noOfOptions} uint), voting-power: uint, locked-stx: uint, unlocked-stx: uint})
     (define-data-var total uint u0)
     (define-data-var total-votes uint u0)
     (define-data-var options (list &{noOfOptions} (string-ascii 36)) (list))
@@ -276,6 +290,20 @@ function getRawContract() {
             volume
         )
     )
+
+    (define-private (get-single-result-with-locked-and-unlocked-stx (option-id (string-ascii 36)))
+        (let 
+            (
+                (locked-stx (default-to u0 (get locked-stx (map-get? results {id: option-id}))))
+                (unlocked-stx (default-to u0 (get unlocked-stx (map-get? results {id: option-id}))))
+            )
+
+            ;; Return locked-stx and unlocked-stx
+            {locked-stx: locked-stx, unlocked-stx: unlocked-stx}
+        )
+    )
+
+    &{stxBalanceWithLockedAndUnlockedFunction}
     
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; public functions for all
@@ -289,6 +317,9 @@ function getRawContract() {
                 &{votingPowerVariable}
                 &{volumeByVotingPower}
                 &{myVotes}
+
+                ;; Get the stx balance with locked and unlocked
+                &{stxBalanceWithLockedAndUnlockedLetVariable}
             )
             ;; Validation
             (asserts! (and (> (len vote) u0) (is-eq (len vote) (len volume-by-voting-power)) (validate-vote-volume volume-by-voting-power)) ERR-NOT-VOTED)
@@ -300,10 +331,12 @@ function getRawContract() {
             ;; Business logic
             ;; Process my vote
             (map process-my-vote vote volume-by-voting-power)
+
+            &{registerStxWithLockedAndUnlockedFunction}
             
             ;; Register for reference
-            (map-set users {id: tx-sender} {id: vote-id, vote: vote, volume: volume-by-voting-power, voting-power: voting-power})
-            (map-set register {id: vote-id} {user: tx-sender, vote: vote, volume: volume-by-voting-power, voting-power: voting-power})
+            (map-set users {id: tx-sender} {id: vote-id, vote: vote, volume: volume-by-voting-power, voting-power: voting-power &{registerStxWithLockedAndUnlockedWithUserFunction}})
+            (map-set register {id: vote-id} {user: tx-sender, vote: vote, volume: volume-by-voting-power, voting-power: voting-power &{registerStxWithLockedAndUnlockedWithUserFunction}})
 
             ;; Increase the total votes
             (var-set total-votes (+ my-votes (var-get total-votes)))
@@ -320,9 +353,10 @@ function getRawContract() {
         (begin
             (ok {
                     total: (var-get total), 
-                    total-votes: (var-get total-votes), 
+                    total-votes: (var-get total-votes),
                     options: (var-get options), 
-                    results: (map get-single-result (var-get options))
+                    results: (map get-single-result (var-get options)),
+                    results-with-locked-and-unlocked-stx: (map get-single-result-with-locked-and-unlocked-stx (var-get options))
                 })
         )
     )
@@ -477,6 +511,77 @@ function getStrategyFunctionForFT(strategyContractName, snapshotBlockHeight) {
             )
         )
     )`;
+}
+
+function getStxBalanceWithLockedAndUnlockedFunction(snapshotBlockHeight) {
+    if (snapshotBlockHeight > 0) {
+        return `
+        (define-private (get-stx-balance-with-locked-and-unlocked)
+            (at-block (unwrap-panic (get-stacks-block-info? id-header-hash u${snapshotBlockHeight}))
+                (let
+                    (
+                        (account (stx-account tx-sender))
+                        (locked-stx (get locked account))
+                        (unlocked-stx (get unlocked account))
+                        (total-stx (+ locked-stx unlocked-stx))
+                    )
+    
+                    ;; Return the stx balance with locked and unlocked
+                    {
+                        locked-stx: (if (> locked-stx u0) (/ locked-stx u1000000) locked-stx), 
+                        unlocked-stx: (if (> unlocked-stx u0) (/ unlocked-stx u1000000) unlocked-stx), 
+                        total-stx: (if (> total-stx u0) (/ total-stx u1000000) total-stx)
+                    }
+                )
+            )
+        )
+    
+        (define-private (register-stx-with-locked-and-unlocked (option-id (string-ascii 36)) (volume uint))
+            (match (map-get? results {id: option-id})
+                result (let
+                        (
+                            (stx-balance-with-locked-and-unlocked (get-stx-balance-with-locked-and-unlocked))
+                            (new-count-tuple {
+                                locked-stx: (+ (get locked-stx stx-balance-with-locked-and-unlocked) (get locked-stx result)), 
+                                unlocked-stx: (+ (get unlocked-stx stx-balance-with-locked-and-unlocked) (get unlocked-stx result))
+                            })
+                        )
+    
+                        ;; If the volume is greater than zero, then register the stx
+                        (if (> volume u0)
+                            (map-set results {id: option-id} (merge result new-count-tuple))
+                            true
+                        )
+    
+                        ;; Return
+                        true
+                    )
+                true
+            )
+        )`;
+    }
+}
+
+function getStxBalanceWithLockedAndUnlockedLetVariable(snapshotBlockHeight) {
+    if (snapshotBlockHeight > 0) {
+        return `(stx-balance-with-locked-and-unlocked (get-stx-balance-with-locked-and-unlocked))`;
+    }
+}
+
+function getRegisterStxWithLockedAndUnlockedFunction(snapshotBlockHeight) {
+    if (snapshotBlockHeight > 0) {
+        return `
+        ;; Register stx with locked and unlocked
+        (map register-stx-with-locked-and-unlocked vote volume-by-voting-power)`;
+    }
+}
+
+function getRegisterStxWithLockedAndUnlockedWithUserFunction(snapshotBlockHeight) {
+    if (snapshotBlockHeight > 0) {
+        return `, locked-stx: (get locked-stx stx-balance-with-locked-and-unlocked), unlocked-stx: (get unlocked-stx stx-balance-with-locked-and-unlocked)`;
+    }
+
+    return `, locked-stx: u0, unlocked-stx: u0`;
 }
 
 export async function castMyVoteContractCall(contractAddress, contractName, voteObj, dns, tokenIdsArray, callbackFunction) {
