@@ -52,7 +52,7 @@ export default function ModernVotingInterface({
             }
             setSelectedOptions(newSelectedOptions);
         }
-        
+
         // Clear any error messages when user makes a selection
         if (errorMessage) {
             setErrorMessage("");
@@ -151,13 +151,13 @@ export default function ModernVotingInterface({
 
     const isPollActive = () => {
         if (!currentBitcoinBlockHeight) return false;
-        return currentBitcoinBlockHeight >= pollObject?.startAtBlock && 
-               currentBitcoinBlockHeight <= pollObject?.endAtBlock;
+        return currentBitcoinBlockHeight >= pollObject?.startAtBlock &&
+            currentBitcoinBlockHeight <= pollObject?.endAtBlock;
     };
 
     const getPollStatusMessage = () => {
         if (!currentBitcoinBlockHeight) return "";
-        
+
         if (currentBitcoinBlockHeight < pollObject?.startAtBlock) {
             return "Poll has not started yet";
         }
@@ -171,7 +171,7 @@ export default function ModernVotingInterface({
         <div className={`${styles.card} ${styles.fade_in}`}>
             <div className={styles.card_content}>
                 <div className={styles.voting_section} style={alreadyVoted ? {
-                    
+
                     pointerEvents: 'none',
                     position: 'relative'
                 } : {}}>
@@ -213,14 +213,14 @@ export default function ModernVotingInterface({
                                 marginBottom: 'var(--space-2)'
                             }}>
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                                 </svg>
                                 <div>
                                     <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
                                         Vote Successfully Recorded
                                     </div>
                                     <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '4px' }}>
-                                        Your vote has been recorded on the blockchain and is displayed below
+                                        Your vote has been recorded on the chain and is displayed below
                                     </div>
                                 </div>
                             </div>
@@ -235,6 +235,18 @@ export default function ModernVotingInterface({
                         {votingPower && (
                             <div className={styles.voting_power_value}>
                                 Voting Power: {votingPower}
+
+                                {/* Show strategy token name */}
+                                {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" && (
+                                    <span style={{
+                                        marginLeft: '4px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '600',
+                                        color: 'var(--color-tertiary)'
+                                    }}>
+                                        {pollObject.strategyTokenName}
+                                    </span>
+                                )}
                             </div>
                         )}
                     </div>
@@ -248,9 +260,8 @@ export default function ModernVotingInterface({
                             return (
                                 <div
                                     key={index}
-                                    className={`${styles.voting_option} ${
-                                        isSelected ? styles.selected : ''
-                                    } ${isOptionDisabled ? styles.disabled : ''}`}
+                                    className={`${styles.voting_option} ${isSelected ? styles.selected : ''
+                                        } ${isOptionDisabled ? styles.disabled : ''}`}
                                     onClick={() => {
                                         if ((pollObject?.votingSystem === "fptp" || pollObject?.votingSystem === "block") && !isOptionDisabled) {
                                             handleOptionSelect(option.id, option.value);
@@ -260,15 +271,14 @@ export default function ModernVotingInterface({
                                     <div className={styles.option_content}>
                                         {/* Radio/Checkbox for FPTP and Block Voting */}
                                         {(pollObject?.votingSystem === "fptp" || pollObject?.votingSystem === "block") && (
-                                            <div 
-                                                className={`${
-                                                    pollObject?.votingSystem === "fptp" 
-                                                        ? styles.option_radio 
+                                            <div
+                                                className={`${pollObject?.votingSystem === "fptp"
+                                                        ? styles.option_radio
                                                         : styles.option_checkbox
-                                                } ${isSelected ? styles.checked : ''}`}
+                                                    } ${isSelected ? styles.checked : ''}`}
                                             />
                                         )}
-                                        
+
                                         {/* Option Label */}
                                         <div className={styles.option_label}>
                                             {option.value}
@@ -333,8 +343,8 @@ export default function ModernVotingInterface({
                                     <>
                                         <div className={styles.pulse}>
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                                <circle cx="12" cy="12" r="10" opacity="0.3"/>
-                                                <path d="M12 2C17.523 2 22 6.477 22 12s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z" opacity="0.6"/>
+                                                <circle cx="12" cy="12" r="10" opacity="0.3" />
+                                                <path d="M12 2C17.523 2 22 6.477 22 12s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z" opacity="0.6" />
                                             </svg>
                                         </div>
                                         Processing Vote...
@@ -342,7 +352,7 @@ export default function ModernVotingInterface({
                                 ) : (
                                     <>
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                         </svg>
                                         Vote Now
                                     </>
@@ -354,7 +364,7 @@ export default function ModernVotingInterface({
                                 onClick={() => authenticate(window?.location?.href)}
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
                                 </svg>
                                 Connect Wallet to Vote
                             </Button>

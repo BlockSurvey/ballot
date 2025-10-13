@@ -37,7 +37,11 @@ export default function PollComponent(props) {
     const [voteObject, setVoteObject] = useState({});
 
     const handleShow = () => setShow(true);
-    const handleClose = () => setShow(false);
+    const handleClose = () => {
+        setShow(false);
+        // Refresh the page to show latest voting data
+        window.location.reload();
+    };
 
     const handleVoteSuccess = (data, selectedOptions) => {
         if (data?.txId) {

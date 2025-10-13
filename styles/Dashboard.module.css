@@ -834,11 +834,12 @@
 .poll_list_description {
     color: var(--color-tertiary);
     font-size: 14px;
-    line-height: 1.4;
+    line-height: 1.5;
     margin: 0;
     overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .poll_list_meta {

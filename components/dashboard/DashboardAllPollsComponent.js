@@ -4,7 +4,6 @@ import { Button } from "react-bootstrap";
 import { deleteFileToGaia, getFileFromGaia, getGaiaAddressFromPublicKey, putFileToGaia } from "../../services/auth.js";
 import { convertToDisplayDateFormat } from "../../services/utils";
 import styles from "../../styles/Dashboard.module.css";
-import RichTextDisplay from "../common/RichTextDisplay";
 
 export default function DashboardAllPollsComponent() {
     // localStorage utility functions
@@ -155,8 +154,7 @@ export default function DashboardAllPollsComponent() {
                                 </h3>
                                 {pollIndexObject?.description && (
                                     <div className={styles.poll_list_description}>
-                                        {/* Sanitize and render rich description safely */}
-                                        <RichTextDisplay content={pollIndexObject.description} convertLinks={true} securityLevel="PERMISSIVE" isPlainText={false} />
+                                        {pollIndexObject.description.replace(/<[^>]*>/g, '')}
                                     </div>
                                 )}
                             </div>
@@ -208,8 +206,7 @@ export default function DashboardAllPollsComponent() {
 
                     {pollIndexObject?.description && (
                         <div className={styles.poll_card_description}>
-                            {/* Sanitize and render rich description safely */}
-                            <RichTextDisplay content={pollIndexObject.description} convertLinks={true} securityLevel="PERMISSIVE" isPlainText={false} />
+                            {pollIndexObject.description.replace(/<[^>]*>/g, '')}
                         </div>
                     )}
 
