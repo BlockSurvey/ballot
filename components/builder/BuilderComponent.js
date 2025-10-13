@@ -125,7 +125,7 @@ export default function BuilderComponent(props) {
                 }
             ],
             votingStrategyFlag: false,
-            strategyTokenType: "nft",
+            strategyTokenType: "ft",
             strategyContractName: "",
             // startAtBlock: 0,
             // endAtBlock: 0,
@@ -153,6 +153,18 @@ export default function BuilderComponent(props) {
         // Switch box component
         if (name == "votingStrategyFlag") {
             value = e.target.checked;
+            // Set default template to STX when enabling token-based voting for the first time
+            if (value && !pollObject.votingStrategyTemplate) {
+                pollObject["votingStrategyTemplate"] = "stx";
+                const strategyTemplate = Constants.STRATEGY_TEMPLATES.find(template => template.id == "stx");
+                if (strategyTemplate) {
+                    pollObject["strategyTokenType"] = strategyTemplate["strategyTokenType"];
+                    pollObject["strategyTokenName"] = strategyTemplate["strategyTokenName"];
+                    pollObject["strategyContractName"] = strategyTemplate["strategyContractName"];
+                    pollObject["strategyTokenDecimals"] = strategyTemplate["strategyTokenDecimals"];
+                    pollObject["snapshotBlockHeight"] = strategyTemplate["snapshotBlockHeight"];
+                }
+            }
         } else if (name == "votingStrategyTemplate") {
             const strategyTemplate = Constants.STRATEGY_TEMPLATES.find(template => template.id == value);
             if (strategyTemplate) {

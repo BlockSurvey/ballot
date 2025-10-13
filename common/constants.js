@@ -98,7 +98,7 @@ export const Constants = {
     }
   ],
 
-  TOKEN_TYPES: [{ id: "nft", name: "Non Fungible Token" }, { id: "ft", name: "Fungible Token" }],
+  TOKEN_TYPES: [{ id: "ft", name: "Fungible Token" }, { id: "nft", name: "Non Fungible Token" }],
 
   // FAQs
   FAQ: [
