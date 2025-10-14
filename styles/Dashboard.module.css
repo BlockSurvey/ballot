@@ -972,24 +972,38 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-6);
-    padding: var(--space-4) var(--space-6);
+    gap: var(--space-8);
+    padding: var(--space-5) var(--space-6);
     background: var(--color-background);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-xl);
     margin-bottom: var(--space-8);
     box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
 }
 
-.toolbar_item {
+.toolbar:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.toolbar_section_left {
+    flex: 1;
+    min-width: 0;
+    max-width: 480px;
+}
+
+.toolbar_section_right {
     display: flex;
     align-items: center;
+    gap: var(--space-4);
     flex-shrink: 0;
 }
 
-.toolbar_item:first-child {
-    flex: 1;
-    min-width: 0;
+.toolbar_divider {
+    width: 1px;
+    height: 32px;
+    background: var(--color-border);
+    margin: 0 var(--space-2);
 }
 
 /* Empty State */
@@ -1153,19 +1167,25 @@
     background: var(--color-background);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    height: 38px;
-    padding: 2px;
+    height: 40px;
+    padding: 3px;
+    gap: 2px;
+    transition: all 0.2s ease;
+}
+
+.view_toggle:hover {
+    border-color: var(--color-secondary);
 }
 
 .view_toggle_btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 32px;
     background: none;
     border: none;
-    border-radius: calc(var(--radius-md) - 2px);
+    border-radius: calc(var(--radius-md) - 3px);
     cursor: pointer;
     transition: all 0.2s ease;
     color: var(--color-tertiary);
@@ -1182,6 +1202,10 @@
     box-shadow: var(--shadow-sm);
 }
 
+.view_toggle_active:hover {
+    background: var(--color-secondary) !important;
+}
+
 /* Search Container */
 .search_container {
     position: relative;
@@ -1194,7 +1218,60 @@
     box-shadow: var(--shadow-md);
 }
 
-/* Filter Combo */
+/* Filter Wrapper - New Standalone Style */
+.filter_wrapper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-2) var(--space-3);
+    transition: all 0.2s ease;
+    height: 40px;
+}
+
+.filter_wrapper:hover {
+    border-color: var(--color-secondary);
+}
+
+.filter_wrapper:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.filter_label_inline {
+    display: flex;
+    align-items: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-tertiary);
+    white-space: nowrap;
+    margin: 0;
+}
+
+.filter_select_standalone {
+    background: none;
+    border: none;
+    padding: 0 var(--space-2) 0 var(--space-1);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    min-width: 120px;
+}
+
+.filter_select_standalone:hover {
+    color: var(--color-secondary);
+}
+
+.filter_select_standalone:focus {
+    color: var(--color-primary);
+}
+
+/* Old Filter Combo - Keep for backward compatibility */
 .filter_combo {
     display: flex;
     align-items: center;
@@ -1247,13 +1324,13 @@
     background: var(--color-background);
     transition: all 0.2s ease;
     outline: none;
-    height: 38px;
+    height: 40px;
     line-height: 1.4;
 }
 
 .search_input:focus {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
 }
 
 .search_input::placeholder {
@@ -1475,30 +1552,35 @@
         padding: var(--space-4);
     }
 
-    .toolbar_item {
-        justify-content: stretch;
+    .toolbar_section_left {
+        max-width: none;
     }
 
-    .toolbar_item:first-child {
-        flex: none;
+    .toolbar_section_right {
+        display: none;
     }
 
     .search_container {
         max-width: none;
     }
 
-    .filter_combo {
-        justify-content: space-between;
+    .search_input {
+        height: 48px;
+        font-size: 16px;
+        padding-left: 44px;
+        padding-right: 16px;
+        padding-top: 12px;
+        padding-bottom: 12px;
     }
 
-    .filter_select {
-        flex: 1;
-        min-width: 0;
-        text-align: center;
+    .search_icon {
+        width: 18px;
+        height: 18px;
+        left: 14px;
     }
 
-    .view_toggle {
-        justify-content: center;
+    .search_clear {
+        right: 12px;
     }
 
     .no_results {

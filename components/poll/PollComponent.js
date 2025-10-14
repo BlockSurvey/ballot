@@ -29,7 +29,8 @@ export default function PollComponent(props) {
         noOfResultsLoaded,
         setNoOfResultsLoaded,
         currentBitcoinBlockHeight,
-        currentStacksBlockHeight
+        currentStacksBlockHeight,
+        stacksBalance
     } = props;
 
     const [txId, setTxId] = useState();
@@ -115,6 +116,7 @@ export default function PollComponent(props) {
                                 dns={dns}
                                 currentBitcoinBlockHeight={currentBitcoinBlockHeight}
                                 currentStacksBlockHeight={currentStacksBlockHeight}
+                                stacksBalance={stacksBalance}
                                 onVoteSuccess={handleVoteSuccess}
                             />
 

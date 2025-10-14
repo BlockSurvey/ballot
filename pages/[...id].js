@@ -34,6 +34,9 @@ export default function Poll(props) {
     const [noHoldingToken, setNoHoldingToken] = useState(false);
     const [holdingTokenIdsArray, setHoldingTokenIdsArray] = useState();
 
+    // Stacks balance 
+    const [stacksBalance, setStacksBalance] = useState(0);
+
     // Voting power
     const [votingPower, setVotingPower] = useState();
 
@@ -326,9 +329,13 @@ export default function Poll(props) {
             const responseObject = await response.json();
 
             if (responseObject?.balance !== "0") {
+                // Convert STX balance to integer with out decimal places
                 const stxBalance = Math.floor((parseInt(responseObject?.balance) / 1000000));
                 setHoldingTokenIdsArray([]);
                 setVotingPower(stxBalance);
+
+                // Store the full STX balance
+                setStacksBalance(parseInt(responseObject?.balance));
             } else {
                 setNoHoldingToken(true);
             }
@@ -523,6 +530,7 @@ export default function Poll(props) {
                 setNoOfResultsLoaded={setNoOfResultsLoaded}
                 currentBitcoinBlockHeight={currentBitcoinBlockHeight}
                 currentStacksBlockHeight={currentStacksBlockHeight}
+                stacksBalance={stacksBalance}
             />
         </>
     );

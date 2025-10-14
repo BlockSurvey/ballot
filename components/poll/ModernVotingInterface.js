@@ -15,6 +15,7 @@ export default function ModernVotingInterface({
     dns,
     currentBitcoinBlockHeight,
     currentStacksBlockHeight,
+    stacksBalance,
     onVoteSuccess
 }) {
     const [selectedOptions, setSelectedOptions] = useState({});
@@ -234,7 +235,13 @@ export default function ModernVotingInterface({
                         </div>
                         {votingPower && (
                             <div className={styles.voting_power_value}>
-                                Voting Power: {votingPower}
+                                Voting Power:
+                                {
+                                    pollObject?.votingStrategyFlag &&
+                                        pollObject?.strategyTokenType === "ft" &&
+                                        pollObject?.votingStrategyTemplate === "stx" &&
+                                        stacksBalance && stacksBalance > 0 ? (stacksBalance / 1000000) : votingPower
+                                }
 
                                 {/* Show strategy token name */}
                                 {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" && (
@@ -273,8 +280,8 @@ export default function ModernVotingInterface({
                                         {(pollObject?.votingSystem === "fptp" || pollObject?.votingSystem === "block") && (
                                             <div
                                                 className={`${pollObject?.votingSystem === "fptp"
-                                                        ? styles.option_radio
-                                                        : styles.option_checkbox
+                                                    ? styles.option_radio
+                                                    : styles.option_checkbox
                                                     } ${isSelected ? styles.checked : ''}`}
                                             />
                                         )}
@@ -336,7 +343,7 @@ export default function ModernVotingInterface({
                         {isUserSignedIn ? (
                             <Button
                                 className="action_primary_btn w-100"
-                                disabled={isDisabled() || Object.keys(selectedOptions).length === 0}
+                                disabled={isDisabled()}
                                 onClick={handleVote}
                             >
                                 {isProcessing ? (

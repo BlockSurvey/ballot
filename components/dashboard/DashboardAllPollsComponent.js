@@ -237,8 +237,8 @@ export default function DashboardAllPollsComponent() {
 
                             {/* World-Class Toolbar */}
                             <div className={styles.toolbar}>
-                                {/* Item 1: Search */}
-                                <div className={styles.toolbar_item}>
+                                {/* Left Section: Search */}
+                                <div className={styles.toolbar_section_left}>
                                     <div className={`${styles.search_container} ${isSearchFocused ? styles.search_focused : ''}`}>
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" className={styles.search_icon}>
                                             <path fillRule="evenodd" clipRule="evenodd" d="M7 1C3.68629 1 1 3.68629 1 7C1 10.3137 3.68629 13 7 13C8.38447 13 9.66544 12.5495 10.6923 11.789L14.7071 15.7071C15.0976 16.0976 15.7308 16.0976 16.1213 15.7071C16.5118 15.3166 16.5118 14.6834 16.1213 14.2929L12.1061 10.2778C12.6597 9.37225 13 8.32009 13 7C13 3.68629 10.3137 1 7 1ZM3 7C3 4.79086 4.79086 3 7 3C9.20914 3 11 4.79086 11 7C11 9.20914 9.20914 11 7 11C4.79086 11 3 9.20914 3 7Z" fill="currentColor" />
@@ -265,41 +265,49 @@ export default function DashboardAllPollsComponent() {
                                     </div>
                                 </div>
 
-                                {/* Item 2: Filter & Sort Combo */}
-                                <div className={styles.toolbar_item}>
-                                    <div className={styles.filter_combo}>
+                                {/* Right Section: Filters and View Toggle */}
+                                <div className={styles.toolbar_section_right}>
+                                    {/* Status Filter */}
+                                    <div className={styles.filter_wrapper}>
+                                        <label className={styles.filter_label_inline}>
+                                            Status
+                                        </label>
                                         <select
                                             value={statusFilter}
                                             onChange={(e) => setStatusFilter(e.target.value)}
-                                            className={styles.filter_select}
+                                            className={styles.filter_select_standalone}
                                         >
                                             <option value="all">All Status</option>
                                             <option value="active">Active</option>
                                             <option value="draft">Draft</option>
                                             <option value="closed">Closed</option>
                                         </select>
-                                        
-                                        <div className={styles.filter_divider}></div>
-                                        
+                                    </div>
+
+                                    {/* Sort Filter */}
+                                    <div className={styles.filter_wrapper}>
+                                        <label className={styles.filter_label_inline}>
+                                            Sort by
+                                        </label>
                                         <select
                                             value={sortBy}
                                             onChange={(e) => setSortBy(e.target.value)}
-                                            className={styles.filter_select}
+                                            className={styles.filter_select_standalone}
                                         >
                                             <option value="date">Last Modified</option>
-                                            <option value="title">Title A-Z</option>
-                                            <option value="status">Status</option>
+                                            <option value="title">Title (A-Z)</option>
+                                            <option value="status">By Status</option>
                                         </select>
                                     </div>
-                                </div>
 
-                                {/* Item 3: View Toggle */}
-                                <div className={styles.toolbar_item}>
+                                    {/* View Toggle */}
+                                    <div className={styles.toolbar_divider}></div>
                                     <div className={styles.view_toggle}>
                                         <button
                                             onClick={() => setViewMode("grid")}
                                             className={`${styles.view_toggle_btn} ${viewMode === "grid" ? styles.view_toggle_active : ''}`}
                                             title="Grid View"
+                                            aria-label="Grid View"
                                         >
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect x="1" y="1" width="6" height="6" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none" />
@@ -312,6 +320,7 @@ export default function DashboardAllPollsComponent() {
                                             onClick={() => setViewMode("list")}
                                             className={`${styles.view_toggle_btn} ${viewMode === "list" ? styles.view_toggle_active : ''}`}
                                             title="List View"
+                                            aria-label="List View"
                                         >
                                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <line x1="4" y1="4" x2="15" y2="4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
