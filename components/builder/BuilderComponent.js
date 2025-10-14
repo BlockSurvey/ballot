@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
 import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
 import { deployContract } from "../../services/contract";
-import { getCurrentBlockHeights, isValidUtf8 } from "../../services/utils";
+import { getCurrentBlockHeights, isValidUtf8, calculateDateFromBitcoinBlockHeight, formatLocalDateTime } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
 import RichTextEditor, { stripHtmlTags, isEditorEmpty } from "../common/RichTextEditor";
@@ -1046,6 +1046,34 @@ export default function BuilderComponent(props) {
                                                             (~{Math.round((pollObject.endAtBlock - pollObject.startAtBlock) * 10 / 60)} hours)
                                                         </span>
                                                     </div>
+                                                    <div className={styles.summary_item}>
+                                                        <span className={styles.summary_label}>Start Date:</span>
+                                                        <span className={styles.summary_value}>
+                                                            {(() => {
+                                                                try {
+                                                                    const startDate = calculateDateFromBitcoinBlockHeight(bitcoinHeight, pollObject.startAtBlock);
+                                                                    return formatLocalDateTime(startDate.toISOString());
+                                                                } catch (error) {
+                                                                    console.error('Error calculating start date:', error);
+                                                                    return 'Invalid Date';
+                                                                }
+                                                            })()}
+                                                        </span>
+                                                    </div>
+                                                    <div className={styles.summary_item}>
+                                                        <span className={styles.summary_label}>End Date:</span>
+                                                        <span className={styles.summary_value}>
+                                                            {(() => {
+                                                                try {
+                                                                    const endDate = calculateDateFromBitcoinBlockHeight(bitcoinHeight, pollObject.endAtBlock);
+                                                                    return formatLocalDateTime(endDate.toISOString());
+                                                                } catch (error) {
+                                                                    console.error('Error calculating end date:', error);
+                                                                    return 'Invalid Date';
+                                                                }
+                                                            })()}
+                                                        </span>
+                                                    </div>
                                                 </div>
                                             )}
                                         </div>
@@ -1353,7 +1381,13 @@ export default function BuilderComponent(props) {
                         </div>
 
                         {/* Preview popup */}
-                        <PreviewComponent pollObject={pollObject} show={show} handleClose={handleClose} />
+                        <PreviewComponent 
+                            pollObject={pollObject} 
+                            show={show} 
+                            handleClose={handleClose}
+                            currentBitcoinBlockHeight={bitcoinHeight}
+                            currentStacksBlockHeight={stacksHeight}
+                        />
                     </div>
                 </>
                 :

@@ -2,7 +2,7 @@ import { Modal } from "react-bootstrap";
 import PollComponent from "../poll/PollComponent";
 
 export default function PreviewComponent(props) {
-    const { show, handleClose, pollObject } = props;
+    const { show, handleClose, pollObject, currentBitcoinBlockHeight, currentStacksBlockHeight } = props;
 
     return (
         <>
@@ -11,7 +11,13 @@ export default function PreviewComponent(props) {
                     <Modal.Title>Preview</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
-                    <PollComponent isPreview="true" pollObject={pollObject} resultsByPosition={{}} />
+                    <PollComponent 
+                        isPreview="true" 
+                        pollObject={pollObject} 
+                        resultsByPosition={{}} 
+                        currentBitcoinBlockHeight={currentBitcoinBlockHeight}
+                        currentStacksBlockHeight={currentStacksBlockHeight}
+                    />
                 </Modal.Body>
             </Modal>
         </>

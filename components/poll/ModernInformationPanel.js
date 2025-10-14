@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Constants } from "../../common/constants";
 import {
-    calculateDateByBlockHeight,
+    calculateDateFromBitcoinBlockHeight,
     convertToDisplayDateFormat,
     formStacksExplorerUrl,
     formatLocalDateTime
@@ -143,6 +143,8 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                         <span className={styles.info_value}>
                             {pollObject?.startAtDateUTC
                                 ? formatLocalDateTime(pollObject.startAtDateUTC)
+                                : pollObject?.startAtBlock && currentBitcoinBlockHeight
+                                ? formatLocalDateTime(calculateDateFromBitcoinBlockHeight(currentBitcoinBlockHeight, pollObject.startAtBlock).toISOString())
                                 : convertToDisplayDateFormat(pollObject?.startAtDate)
                             }
                         </span>
@@ -152,13 +154,12 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                     <div className={styles.info_item}>
                         <span className={styles.info_label}>End Date</span>
                         <span className={styles.info_value}>
-                            {pollObject?.endAtBlock && currentBitcoinBlockHeight < pollObject?.endAtBlock ? (
-                                formatLocalDateTime(calculateDateByBlockHeight(currentBitcoinBlockHeight, pollObject.endAtBlock))
-                            ) : (
-                                pollObject?.endAtDateUTC
-                                    ? formatLocalDateTime(pollObject.endAtDateUTC)
-                                    : convertToDisplayDateFormat(pollObject?.endAtDate)
-                            )}
+                            {pollObject?.endAtDateUTC
+                                ? formatLocalDateTime(pollObject.endAtDateUTC)
+                                : pollObject?.endAtBlock && currentBitcoinBlockHeight
+                                ? formatLocalDateTime(calculateDateFromBitcoinBlockHeight(currentBitcoinBlockHeight, pollObject.endAtBlock).toISOString())
+                                : convertToDisplayDateFormat(pollObject?.endAtDate)
+                            }
                         </span>
                     </div>
 
