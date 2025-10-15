@@ -30,7 +30,11 @@ export default function PollComponent(props) {
         setNoOfResultsLoaded,
         currentBitcoinBlockHeight,
         currentStacksBlockHeight,
-        stacksBalance
+        stacksBalance,
+        dustVotingMap,
+        userDustVotingStatus,
+        dustVotingResults,
+        dustVotersList,
     } = props;
 
     const [txId, setTxId] = useState();
@@ -117,6 +121,9 @@ export default function PollComponent(props) {
                                 currentBitcoinBlockHeight={currentBitcoinBlockHeight}
                                 currentStacksBlockHeight={currentStacksBlockHeight}
                                 stacksBalance={stacksBalance}
+                                dustVotingMap={dustVotingMap}
+                                userDustVotingStatus={userDustVotingStatus}
+                                dustVotingResults={dustVotingResults}
                                 onVoteSuccess={handleVoteSuccess}
                             />
 
@@ -131,6 +138,201 @@ export default function PollComponent(props) {
                                 noOfResultsLoaded={noOfResultsLoaded}
                                 setNoOfResultsLoaded={setNoOfResultsLoaded}
                             />
+
+                            {/* Dust Transaction Activity */}
+                            {dustVotersList && dustVotersList.length > 0 && (
+                                <div className={`${styles.card} ${styles.fade_in}`} style={{ marginTop: 'var(--space-4)' }}>
+                                    <div className={styles.card_header}>
+                                        <h2 className={styles.section_title}>
+                                            Dust Transactions
+                                            <span style={{
+                                                fontWeight: 'normal',
+                                                fontSize: '1rem',
+                                                color: 'var(--color-tertiary)',
+                                                marginLeft: 'var(--space-2)'
+                                            }}>
+                                                ({dustVotersList.length} {dustVotersList.length === 1 ? 'transaction' : 'transactions'})
+                                            </span>
+                                        </h2>
+                                    </div>
+
+                                    <div className={styles.activity_table}>
+                                        {/* Table Header */}
+                                        <div className={styles.activity_header} style={{ gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.2fr' }}>
+                                            <span>Voter</span>
+                                            <span>Choice</span>
+                                            <span>Votes</span>
+                                            <span>Power</span>
+                                            <span>Lock Status</span>
+                                        </div>
+
+                                        {/* Transaction Rows */}
+                                        <div>
+                                            {dustVotersList.map((voter, index) => {
+                                                const generateUserAvatar = (address) => {
+                                                    if (!address) return "?";
+                                                    return address.substring(0, 2).toUpperCase();
+                                                };
+
+                                                const formatAddress = (address) => {
+                                                    if (!address) return "";
+                                                    if (address.length <= 16) return address;
+                                                    return `${address.substring(0, 8)}...${address.substring(address.length - 6)}`;
+                                                };
+
+                                                return (
+                                                    <div
+                                                        key={voter.address}
+                                                        className={styles.activity_row}
+                                                        style={{ gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.2fr' }}
+                                                    >
+                                                        {/* User Info */}
+                                                        <div className={styles.user_info}>
+                                                            <div
+                                                                className={styles.user_avatar}
+                                                                style={{
+                                                                    background: `hsl(${(voter.address?.charCodeAt(0) || 0) * 7}, 50%, 45%)`
+                                                                }}
+                                                            >
+                                                                {generateUserAvatar(voter.address)}
+                                                            </div>
+                                                            <div>
+                                                                <a
+                                                                    className={styles.user_address}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    href={formStacksExplorerUrl(voter.address, 'address')}
+                                                                >
+                                                                    {formatAddress(voter.address)}
+                                                                </a>
+                                                                {voter.isCurrentUser && (
+                                                                    <div style={{
+                                                                        background: '#10B981',
+                                                                        color: 'white',
+                                                                        padding: '1px 6px',
+                                                                        borderRadius: '8px',
+                                                                        fontSize: '0.625rem',
+                                                                        fontWeight: '700',
+                                                                        textTransform: 'uppercase',
+                                                                        marginTop: '2px',
+                                                                        display: 'inline-block'
+                                                                    }}>
+                                                                        You
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Vote Options */}
+                                                        <div className={styles.vote_option}>
+                                                            {voter.votedOptions.map((option, voteIndex) => (
+                                                                <div key={voteIndex} style={{ marginBottom: voteIndex < voter.votedOptions.length - 1 ? '2px' : '0' }}>
+                                                                    {option.optionValue}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Vote Counts (Dust Amount) */}
+                                                        <div className={styles.vote_count}>
+                                                            {voter.votedOptions.map((option, voteIndex) => (
+                                                                <div key={voteIndex} style={{ marginBottom: voteIndex < voter.votedOptions.length - 1 ? '2px' : '0' }}>
+                                                                    {option.dustAmount}
+                                                                    <span style={{
+                                                                        marginLeft: '4px',
+                                                                        fontSize: '0.75rem',
+                                                                        fontWeight: '600',
+                                                                        color: 'var(--color-tertiary)'
+                                                                    }}>
+                                                                        STX
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Voting Power */}
+                                                        <div className={styles.voting_power_display}>
+                                                            {voter.stxBalance || 0}
+                                                            <span style={{
+                                                                marginLeft: '4px',
+                                                                fontSize: '0.75rem',
+                                                                fontWeight: '600',
+                                                                color: 'var(--color-tertiary)'
+                                                            }}>
+                                                                STX
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Locked/Unlocked Status */}
+                                                        <div className={styles.lock_status}>
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                flexDirection: 'column',
+                                                                gap: '4px',
+                                                                fontSize: '0.75rem'
+                                                            }}>
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px'
+                                                                }}>
+                                                                    <div style={{
+                                                                        width: '6px',
+                                                                        height: '6px',
+                                                                        borderRadius: '50%',
+                                                                        background: '#F59E0B',
+                                                                        flexShrink: 0
+                                                                    }} />
+                                                                    <span style={{
+                                                                        fontWeight: '600',
+                                                                        color: 'var(--color-primary)'
+                                                                    }}>
+                                                                        {voter.lockedStx || 0}
+                                                                        <span style={{
+                                                                            marginLeft: '4px',
+                                                                            fontSize: '0.75rem',
+                                                                            fontWeight: '600',
+                                                                            color: 'var(--color-tertiary)'
+                                                                        }}>
+                                                                            STX
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                                <div style={{
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '4px'
+                                                                }}>
+                                                                    <div style={{
+                                                                        width: '6px',
+                                                                        height: '6px',
+                                                                        borderRadius: '50%',
+                                                                        background: '#10B981',
+                                                                        flexShrink: 0
+                                                                    }} />
+                                                                    <span style={{
+                                                                        fontWeight: '600',
+                                                                        color: 'var(--color-primary)'
+                                                                    }}>
+                                                                        {voter.unlockedStx || 0}
+                                                                        <span style={{
+                                                                            marginLeft: '4px',
+                                                                            fontSize: '0.75rem',
+                                                                            fontWeight: '600',
+                                                                            color: 'var(--color-tertiary)'
+                                                                        }}>
+                                                                            STX
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Sidebar */}
@@ -142,6 +344,8 @@ export default function PollComponent(props) {
                                 currentStacksBlockHeight={currentStacksBlockHeight}
                                 totalVotes={totalVotes}
                                 totalUniqueVotes={totalUniqueVotes}
+                                dustVotingResults={dustVotingResults}
+                                dustVotersList={dustVotersList}
                             />
                         </div>
                     </div>

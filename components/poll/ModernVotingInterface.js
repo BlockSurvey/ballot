@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
 import { authenticate, userSession } from "../../services/auth";
 import { castMyVoteContractCall } from "../../services/contract";
 import styles from "../../styles/Poll.module.css";
+import SendTxModal from "../common/SendTxModal";
 
 export default function ModernVotingInterface({
     pollObject,
@@ -16,12 +17,19 @@ export default function ModernVotingInterface({
     currentBitcoinBlockHeight,
     currentStacksBlockHeight,
     stacksBalance,
+    dustVotingMap,
+    userDustVotingStatus,
+    dustVotingResults,
     onVoteSuccess
 }) {
     const [selectedOptions, setSelectedOptions] = useState({});
     const [errorMessage, setErrorMessage] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [isUserSignedIn, setIsUserSignedIn] = useState(false);
+    const [showSendTxModal, setShowSendTxModal] = useState(false);
+    const [enableDustVoting, setEnableDustVoting] = useState(false);
+    const [dustTransactionsCompleted, setDustTransactionsCompleted] = useState(false);
+    const [dustVoteTransaction, setDustVoteTransaction] = useState(null);
 
     useEffect(() => {
         if (userSession && userSession.isUserSignedIn()) {
@@ -78,6 +86,7 @@ export default function ModernVotingInterface({
             isPreview ||
             !holdingTokenIdsArray ||
             alreadyVoted ||
+            dustTransactionsCompleted || // Disable after dust voting is completed
             isProcessing ||
             noHoldingToken ||
             (!currentBitcoinBlockHeight || currentBitcoinBlockHeight < pollObject?.startAtBlock) ||
@@ -107,6 +116,16 @@ export default function ModernVotingInterface({
     };
 
     const handleVote = async () => {
+        if (enableDustVoting && hasDustOptionsSelected()) {
+            // Show dust transaction modal first
+            setShowSendTxModal(true);
+        } else {
+            // Regular voting
+            await handleRegularVote();
+        }
+    };
+
+    const handleRegularVote = async () => {
         if (!validateVote()) return;
 
         setIsProcessing(true);
@@ -134,7 +153,6 @@ export default function ModernVotingInterface({
             setIsProcessing(false);
         }
     };
-
     const getVotingSystemDescription = () => {
         switch (pollObject?.votingSystem) {
             case "fptp":
@@ -166,6 +184,38 @@ export default function ModernVotingInterface({
             return "Poll has ended";
         }
         return "";
+    };
+
+    // Check if any options have dust settings
+    const hasDustOptions = () => {
+        return pollObject?.options?.some(option =>
+            option.dustAddress && option.dustAmount && option.dustAmount > 0
+        );
+    };
+
+    // Check if any selected options have dust settings
+    const hasDustOptionsSelected = () => {
+        return Object.keys(selectedOptions).some(optionId => {
+            const option = pollObject?.options?.find(opt => opt.id === optionId);
+            return option?.dustAddress && option?.dustAmount && option.dustAmount > 0;
+        });
+    };
+
+    // Handle transaction success for dust voting
+    const handleTransactionSuccess = (transaction) => {
+        setDustTransactionsCompleted(true);
+        setDustVoteTransaction(transaction);
+
+        // Call the parent success callback to show voting completion
+        if (onVoteSuccess) {
+            const dustVoteData = {
+                type: 'dust-vote',
+                transaction: transaction,
+                selectedOptions: selectedOptions,
+                txId: transaction.txId
+            };
+            onVoteSuccess(dustVoteData, selectedOptions);
+        }
     };
 
     return (
@@ -200,10 +250,14 @@ export default function ModernVotingInterface({
                         <div style={{
                             padding: 'var(--space-4)',
                             marginBottom: 'var(--space-4)',
-                            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                            background: userDustVotingStatus ?
+                                'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' :
+                                'linear-gradient(135deg, #10B981 0%, #059669 100%)',
                             borderRadius: 'var(--radius-md)',
                             color: 'white',
-                            boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)',
+                            boxShadow: userDustVotingStatus ?
+                                '0 4px 6px -1px rgba(245, 158, 11, 0.3)' :
+                                '0 4px 6px -1px rgba(16, 185, 129, 0.3)',
                             position: 'relative',
                             zIndex: 2
                         }}>
@@ -213,17 +267,241 @@ export default function ModernVotingInterface({
                                 gap: 'var(--space-2)',
                                 marginBottom: 'var(--space-2)'
                             }}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                </svg>
+                                {userDustVotingStatus ? (
+                                    <span style={{ fontSize: '1.5rem' }}></span>
+                                ) : (
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                    </svg>
+                                )}
                                 <div>
                                     <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
-                                        Vote Successfully Recorded
+                                        {userDustVotingStatus ? 'You Have Already Voted via Dust Transactions' : 'Vote Successfully Recorded'}
                                     </div>
                                     <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '4px' }}>
-                                        Your vote has been recorded on the chain and is displayed below
+                                        {userDustVotingStatus ?
+                                            'Your dust transaction votes have been detected and recorded' :
+                                            'Your vote has been recorded on the chain and is displayed below'
+                                        }
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Show dust voting details if user voted via dust */}
+                            {userDustVotingStatus && (
+                                <div style={{
+                                    background: 'rgba(255, 255, 255, 0.15)',
+                                    borderRadius: 'var(--radius-md)',
+                                    padding: 'var(--space-3)',
+                                    marginTop: 'var(--space-3)'
+                                }}>
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr 1fr',
+                                        gap: 'var(--space-3)',
+                                        fontSize: '0.8125rem',
+                                        marginBottom: 'var(--space-3)'
+                                    }}>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ opacity: 0.8, marginBottom: '4px' }}>Total STX</div>
+                                            <div style={{ fontWeight: '700', fontSize: '1rem' }}>{userDustVotingStatus.stxBalance}</div>
+                                        </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ opacity: 0.8, marginBottom: '4px' }}>Locked</div>
+                                            <div style={{ fontWeight: '600' }}>{userDustVotingStatus.lockedStx || 0}</div>
+                                        </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ opacity: 0.8, marginBottom: '4px' }}>Unlocked</div>
+                                            <div style={{ fontWeight: '600' }}>{userDustVotingStatus.unlockedStx || 0}</div>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div style={{ opacity: 0.8, fontSize: '0.75rem', marginBottom: '6px' }}>You voted for:</div>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                                            {userDustVotingStatus.votedOptions?.map((option, index) => (
+                                                <span key={index} style={{
+                                                    background: 'rgba(255, 255, 255, 0.2)',
+                                                    padding: '4px 8px',
+                                                    borderRadius: '12px',
+                                                    fontSize: '0.75rem',
+                                                    fontWeight: '600'
+                                                }}>
+                                                    {option.optionValue}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Dust Voting Success Banner */}
+                    {dustTransactionsCompleted && (
+                        <div style={{
+                            padding: 'var(--space-4)',
+                            marginBottom: 'var(--space-4)',
+                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'white',
+                            boxShadow: '0 4px 6px -1px rgba(245, 158, 11, 0.3)',
+                            position: 'relative',
+                            zIndex: 2
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 'var(--space-2)',
+                                marginBottom: 'var(--space-3)'
+                            }}>
+                                <span style={{ fontSize: '1.5rem' }}>💰</span>
+                                <div>
+                                    <div style={{ fontWeight: '700', fontSize: '1.1rem' }}>
+                                        Dust Vote Successfully Completed!
+                                    </div>
+                                    <div style={{ fontSize: '0.875rem', opacity: 0.9, marginTop: '4px' }}>
+                                        Your STX transactions have been sent to the option creators
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Transaction Details */}
+                            <div style={{
+                                background: 'rgba(255, 255, 255, 0.15)',
+                                borderRadius: 'var(--radius-md)',
+                                padding: 'var(--space-3)',
+                                marginTop: 'var(--space-3)'
+                            }}>
+                                <div style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: '600',
+                                    marginBottom: 'var(--space-2)'
+                                }}>
+                                    Transaction Details:
+                                </div>
+                                {dustVoteTransaction && (
+                                    <div style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        fontSize: '0.8125rem',
+                                        marginBottom: 'var(--space-2)',
+                                        opacity: 0.9
+                                    }}>
+                                        <div>
+                                            <div style={{ fontWeight: '600' }}>{dustVoteTransaction.optionName}</div>
+                                            {dustVoteTransaction.txId && (
+                                                <a
+                                                    href={dustVoteTransaction.explorerUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    style={{
+                                                        color: 'rgba(255, 255, 255, 0.8)',
+                                                        fontSize: '0.75rem',
+                                                        textDecoration: 'none',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '4px',
+                                                        marginTop: '2px'
+                                                    }}
+                                                    onMouseOver={(e) => e.target.style.color = 'white'}
+                                                    onMouseOut={(e) => e.target.style.color = 'rgba(255, 255, 255, 0.8)'}
+                                                >
+                                                    🔗 View Transaction
+                                                </a>
+                                            )}
+                                        </div>
+                                        <span style={{ fontWeight: '700' }}>{dustVoteTransaction.amount} STX</span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Dust Voting Toggle */}
+                    {hasDustOptions() && !alreadyVoted && (
+                        <div style={{
+                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.05) 100%)',
+                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                            borderRadius: 'var(--radius-md)',
+                            padding: 'var(--space-4)',
+                            marginBottom: 'var(--space-4)'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                marginBottom: 'var(--space-2)'
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 'var(--space-2)'
+                                }}>
+                                    <span style={{
+                                        fontSize: '1.2em'
+                                    }}>💰</span>
+                                    <div>
+                                        <div style={{
+                                            fontWeight: '700',
+                                            color: 'var(--color-primary)',
+                                            fontSize: '1rem'
+                                        }}>
+                                            Dust Voting Available
+                                        </div>
+                                        <div style={{
+                                            fontSize: '0.8125rem',
+                                            color: 'var(--color-secondary)',
+                                            marginTop: '2px'
+                                        }}>
+                                            Send small STX amounts to option creators
+                                        </div>
+                                    </div>
+                                </div>
+                                <label style={{
+                                    position: 'relative',
+                                    display: 'inline-block',
+                                    width: '44px',
+                                    height: '24px'
+                                }}>
+                                    <input
+                                        type="checkbox"
+                                        checked={enableDustVoting}
+                                        onChange={(e) => setEnableDustVoting(e.target.checked)}
+                                        style={{ opacity: 0, width: 0, height: 0 }}
+                                    />
+                                    <span style={{
+                                        position: 'absolute',
+                                        cursor: 'pointer',
+                                        top: 0,
+                                        left: 0,
+                                        right: 0,
+                                        bottom: 0,
+                                        background: enableDustVoting ? '#f59e0b' : '#cbd5e1',
+                                        borderRadius: '24px',
+                                        transition: 'all 0.3s ease'
+                                    }}>
+                                        <span style={{
+                                            position: 'absolute',
+                                            content: '',
+                                            height: '18px',
+                                            width: '18px',
+                                            left: enableDustVoting ? '23px' : '3px',
+                                            bottom: '3px',
+                                            background: 'white',
+                                            borderRadius: '50%',
+                                            transition: 'all 0.3s ease'
+                                        }} />
+                                    </span>
+                                </label>
+                            </div>
+                            <div style={{
+                                fontSize: '0.75rem',
+                                color: 'var(--color-tertiary)',
+                                lineHeight: '1.4'
+                            }}>
+                                When enabled, voting for options with dust settings will also send the specified STX amount to the option creators.
                             </div>
                         </div>
                     )}
@@ -289,6 +567,23 @@ export default function ModernVotingInterface({
                                         {/* Option Label */}
                                         <div className={styles.option_label}>
                                             {option.value}
+                                            {/* Dust voting indicator - only show when dust voting is enabled */}
+                                            {enableDustVoting && option.dustAddress && option.dustAmount > 0 && (
+                                                <span style={{
+                                                    marginLeft: 'var(--space-2)',
+                                                    padding: '2px 6px',
+                                                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                                    color: 'white',
+                                                    fontSize: '0.6875rem',
+                                                    fontWeight: '700',
+                                                    borderRadius: '8px',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.025em',
+                                                    animation: 'fadeIn 0.3s ease'
+                                                }}>
+                                                    {option.dustAmount} STX
+                                                </span>
+                                            )}
                                         </div>
 
                                         {/* Number Input for Quadratic and Weighted Voting */}
@@ -361,7 +656,7 @@ export default function ModernVotingInterface({
                                         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
                                         </svg>
-                                        Vote Now
+                                        {enableDustVoting && hasDustOptionsSelected() ? 'Vote with Dust' : 'Vote Now'}
                                     </>
                                 )}
                             </Button>
@@ -379,6 +674,15 @@ export default function ModernVotingInterface({
                     </div>
                 </div>
             </div>
+
+            {/* Send Transaction Modal */}
+            <SendTxModal
+                show={showSendTxModal}
+                onHide={() => setShowSendTxModal(false)}
+                selectedOptions={selectedOptions}
+                pollObject={pollObject}
+                onTransactionSuccess={handleTransactionSuccess}
+            />
         </div>
     );
 }

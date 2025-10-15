@@ -1,0 +1,325 @@
+/* Voting Method Selection Styles */
+.voting_methods_container {
+    margin-bottom: var(--space-6);
+}
+
+.voting_methods_title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0 0 var(--space-4) 0;
+    text-align: center;
+}
+
+.voting_methods_subtitle {
+    font-size: 0.875rem;
+    color: var(--color-secondary);
+    margin: 0 0 var(--space-5) 0;
+    text-align: center;
+    line-height: 1.5;
+}
+
+.voting_methods_grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-5);
+}
+
+@media (max-width: 768px) {
+    .voting_methods_grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-3);
+    }
+}
+
+.voting_method_card {
+    background: white;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.voting_method_card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.voting_method_card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 8px 25px -8px rgba(59, 130, 246, 0.3);
+    transform: translateY(-2px);
+}
+
+.voting_method_card:hover::before {
+    transform: scaleX(1);
+}
+
+.voting_method_card.selected {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    box-shadow: 0 8px 25px -8px rgba(59, 130, 246, 0.4);
+}
+
+.voting_method_card.selected::before {
+    transform: scaleX(1);
+}
+
+.voting_method_card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: #f9fafb;
+}
+
+.voting_method_card.disabled:hover {
+    transform: none;
+    border-color: var(--color-border);
+    box-shadow: none;
+}
+
+.voting_method_header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+}
+
+.voting_method_icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.voting_method_icon.regular {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+}
+
+.voting_method_icon.dust {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: white;
+}
+
+.voting_method_card:hover .voting_method_icon {
+    transform: scale(1.1);
+}
+
+.voting_method_title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0;
+    line-height: 1.2;
+}
+
+.voting_method_description {
+    font-size: 0.875rem;
+    color: var(--color-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--space-3);
+}
+
+.voting_method_features {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.voting_method_feature {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8125rem;
+    color: var(--color-tertiary);
+    margin-bottom: var(--space-1);
+}
+
+.voting_method_feature:last-child {
+    margin-bottom: 0;
+}
+
+.voting_method_feature svg {
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+.voting_method_badge {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.voting_method_badge.dust_available {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.voting_method_selector {
+    position: absolute;
+    top: var(--space-3);
+    left: var(--space-3);
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-border);
+    border-radius: 50%;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.voting_method_card.selected .voting_method_selector {
+    border-color: #3b82f6;
+    background: #3b82f6;
+}
+
+.voting_method_card.selected .voting_method_selector::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    background: white;
+    border-radius: 50%;
+}
+
+.voting_options_preview {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.voting_options_preview_title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0 0 var(--space-3) 0;
+}
+
+.dust_options_list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.dust_option_item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2);
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8125rem;
+}
+
+.dust_option_name {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+.dust_option_amount {
+    font-weight: 700;
+    color: #f59e0b;
+}
+
+.no_dust_message {
+    font-size: 0.8125rem;
+    color: var(--color-tertiary);
+    font-style: italic;
+}
+
+.continue_button {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    border: none;
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-6);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    min-height: 48px;
+}
+
+.continue_button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px -8px rgba(59, 130, 246, 0.5);
+}
+
+.continue_button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.continue_button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.back_button {
+    background: white;
+    color: var(--color-primary);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-5);
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+}
+
+.back_button:hover {
+    border-color: var(--color-primary);
+    background: var(--color-surface);
+    transform: translateY(-1px);
+}
+
+.buttons_container {
+    display: flex;
+    gap: var(--space-3);
+    margin-top: var(--space-5);
+}
+
+.buttons_container .back_button {
+    flex: 0 0 auto;
+}
+
+.buttons_container .continue_button {
+    flex: 1;
+}

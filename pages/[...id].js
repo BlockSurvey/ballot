@@ -40,6 +40,12 @@ export default function Poll(props) {
     // Voting power
     const [votingPower, setVotingPower] = useState();
 
+    // Dust transaction voting
+    const [dustVotingResults, setDustVotingResults] = useState({});
+    const [dustVotingMap, setDustVotingMap] = useState({});
+    const [userDustVotingStatus, setUserDustVotingStatus] = useState(null);
+    const [dustVotersList, setDustVotersList] = useState([]);
+
     const title = `${pollObject?.title} | Ballot`;
     const description = pollObject?.description?.substr(0, 160);
     const metaImage = "https://ballot.gg/images/ballot-meta.png";
@@ -68,6 +74,16 @@ export default function Poll(props) {
 
             // Fetch result by user
             getResultByUser(pollObject);
+
+            // Additionally check if any options have dust transaction properties
+            const hasDustOptions = pollObject?.options?.some(option =>
+                option.dustAddress && option.dustAmount && option.dustAmount > 0
+            );
+
+            // Fetch dust voting results in addition to regular voting
+            if (hasDustOptions) {
+                getDustVotingResultsForPoll(pollObject);
+            }
         }
     }, [pollObject, pollId, gaiaAddress]);
 
@@ -100,8 +116,8 @@ export default function Poll(props) {
             return;
         }
 
-        // Strategy
         if (pollObject?.votingStrategyFlag) {
+            // Strategy
             if (pollObject?.strategyTokenType == "nft") {
                 // Fetch NFT holdings
                 getNFTHolding(pollObject);
@@ -125,7 +141,7 @@ export default function Poll(props) {
                 // Fetch BTC domain
                 getBTCDomainFromBlockchain(pollObject);
             } else if (pollObject?.strategyContractName && pollObject?.strategyTokenName) {
-                const limit = 200;
+                const limit = 50;
                 // Get NFT holdings
                 const responseObject = await makeFetchCall(getStacksAPIPrefix() + "/extended/v1/tokens/nft/holdings?principal=" + getMyStxAddress() +
                     "&asset_identifiers=" + pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName + "&offset=0&limit=" + limit);
@@ -138,7 +154,7 @@ export default function Poll(props) {
                         _holdingTokenIdsArray.push(cvToValue(hexToCV(eachNFT.value.hex)));
                     });
 
-                    // If there are more than 200, then fetch all
+                    // If there are more than 250, then fetch all
                     if (responseObject?.total > limit) {
                         const remainingTotal = (responseObject?.total - limit);
                         const noOfFetchCallsToBeMade = Math.ceil(remainingTotal / limit);
@@ -345,6 +361,215 @@ export default function Poll(props) {
         }
     }
 
+    // Dust Transaction utility functions
+    const fetchAllTransactionsForAddress = async (address, limit = 50, offset = 0) => {
+        try {
+            const url = `${getStacksAPIPrefix()}/extended/v1/address/${address}/transactions?limit=${limit}&offset=${offset}`;
+            const response = await fetch(url, { headers: getStacksAPIHeaders() });
+
+            if (!response.ok) {
+                console.error(`Failed to fetch transactions for ${address}: ${response.status} ${response.statusText}`);
+                return { results: [], total: 0 };
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error(`Error fetching transactions for ${address}:`, error);
+            return { results: [], total: 0 };
+        }
+    };
+
+    const filterTransactionsByDustAmount = (transactions, dustAmount) => {
+        return transactions.filter(tx => {
+            // Check for STX transfers that match the dust amount
+            if (tx.tx_type === 'token_transfer' &&
+                tx.token_transfer &&
+                tx.token_transfer.amount) {
+                const transferAmount = parseInt(tx.token_transfer.amount);
+                return transferAmount === dustAmount;
+            }
+            return false;
+        });
+    };
+
+    const getUniqueAddressesFromTransactions = (transactions) => {
+        const uniqueAddresses = new Set();
+        const addressToOptionMap = {};
+
+        transactions.forEach(tx => {
+            if (tx.sender_address && tx.token_transfer && tx.token_transfer.recipient_address) {
+                uniqueAddresses.add(tx.sender_address);
+                // Map sender to recipient (option they voted for)
+                addressToOptionMap[tx.sender_address] = tx.token_transfer.recipient_address;
+            }
+        });
+
+        return {
+            addresses: Array.from(uniqueAddresses),
+            addressToOptionMap
+        };
+    };
+
+    const fetchStxBalanceAtSnapshot = async (address, snapshotHeight) => {
+        try {
+            const url = `${getStacksAPIPrefix()}/extended/v1/address/${address}/stx` +
+                (snapshotHeight ? `?until_block=${snapshotHeight}` : "");
+            const response = await fetch(url, { headers: getStacksAPIHeaders() });
+
+            if (!response.ok) {
+                console.warn(`Failed to fetch STX balance for ${address}: ${response.status} ${response.statusText}`);
+                return { total: 0, locked: 0, unlocked: 0 };
+            }
+
+            const responseObject = await response.json();
+
+            // Extract locked and unlocked balances
+            const lockedBalance = responseObject?.locked ? parseInt(responseObject.locked) : 0;
+            const totalBalance = responseObject?.balance ? parseInt(responseObject.balance) : 0;
+            const unlockedBalance = totalBalance - lockedBalance;
+
+            return {
+                total: Math.floor(totalBalance / 1000000),
+                locked: Math.floor(lockedBalance / 1000000),
+                unlocked: Math.floor(unlockedBalance / 1000000)
+            };
+        } catch (error) {
+            console.warn(`Error fetching STX balance for ${address}:`, error);
+            return { total: 0, locked: 0, unlocked: 0 };
+        }
+    };
+
+    const getDustVotingResultsForPoll = async (pollObject) => {
+        try {
+            const snapshotHeight = pollObject?.snapshotBlockHeight;
+
+            // Filter options that have dust transaction configuration
+            const dustOptions = pollObject?.options?.filter(option =>
+                option.dustAddress && option.dustAmount && option.dustAmount > 0
+            );
+
+            // No dust options found
+            if (!dustOptions || dustOptions.length === 0) {
+                return;
+            }
+
+            // Process each dust option to collect voting data
+            const dustOptionResults = {};
+            const allDustVoters = {};
+
+            // Loop through each dust option
+            for (const option of dustOptions) {
+                const dustAddress = option.dustAddress;
+                const dustAmount = option.dustAmount;
+
+                // Get all transactions for this option's dust address
+                let allTransactions = [];
+                let offset = 0;
+
+                // Set limit
+                const limit = 50;
+                let hasMore = true;
+
+                while (hasMore) {
+                    const txData = await fetchAllTransactionsForAddress(dustAddress, limit, offset);
+                    if (txData.results) {
+                        allTransactions = [...allTransactions, ...txData.results];
+                    }
+
+                    hasMore = txData.results && txData.results.length === limit && allTransactions.length < txData.total;
+                    offset += limit;
+
+                    // Safety check to prevent infinite loops
+                    if (offset > 10000) break;
+                }
+
+                // Filter transactions by this option's exact dust amount
+                const dustTransactions = allTransactions.filter(tx => {
+                    return tx.tx_type === 'token_transfer' &&
+                        tx.token_transfer &&
+                        tx.token_transfer.amount &&
+                        tx.token_transfer.recipient_address.toLowerCase() === dustAddress.toLowerCase() &&
+                        parseInt(tx.token_transfer.amount) === (dustAmount * 1000000);
+                });
+
+                // Get unique voter addresses for this option
+                const uniqueVoters = [...new Set(dustTransactions.map(tx => tx.sender_address).filter(Boolean))];
+
+                // Initialize results for this option
+                dustOptionResults[option.id] = {
+                    optionId: option.id,
+                    optionValue: option.value,
+                    dustAddress: dustAddress,
+                    dustAmount: dustAmount,
+                    totalVoters: 0,
+                    totalStx: 0,
+                    totalLockedStx: 0,
+                    totalUnlockedStx: 0,
+                    totalTransactions: dustTransactions.length,
+                    voterAddresses: []
+                };
+
+                // Process each voter's STX balance at snapshot height
+                for (const voterAddress of uniqueVoters) {
+                    const balanceData = await fetchStxBalanceAtSnapshot(voterAddress, snapshotHeight);
+
+                    if (balanceData.total > 0) {
+                        // Add voter to this option's results
+                        dustOptionResults[option.id].totalVoters++;
+                        dustOptionResults[option.id].totalStx += balanceData.total;
+                        dustOptionResults[option.id].totalLockedStx += balanceData.locked;
+                        dustOptionResults[option.id].totalUnlockedStx += balanceData.unlocked;
+                        dustOptionResults[option.id].voterAddresses.push({
+                            address: voterAddress,
+                            stxBalance: balanceData.total,
+                            lockedStx: balanceData.locked,
+                            unlockedStx: balanceData.unlocked
+                        });
+
+                        // Track this voter globally
+                        if (!allDustVoters[voterAddress]) {
+                            allDustVoters[voterAddress] = {
+                                stxBalance: balanceData.total,
+                                lockedStx: balanceData.locked,
+                                unlockedStx: balanceData.unlocked,
+                                votedOptions: [],
+                                hasVoted: true
+                            };
+                        }
+
+                        // Add this option to voter's voted options
+                        allDustVoters[voterAddress].votedOptions.push({
+                            optionId: option.id,
+                            optionValue: option.value,
+                            dustAmount: dustAmount
+                        });
+                    }
+                }
+            }
+
+            // Check if current user has already voted via dust transactions
+            const currentUserAddress = getMyStxAddress();
+            if (userSession.isUserSignedIn() && allDustVoters[currentUserAddress]) {
+                setUserDustVotingStatus(allDustVoters[currentUserAddress]);
+                setAlreadyVoted(true);
+            }
+
+            // Create dust voters list for UI display
+            const dustVotersList = Object.keys(allDustVoters).map(address => ({
+                address,
+                ...allDustVoters[address],
+                isCurrentUser: userSession.isUserSignedIn() && address === currentUserAddress
+            }));
+            setDustVotersList(dustVotersList);
+
+            // Store dust voting data for UI access
+            setDustVotingResults(dustOptionResults);
+            setDustVotingMap(allDustVoters);
+        } catch (error) {
+            console.error("Error fetching dust voting results for poll:", error);
+        }
+    };
+
     const getPollResults = async (pollObject) => {
         if (pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName) {
             try {
@@ -531,6 +756,10 @@ export default function Poll(props) {
                 currentBitcoinBlockHeight={currentBitcoinBlockHeight}
                 currentStacksBlockHeight={currentStacksBlockHeight}
                 stacksBalance={stacksBalance}
+                dustVotingMap={dustVotingMap}
+                userDustVotingStatus={userDustVotingStatus}
+                dustVotingResults={dustVotingResults}
+                dustVotersList={dustVotersList}
             />
         </>
     );

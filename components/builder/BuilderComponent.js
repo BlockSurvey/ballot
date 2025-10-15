@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import Link from 'next/link.js';
 import Router from 'next/router';
 import { useEffect, useRef, useState } from "react";
-import { Button, Form } from "react-bootstrap";
+import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
 import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
@@ -11,6 +11,7 @@ import { getCurrentBlockHeights, isValidUtf8, calculateDateFromBitcoinBlockHeigh
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
 import RichTextEditor, { stripHtmlTags, isEditorEmpty } from "../common/RichTextEditor";
+import DustTransactionModal from "./DustTransactionModal";
 
 export default function BuilderComponent(props) {
     // Variables
@@ -46,6 +47,10 @@ export default function BuilderComponent(props) {
     const [show, setShow] = useState(false);
     const handleShow = () => setShow(true);
     const handleClose = () => setShow(false);
+
+    // Dust Transaction Modal
+    const [showDustModal, setShowDustModal] = useState(false);
+    const [selectedOption, setSelectedOption] = useState(null);
 
     // Refs for form fields to manage focus
     const titleRef = useRef(null);
@@ -117,11 +122,15 @@ export default function BuilderComponent(props) {
             options: [
                 {
                     id: uuidv4(),
-                    value: "Choice 1"
+                    value: "Choice 1",
+                    dustAddress: "",
+                    dustAmount: ""
                 },
                 {
                     id: uuidv4(),
-                    value: "Choice 2"
+                    value: "Choice 2",
+                    dustAddress: "",
+                    dustAmount: ""
                 }
             ],
             votingStrategyFlag: false,
@@ -211,9 +220,9 @@ export default function BuilderComponent(props) {
         } else {
             pollObject["description"] = htmlContent;
         }
-        
+
         setPollObject({ ...pollObject });
-        
+
         // Clear description field error when user starts typing
         if (fieldErrors.description) {
             const newErrors = { ...fieldErrors };
@@ -226,7 +235,9 @@ export default function BuilderComponent(props) {
         if (pollObject?.options) {
             pollObject.options.push({
                 id: uuidv4(),
-                value: `Choice ${pollObject.options.length + 1}`
+                value: `Choice ${pollObject.options.length + 1}`,
+                dustAddress: "",
+                dustAmount: ""
             })
         }
         setPollObject({ ...pollObject });
@@ -292,6 +303,36 @@ export default function BuilderComponent(props) {
 
     const handleDragEnd = () => {
         setDraggedIndex(null);
+    };
+
+    // Dust Transaction Modal Functions
+    const handleDustSettingsClick = (option) => {
+        setSelectedOption(option);
+        setShowDustModal(true);
+    };
+
+    const handleDustModalClose = () => {
+        setShowDustModal(false);
+        setSelectedOption(null);
+    };
+
+    const handleDustTransactionSave = (dustDetails) => {
+        if (selectedOption && pollObject?.options) {
+            const optionIndex = pollObject.options.findIndex(opt => opt.id === selectedOption.id);
+            if (optionIndex !== -1) {
+                // Ensure backward compatibility - initialize dust fields if they don't exist
+                if (!pollObject.options[optionIndex].hasOwnProperty('dustAddress')) {
+                    pollObject.options[optionIndex].dustAddress = "";
+                }
+                if (!pollObject.options[optionIndex].hasOwnProperty('dustAmount')) {
+                    pollObject.options[optionIndex].dustAmount = "";
+                }
+
+                pollObject.options[optionIndex].dustAddress = dustDetails.dustAddress;
+                pollObject.options[optionIndex].dustAmount = dustDetails.dustAmount;
+                setPollObject({ ...pollObject });
+            }
+        }
     };
 
     const savePollToGaia = (encrypt = true) => {
@@ -945,7 +986,47 @@ export default function BuilderComponent(props) {
                                                                             {fieldErrors.optionItems[index]}
                                                                         </small>
                                                                     )}
+                                                                    {(option?.dustAddress && option?.dustAddress.trim() && option?.dustAmount && option?.dustAmount.toString().trim()) && (
+                                                                        <div style={{
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            marginTop: '6px',
+                                                                            padding: '4px 8px',
+                                                                            backgroundColor: '#f8f9fa',
+                                                                            border: '1px solid #dee2e6',
+                                                                            borderRadius: '4px',
+                                                                            fontSize: '0.75rem',
+                                                                            color: '#6c757d',
+                                                                            fontWeight: '500'
+                                                                        }}>
+                                                                            <svg width="10" height="10" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '4px', flexShrink: 0 }}>
+                                                                                <path d="M8 0L10.2 5.8L16 8L10.2 10.2L8 16L5.8 10.2L0 8L5.8 5.8L8 0Z" fill="#6c757d" />
+                                                                            </svg>
+                                                                            <span style={{ fontSize: '0.75rem', lineHeight: '1' }}>
+                                                                                Dust: <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>
+                                                                                {option.dustAddress.length > 16 ? 
+                                                                                    `${option.dustAddress.substring(0, 6)}...${option.dustAddress.substring(option.dustAddress.length - 4)}` :
+                                                                                    option.dustAddress
+                                                                                }</span> ({option.dustAmount} STX)
+                                                                            </span>
+                                                                        </div>
+                                                                    )}
                                                                 </div>
+                                                                <OverlayTrigger
+                                                                    placement="top"
+                                                                    overlay={<Tooltip>Configure Dust Transaction</Tooltip>}
+                                                                >
+                                                                    <Button
+                                                                        className={styles.option_settings}
+                                                                        onClick={() => handleDustSettingsClick(option)}
+                                                                        size="sm"
+                                                                    >
+                                                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492zM5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0z" fill="currentColor" />
+                                                                            <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52l-.094-.319zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115l.094-.319z" fill="currentColor" />
+                                                                        </svg>
+                                                                    </Button>
+                                                                </OverlayTrigger>
                                                                 {pollObject.options.length > 2 && (
                                                                     <Button
                                                                         className={styles.option_delete}
@@ -1304,8 +1385,8 @@ export default function BuilderComponent(props) {
                                                     disabled={isProcessing}
                                                 >
                                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M1.25 10C1.25 10 4.375 3.75 10 3.75C15.625 3.75 18.75 10 18.75 10C18.75 10 15.625 16.25 10 16.25C4.375 16.25 1.25 10 1.25 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                                                        <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                        <path d="M1.25 10C1.25 10 4.375 3.75 10 3.75C15.625 3.75 18.75 10 18.75 10C18.75 10 15.625 16.25 10 16.25C4.375 16.25 1.25 10 1.25 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                        <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                     </svg>
                                                     Preview Poll
                                                 </Button>
@@ -1324,7 +1405,7 @@ export default function BuilderComponent(props) {
                                                 ) : (
                                                     <>
                                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M15.625 5L7.5 13.125L4.375 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                            <path d="M15.625 5L7.5 13.125L4.375 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                         </svg>
                                                         Save Draft
                                                     </>
@@ -1344,7 +1425,7 @@ export default function BuilderComponent(props) {
                                                 ) : (
                                                     <>
                                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M10 3.75V16.25M3.75 10L10 3.75L16.25 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                                            <path d="M10 3.75V16.25M3.75 10L10 3.75L16.25 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                                         </svg>
                                                         Publish Poll
                                                     </>
@@ -1381,12 +1462,20 @@ export default function BuilderComponent(props) {
                         </div>
 
                         {/* Preview popup */}
-                        <PreviewComponent 
-                            pollObject={pollObject} 
-                            show={show} 
+                        <PreviewComponent
+                            pollObject={pollObject}
+                            show={show}
                             handleClose={handleClose}
                             currentBitcoinBlockHeight={bitcoinHeight}
                             currentStacksBlockHeight={stacksHeight}
+                        />
+
+                        {/* Dust Transaction Modal */}
+                        <DustTransactionModal
+                            show={showDustModal}
+                            onHide={handleDustModalClose}
+                            option={selectedOption}
+                            onSave={handleDustTransactionSave}
                         />
                     </div>
                 </>

@@ -1247,3 +1247,230 @@
         align-self: flex-start;
     }
 }
+
+/* Dust Transaction Modal Styles */
+.dust_modal .modal-dialog {
+    max-width: 520px;
+}
+
+.modal_header {
+    border-bottom: 1px solid var(--color-border-light);
+    padding: var(--space-6);
+    background: var(--color-background);
+}
+
+.modal_title {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin: 0;
+    width: 100%;
+}
+
+.modal_icon {
+    width: 40px;
+    height: 40px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.modal_title h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin: 0 0 var(--space-1) 0;
+    line-height: 1.3;
+}
+
+.modal_title p {
+    font-size: 14px;
+    color: var(--color-tertiary);
+    margin: 0;
+    line-height: 1.4;
+}
+
+.modal_body {
+    padding: var(--space-6);
+    background: var(--color-background);
+}
+
+.modal_form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.modal_info {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-4);
+    background: var(--color-surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-light);
+}
+
+.info_icon {
+    flex-shrink: 0;
+    color: var(--color-tertiary);
+    margin-top: 1px;
+}
+
+.modal_info p {
+    font-size: 13px;
+    color: var(--color-tertiary);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.modal_footer {
+    border-top: 1px solid var(--color-border-light);
+    padding: var(--space-6);
+    background: var(--color-surface);
+}
+
+.modal_actions {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.modal_delete_button {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-tertiary);
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+    padding: 0;
+}
+
+.modal_delete_button:hover {
+    background: #fee;
+    border-color: #fcc;
+    color: #c33;
+}
+
+.modal_delete_button:focus {
+    outline: none;
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+}
+
+.modal_delete_button:active {
+    background: #fee2e2;
+    border-color: #ef4444;
+    color: #b91c1c;
+    transform: scale(0.95);
+}
+
+.modal_main_actions {
+    display: flex;
+    gap: var(--space-3);
+    align-items: center;
+    margin-left: auto;
+}
+
+/* Responsive modal actions */
+@media (max-width: 480px) {
+    .modal_actions {
+        flex-direction: column;
+        gap: var(--space-3);
+        align-items: stretch;
+    }
+    
+    .modal_delete_button {
+        align-self: flex-start;
+    }
+    
+    .modal_main_actions {
+        flex-direction: column;
+        gap: var(--space-2);
+    }
+    
+    .modal_main_actions .action_secondary_btn,
+    .modal_main_actions .action_primary_btn {
+        width: 100%;
+    }
+}
+
+/* Option Settings Button Styles - Matches Add Option Button */
+.option_settings {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-tertiary);
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0;
+    box-shadow: none;
+}
+
+.option_settings:hover:not(.active) {
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    transform: none;
+    box-shadow: none;
+}
+
+.option_settings:focus {
+    outline: none;
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.option_settings:active {
+    background: var(--color-border-light);
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+    transform: scale(0.98);
+}
+
+/* Dust Status Indicator Styles */
+.dust_status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-top: var(--space-2);
+    padding: 2px var(--space-2);
+    background: var(--color-surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-light);
+}
+
+.dust_status svg {
+    color: var(--color-primary);
+    flex-shrink: 0;
+}
+
+.dust_status span {
+    font-size: 11px;
+    color: var(--color-secondary);
+    font-weight: 500;
+    line-height: 1;
+    letter-spacing: 0.01em;
+}

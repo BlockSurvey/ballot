@@ -8,7 +8,7 @@ import {
 } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 
-export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes }) {
+export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes, dustVotingResults, dustVotersList }) {
     const votingSystemInfo = useMemo(() => {
         return Constants.VOTING_SYSTEMS.find(system => system.id === pollObject?.votingSystem);
     }, [pollObject?.votingSystem]);
@@ -144,8 +144,8 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                             {pollObject?.startAtDateUTC
                                 ? formatLocalDateTime(pollObject.startAtDateUTC)
                                 : pollObject?.startAtBlock && currentBitcoinBlockHeight
-                                ? formatLocalDateTime(calculateDateFromBitcoinBlockHeight(currentBitcoinBlockHeight, pollObject.startAtBlock).toISOString())
-                                : convertToDisplayDateFormat(pollObject?.startAtDate)
+                                    ? formatLocalDateTime(calculateDateFromBitcoinBlockHeight(currentBitcoinBlockHeight, pollObject.startAtBlock).toISOString())
+                                    : convertToDisplayDateFormat(pollObject?.startAtDate)
                             }
                         </span>
                     </div>
@@ -157,8 +157,8 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                             {pollObject?.endAtDateUTC
                                 ? formatLocalDateTime(pollObject.endAtDateUTC)
                                 : pollObject?.endAtBlock && currentBitcoinBlockHeight
-                                ? formatLocalDateTime(calculateDateFromBitcoinBlockHeight(currentBitcoinBlockHeight, pollObject.endAtBlock).toISOString())
-                                : convertToDisplayDateFormat(pollObject?.endAtDate)
+                                    ? formatLocalDateTime(calculateDateFromBitcoinBlockHeight(currentBitcoinBlockHeight, pollObject.endAtBlock).toISOString())
+                                    : convertToDisplayDateFormat(pollObject?.endAtDate)
                             }
                         </span>
                     </div>
@@ -192,18 +192,33 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                         <div className={styles.results_stat}>
                             <span className={styles.results_stat_value}>
                                 {(() => {
-                                    // Calculate total votes from all options
+                                    // Calculate total votes from regular results
+                                    let regularVotes = 0;
                                     if (resultsByOption && Object.keys(resultsByOption).length > 0) {
-                                        return Object.values(resultsByOption).reduce((sum, result) => sum + parseInt(result.total || 0), 0);
+                                        regularVotes = Object.values(resultsByOption).reduce((sum, result) => sum + parseInt(result.total || 0), 0);
+                                    } else {
+                                        regularVotes = totalVotes >= 0 ? totalVotes : 0;
                                     }
-                                    return totalVotes >= 0 ? totalVotes : '0';
+
+                                    // Calculate dust votes
+                                    let dustVotes = 0;
+                                    if (dustVotingResults && Object.keys(dustVotingResults).length > 0) {
+                                        dustVotes = Object.values(dustVotingResults).reduce((sum, result) => sum + (result.totalStx || 0), 0);
+                                    }
+
+                                    return regularVotes + dustVotes;
                                 })()}
                             </span>
                             <span className={styles.results_stat_label}>Total Votes</span>
                         </div>
                         <div className={styles.results_stat}>
                             <span className={styles.results_stat_value}>
-                                {totalUniqueVotes >= 0 ? totalUniqueVotes : '0'}
+                                {(() => {
+                                    // Calculate total unique voters from regular + dust
+                                    const regularVoters = parseInt(totalUniqueVotes) >= 0 ? parseInt(totalUniqueVotes) : 0;
+                                    const dustVoters = dustVotersList ? dustVotersList.length : 0;
+                                    return regularVoters + dustVoters;
+                                })()}
                             </span>
                             <span className={styles.results_stat_label}>Voters</span>
                         </div>
@@ -211,12 +226,29 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
 
                     {/* Total Locked/Unlocked Summary */}
                     {(() => {
-                        if (!resultsByOption || Object.keys(resultsByOption).length === 0) return null;
+                        // Calculate regular results totals
+                        const regularTotals = { locked: 0, unlocked: 0 };
+                        if (resultsByOption && Object.keys(resultsByOption).length > 0) {
+                            Object.values(resultsByOption).forEach(result => {
+                                regularTotals.locked += parseInt(result.lockedStx) || 0;
+                                regularTotals.unlocked += parseInt(result.unlockedStx) || 0;
+                            });
+                        }
 
-                        const totals = Object.values(resultsByOption).reduce((acc, result) => ({
-                            locked: acc.locked + (parseInt(result.lockedStx) || 0),
-                            unlocked: acc.unlocked + (parseInt(result.unlockedStx) || 0)
-                        }), { locked: 0, unlocked: 0 });
+                        // Calculate dust results totals
+                        const dustTotals = { locked: 0, unlocked: 0 };
+                        if (dustVotingResults && Object.keys(dustVotingResults).length > 0) {
+                            Object.values(dustVotingResults).forEach(result => {
+                                dustTotals.locked += result.totalLockedStx || 0;
+                                dustTotals.unlocked += result.totalUnlockedStx || 0;
+                            });
+                        }
+
+                        // Combine totals
+                        const totals = {
+                            locked: regularTotals.locked + dustTotals.locked,
+                            unlocked: regularTotals.unlocked + dustTotals.unlocked
+                        };
 
                         if (totals.locked === 0 && totals.unlocked === 0) return null;
 
@@ -345,18 +377,43 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                 );
                             }
 
-                            // Calculate and sort results
+                            // Calculate and sort results (merging regular + dust)
                             const resultsData = pollObject.options.map(option => {
-                                const result = resultsByOption[option.id] || { total: 0, percentage: 0, lockedStx: 0, unlockedStx: 0 };
+                                // Get regular results
+                                const regularResult = resultsByOption[option.id] || { total: 0, percentage: 0, lockedStx: 0, unlockedStx: 0 };
+
+                                // Get dust results for this option
+                                const dustResult = dustVotingResults && dustVotingResults[option.id] ? dustVotingResults[option.id] : null;
+
+                                // Combine regular and dust votes
+                                const regularVotes = parseInt(regularResult.total) || 0;
+                                const dustVotes = dustResult ? dustResult.totalStx || 0 : 0;
+                                const totalVotes = regularVotes + dustVotes;
+
+                                // Combine locked/unlocked STX
+                                const regularLockedStx = parseInt(regularResult.lockedStx) || 0;
+                                const regularUnlockedStx = parseInt(regularResult.unlockedStx) || 0;
+                                const dustLockedStx = dustResult ? dustResult.totalLockedStx || 0 : 0;
+                                const dustUnlockedStx = dustResult ? dustResult.totalUnlockedStx || 0 : 0;
+
                                 return {
                                     id: option.id,
                                     name: option.value,
-                                    votes: parseInt(result.total) || 0,
-                                    percentage: parseFloat(result.percentage) || 0,
-                                    lockedStx: parseInt(result.lockedStx) || 0,
-                                    unlockedStx: parseInt(result.unlockedStx) || 0
+                                    votes: totalVotes,
+                                    percentage: 0, // Will calculate after getting all totals
+                                    lockedStx: regularLockedStx + dustLockedStx,
+                                    unlockedStx: regularUnlockedStx + dustUnlockedStx
                                 };
-                            }).sort((a, b) => b.votes - a.votes);
+                            });
+
+                            // Calculate percentages based on total votes
+                            const grandTotalVotes = resultsData.reduce((sum, result) => sum + result.votes, 0);
+                            resultsData.forEach(result => {
+                                result.percentage = grandTotalVotes > 0 ? ((result.votes / grandTotalVotes) * 100).toFixed(1) : 0;
+                            });
+
+                            // Sort by votes (descending)
+                            resultsData.sort((a, b) => b.votes - a.votes);
 
                             return resultsData.map((result, index) => (
                                 <div key={result.id} className={styles.result_option} style={{
