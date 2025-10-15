@@ -420,7 +420,7 @@ export default function ModernVotingInterface({
                     )}
 
                     {/* Dust Voting Toggle */}
-                    {hasDustOptions() && !alreadyVoted && (
+                    {hasDustOptions() && !alreadyVoted && pollObject?.votingSystem === 'fptp' && (
                         <div style={{
                             background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.05) 100%)',
                             border: '1px solid rgba(245, 158, 11, 0.2)',
@@ -439,9 +439,6 @@ export default function ModernVotingInterface({
                                     alignItems: 'center',
                                     gap: 'var(--space-2)'
                                 }}>
-                                    <span style={{
-                                        fontSize: '1.2em'
-                                    }}>💰</span>
                                     <div>
                                         <div style={{
                                             fontWeight: '700',
