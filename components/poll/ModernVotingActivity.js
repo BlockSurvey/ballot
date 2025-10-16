@@ -76,12 +76,7 @@ export default function ModernVotingActivity({
                 <h2 className={styles.section_title}>
                     Voting Activity
                     {totalUniqueVotes >= 0 && (
-                        <span style={{
-                            fontWeight: 'normal',
-                            fontSize: '1rem',
-                            color: 'var(--color-tertiary)',
-                            marginLeft: 'var(--space-2)'
-                        }}>
+                        <span className={styles.section_title_count}>
                             ({totalUniqueVotes} {totalUniqueVotes === 1 ? 'voter' : 'voters'})
                         </span>
                     )}
@@ -154,7 +149,7 @@ export default function ModernVotingActivity({
                                             {/* Vote Options */}
                                             <div className={styles.vote_option}>
                                                 {Object.keys(result?.vote || {}).map((optionId, voteIndex) => (
-                                                    <div key={voteIndex} style={{ marginBottom: voteIndex < Object.keys(result.vote).length - 1 ? '2px' : '0' }}>
+                                                    <div key={voteIndex} className={styles.vote_item}>
                                                         {optionsMap[optionId] || `Option ${optionId}`}
                                                     </div>
                                                 ))}
@@ -163,15 +158,10 @@ export default function ModernVotingActivity({
                                             {/* Vote Counts */}
                                             <div className={styles.vote_count}>
                                                 {Object.values(result?.vote || {}).map((value, voteIndex) => (
-                                                    <div key={voteIndex} style={{ marginBottom: voteIndex < Object.values(result.vote).length - 1 ? '2px' : '0' }}>
+                                                    <div key={voteIndex} className={styles.vote_item}>
                                                         {value}
                                                         {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.strategyTokenName && (
-                                                            <span style={{
-                                                                marginLeft: '4px',
-                                                                fontSize: '0.75rem',
-                                                                fontWeight: '600',
-                                                                color: 'var(--color-tertiary)'
-                                                            }}>
+                                                            <span className={styles.token_name}>
                                                                 {pollObject.strategyTokenName}
                                                             </span>
                                                         )}
@@ -184,13 +174,7 @@ export default function ModernVotingActivity({
                                                 {result?.votingPower || 0}
 
                                                 {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && (
-                                                    // Show strategy token name
-                                                    <span style={{
-                                                        marginLeft: '4px',
-                                                        fontSize: '0.75rem',
-                                                        fontWeight: '600',
-                                                        color: 'var(--color-tertiary)'
-                                                    }}>
+                                                    <span className={styles.token_name}>
                                                         {pollObject.strategyTokenName}
                                                     </span>
                                                 )}
@@ -199,62 +183,21 @@ export default function ModernVotingActivity({
                                             {/* Locked/Unlocked Status */}
                                             {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" && (
                                                 <div className={styles.lock_status}>
-                                                    <div style={{
-                                                        display: 'flex',
-                                                        flexDirection: 'column',
-                                                        gap: '4px',
-                                                        fontSize: '0.75rem'
-                                                    }}>
-                                                        <div style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px'
-                                                        }}>
-                                                            <div style={{
-                                                                width: '6px',
-                                                                height: '6px',
-                                                                borderRadius: '50%',
-                                                                background: '#F59E0B',
-                                                                flexShrink: 0
-                                                            }} />
-                                                            <span style={{
-                                                                fontWeight: '600',
-                                                                color: 'var(--color-primary)'
-                                                            }}>
+                                                    <div className={styles.lock_status_container}>
+                                                        <div className={styles.status_indicator}>
+                                                            <div className={`${styles.status_dot} ${styles.status_dot_locked}`} />
+                                                            <span className={styles.status_text}>
                                                                 {result?.lockedStx}
-                                                                <span style={{
-                                                                    marginLeft: '4px',
-                                                                    fontSize: '0.75rem',
-                                                                    fontWeight: '600',
-                                                                    color: 'var(--color-tertiary)'
-                                                                }}>
+                                                                <span className={styles.token_name}>
                                                                     {pollObject.strategyTokenName}
                                                                 </span>
                                                             </span>
                                                         </div>
-                                                        <div style={{
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px'
-                                                        }}>
-                                                            <div style={{
-                                                                width: '6px',
-                                                                height: '6px',
-                                                                borderRadius: '50%',
-                                                                background: '#10B981',
-                                                                flexShrink: 0
-                                                            }} />
-                                                            <span style={{
-                                                                fontWeight: '600',
-                                                                color: 'var(--color-primary)'
-                                                            }}>
+                                                        <div className={styles.status_indicator}>
+                                                            <div className={`${styles.status_dot} ${styles.status_dot_unlocked}`} />
+                                                            <span className={styles.status_text}>
                                                                 {result?.unlockedStx}
-                                                                <span style={{
-                                                                    marginLeft: '4px',
-                                                                    fontSize: '0.75rem',
-                                                                    fontWeight: '600',
-                                                                    color: 'var(--color-tertiary)'
-                                                                }}>
+                                                                <span className={styles.token_name}>
                                                                     {pollObject.strategyTokenName}
                                                                 </span>
                                                             </span>

@@ -145,12 +145,7 @@ export default function PollComponent(props) {
                                     <div className={styles.card_header}>
                                         <h2 className={styles.section_title}>
                                             Dust Transactions
-                                            <span style={{
-                                                fontWeight: 'normal',
-                                                fontSize: '1rem',
-                                                color: 'var(--color-tertiary)',
-                                                marginLeft: 'var(--space-2)'
-                                            }}>
+                                            <span className={styles.section_title_count}>
                                                 ({dustVotersList.length} {dustVotersList.length === 1 ? 'transaction' : 'transactions'})
                                             </span>
                                         </h2>
@@ -158,7 +153,7 @@ export default function PollComponent(props) {
 
                                     <div className={styles.activity_table}>
                                         {/* Table Header */}
-                                        <div className={styles.activity_header} style={{ gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.2fr' }}>
+                                        <div className={`${styles.activity_header} ${styles.activity_header_with_lock}`}>
                                             <span>Voter</span>
                                             <span>Choice</span>
                                             <span>Votes</span>
@@ -183,8 +178,7 @@ export default function PollComponent(props) {
                                                 return (
                                                     <div
                                                         key={voter.address}
-                                                        className={styles.activity_row}
-                                                        style={{ gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.2fr' }}
+                                                        className={`${styles.activity_row} ${styles.activity_row_with_lock}`}
                                                     >
                                                         {/* User Info */}
                                                         <div className={styles.user_info}>
@@ -226,7 +220,7 @@ export default function PollComponent(props) {
                                                         {/* Vote Options */}
                                                         <div className={styles.vote_option}>
                                                             {voter.votedOptions.map((option, voteIndex) => (
-                                                                <div key={voteIndex} style={{ marginBottom: voteIndex < voter.votedOptions.length - 1 ? '2px' : '0' }}>
+                                                                <div key={voteIndex} className={styles.vote_item}>
                                                                     {option.optionValue}
                                                                 </div>
                                                             ))}
@@ -235,14 +229,9 @@ export default function PollComponent(props) {
                                                         {/* Vote Counts (Dust Amount) */}
                                                         <div className={styles.vote_count}>
                                                             {voter.votedOptions.map((option, voteIndex) => (
-                                                                <div key={voteIndex} style={{ marginBottom: voteIndex < voter.votedOptions.length - 1 ? '2px' : '0' }}>
+                                                                <div key={voteIndex} className={styles.vote_item}>
                                                                     {option.dustAmount}
-                                                                    <span style={{
-                                                                        marginLeft: '4px',
-                                                                        fontSize: '0.75rem',
-                                                                        fontWeight: '600',
-                                                                        color: 'var(--color-tertiary)'
-                                                                    }}>
+                                                                    <span className={styles.token_name}>
                                                                         STX
                                                                     </span>
                                                                 </div>
@@ -252,74 +241,28 @@ export default function PollComponent(props) {
                                                         {/* Voting Power */}
                                                         <div className={styles.voting_power_display}>
                                                             {voter.stxBalance || 0}
-                                                            <span style={{
-                                                                marginLeft: '4px',
-                                                                fontSize: '0.75rem',
-                                                                fontWeight: '600',
-                                                                color: 'var(--color-tertiary)'
-                                                            }}>
+                                                            <span className={styles.token_name}>
                                                                 STX
                                                             </span>
                                                         </div>
 
                                                         {/* Locked/Unlocked Status */}
                                                         <div className={styles.lock_status}>
-                                                            <div style={{
-                                                                display: 'flex',
-                                                                flexDirection: 'column',
-                                                                gap: '4px',
-                                                                fontSize: '0.75rem'
-                                                            }}>
-                                                                <div style={{
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '4px'
-                                                                }}>
-                                                                    <div style={{
-                                                                        width: '6px',
-                                                                        height: '6px',
-                                                                        borderRadius: '50%',
-                                                                        background: '#F59E0B',
-                                                                        flexShrink: 0
-                                                                    }} />
-                                                                    <span style={{
-                                                                        fontWeight: '600',
-                                                                        color: 'var(--color-primary)'
-                                                                    }}>
+                                                            <div className={styles.lock_status_container}>
+                                                                <div className={styles.status_indicator}>
+                                                                    <div className={`${styles.status_dot} ${styles.status_dot_locked}`} />
+                                                                    <span className={styles.status_text}>
                                                                         {voter.lockedStx || 0}
-                                                                        <span style={{
-                                                                            marginLeft: '4px',
-                                                                            fontSize: '0.75rem',
-                                                                            fontWeight: '600',
-                                                                            color: 'var(--color-tertiary)'
-                                                                        }}>
+                                                                        <span className={styles.token_name}>
                                                                             STX
                                                                         </span>
                                                                     </span>
                                                                 </div>
-                                                                <div style={{
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '4px'
-                                                                }}>
-                                                                    <div style={{
-                                                                        width: '6px',
-                                                                        height: '6px',
-                                                                        borderRadius: '50%',
-                                                                        background: '#10B981',
-                                                                        flexShrink: 0
-                                                                    }} />
-                                                                    <span style={{
-                                                                        fontWeight: '600',
-                                                                        color: 'var(--color-primary)'
-                                                                    }}>
+                                                                <div className={styles.status_indicator}>
+                                                                    <div className={`${styles.status_dot} ${styles.status_dot_unlocked}`} />
+                                                                    <span className={styles.status_text}>
                                                                         {voter.unlockedStx || 0}
-                                                                        <span style={{
-                                                                            marginLeft: '4px',
-                                                                            fontSize: '0.75rem',
-                                                                            fontWeight: '600',
-                                                                            color: 'var(--color-tertiary)'
-                                                                        }}>
+                                                                        <span className={styles.token_name}>
                                                                             STX
                                                                         </span>
                                                                     </span>

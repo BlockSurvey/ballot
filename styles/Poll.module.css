@@ -795,7 +795,50 @@
     animation: pulse 2s infinite;
 }
 
-/* Responsive Design */
+/* Responsive Design - Tablet breakpoint */
+@media (max-width: 992px) {
+    .activity_header_default {
+        grid-template-columns: 1.5fr 1fr 1fr 1fr;
+        font-size: 0.75rem;
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .activity_header_with_lock {
+        grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+        font-size: 0.75rem;
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .activity_row_default {
+        grid-template-columns: 1.5fr 1fr 1fr 1fr;
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .activity_row_with_lock {
+        grid-template-columns: 1.5fr 1fr 1fr 1fr 1fr;
+        padding: var(--space-2) var(--space-3);
+    }
+
+    .user_info {
+        gap: var(--space-1);
+    }
+
+    .user_avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 0.6rem;
+    }
+
+    .user_address,
+    .vote_option,
+    .vote_count,
+    .voting_power_display,
+    .lock_status {
+        font-size: 0.8125rem;
+    }
+}
+
+/* Responsive Design - Mobile */
 @media (max-width: 768px) {
     .poll_title {
         font-size: 1.5rem;
@@ -834,6 +877,13 @@
     }
     
     /* Mobile voting activity layout */
+    .activity_table {
+        overflow-x: visible;
+        border: none;
+        border-radius: 0;
+        background: transparent;
+    }
+    
     .activity_header {
         display: none;
     }
@@ -844,67 +894,149 @@
         display: block;
         padding: var(--space-4);
         border-radius: var(--radius-md);
-        margin-bottom: var(--space-2);
-        background: var(--color-surface);
+        margin-bottom: var(--space-4);
+        background: white;
         border: 1px solid var(--color-border);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        grid-template-columns: none;
     }
     
     .activity_row:last-child {
         margin-bottom: 0;
+        border-bottom: 1px solid var(--color-border);
+    }
+    
+    .activity_row:hover {
+        background: white;
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
     }
     
     /* Mobile activity row styling */
     .user_info {
         margin-bottom: var(--space-3);
+        padding-bottom: var(--space-3);
+        border-bottom: 1px solid var(--color-border-light);
     }
     
     .vote_option,
     .vote_count,
-    .voting_power_display,
-    .lock_status {
-        margin-bottom: var(--space-2);
+    .voting_power_display {
+        margin-bottom: var(--space-3);
         display: block;
+        padding: 0;
+    }
+    
+    .lock_status {
+        margin-bottom: 0;
+        display: block;
+        padding: 0;
     }
     
     .vote_option::before {
-        content: "Choice: ";
-        font-weight: 600;
-        color: var(--color-secondary);
-        font-size: 0.75rem;
+        content: "CHOICE";
+        font-weight: 700;
+        color: var(--color-tertiary);
+        font-size: 0.6875rem;
         text-transform: uppercase;
-        letter-spacing: 0.025em;
+        letter-spacing: 0.05em;
+        display: block;
+        margin-bottom: var(--space-1);
     }
     
     .vote_count::before {
-        content: "Votes: ";
-        font-weight: 600;
-        color: var(--color-secondary);
-        font-size: 0.75rem;
+        content: "VOTES";
+        font-weight: 700;
+        color: var(--color-tertiary);
+        font-size: 0.6875rem;
         text-transform: uppercase;
-        letter-spacing: 0.025em;
+        letter-spacing: 0.05em;
+        display: block;
+        margin-bottom: var(--space-1);
     }
     
     .voting_power_display::before {
-        content: "Power: ";
-        font-weight: 600;
-        color: var(--color-secondary);
-        font-size: 0.75rem;
+        content: "POWER";
+        font-weight: 700;
+        color: var(--color-tertiary);
+        font-size: 0.6875rem;
         text-transform: uppercase;
-        letter-spacing: 0.025em;
+        letter-spacing: 0.05em;
+        display: block;
+        margin-bottom: var(--space-1);
     }
     
     .lock_status::before {
-        content: "Lock Status: ";
-        font-weight: 600;
-        color: var(--color-secondary);
-        font-size: 0.75rem;
+        content: "LOCK STATUS";
+        font-weight: 700;
+        color: var(--color-tertiary);
+        font-size: 0.6875rem;
         text-transform: uppercase;
-        letter-spacing: 0.025em;
+        letter-spacing: 0.05em;
+        display: block;
+        margin-bottom: var(--space-1);
     }
     
     .results_summary {
         grid-template-columns: repeat(2, 1fr);
     }
+}
+
+/* Token name styling */
+.token_name {
+    margin-left: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-tertiary);
+}
+
+/* Section title count */
+.section_title_count {
+    font-weight: normal;
+    font-size: 1rem;
+    color: var(--color-tertiary);
+    margin-left: var(--space-2);
+}
+
+/* Status indicators */
+.status_indicator {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.75rem;
+}
+
+.status_dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status_dot_locked {
+    background: #F59E0B;
+}
+
+.status_dot_unlocked {
+    background: #10B981;
+}
+
+.status_text {
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+/* Vote item spacing */
+.vote_item:not(:last-child) {
+    margin-bottom: 1px;
+}
+
+/* Lock status container */
+.lock_status_container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    font-size: 0.75rem;
 }
 
 /* Small mobile devices */
@@ -917,11 +1049,13 @@
     .activity_row_default,
     .activity_row_with_lock {
         padding: var(--space-3);
-        margin-bottom: var(--space-2);
+        margin-bottom: var(--space-3);
     }
     
     .user_info {
         gap: var(--space-1);
+        margin-bottom: var(--space-2);
+        padding-bottom: var(--space-2);
     }
     
     .user_avatar {
@@ -937,10 +1071,34 @@
     .vote_option,
     .vote_count,
     .voting_power_display {
-        font-size: 0.8125rem;
+        font-size: 0.875rem;
+        margin-bottom: var(--space-2);
+        padding: 0;
     }
     
     .lock_status {
+        font-size: 0.75rem;
+        margin-bottom: 0;
+    }
+    
+    .section_title_count {
+        font-size: 0.875rem;
+    }
+    
+    .vote_option::before,
+    .vote_count::before,
+    .voting_power_display::before,
+    .lock_status::before {
         font-size: 0.6875rem;
+        margin-bottom: var(--space-1);
+    }
+    
+    .lock_status_container {
+        gap: var(--space-1);
+    }
+    
+    .status_indicator {
+        gap: var(--space-1);
+        font-size: 0.75rem;
     }
 }
