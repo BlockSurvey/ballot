@@ -328,12 +328,15 @@ div {
 .nav_container {
     position: sticky;
     top: 0;
+    left: 0;
+    right: 0;
     z-index: 100;
     background: rgba(255, 255, 255, 0.98);
     backdrop-filter: blur(12px);
     border-bottom: 1px solid #e5e7eb;
     padding: var(--space-4) 0;
     width: 100%;
+    margin: 0;
 }
 
 .nav_content {
@@ -344,6 +347,8 @@ div {
     align-items: center;
     justify-content: space-between;
     min-height: 64px;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .nav_logo {
@@ -646,15 +651,36 @@ div {
 }
 
 @media (max-width: 768px) {
+    .nav_container {
+        padding: var(--space-3) 0;
+    }
+
     .nav_content {
         padding: 0 var(--space-4);
+        min-height: 56px;
+    }
+
+    .nav_logo {
+        flex-shrink: 0;
     }
 
     .nav_actions {
-        gap: var(--space-3);
+        gap: var(--space-2);
+        flex-shrink: 0;
     }
 
     .block_heights_section {
+        display: none;
+    }
+
+    /* Make Sign up button smaller on mobile */
+    .nav_actions Button {
+        padding: 6px 16px !important;
+        font-size: 14px !important;
+    }
+
+    /* Hide New Poll button on mobile */
+    .action_secondary_btn {
         display: none;
     }
 }

@@ -659,7 +659,7 @@ export default function ModernVotingInterface({
                             </Button>
                         ) : (
                             <Button
-                                className="action_secondary_btn w-100"
+                                className="action_primary_btn w-100"
                                 onClick={() => authenticate(window?.location?.href)}
                             >
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">

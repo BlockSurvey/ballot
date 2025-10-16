@@ -91,10 +91,11 @@ export default function ModernVotingActivity({
             <div className={styles.activity_table}>
                 {/* Table Header */}
                 <div
-                    className={styles.activity_header}
-                    style={pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" ? {
-                        gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.2fr'
-                    } : {}}
+                    className={`${styles.activity_header} ${
+                        pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" 
+                            ? styles.activity_header_with_lock 
+                            : styles.activity_header_default
+                    }`}
                 >
                     <span>Voter</span>
                     <span>Choice</span>
@@ -118,10 +119,11 @@ export default function ModernVotingActivity({
                                     return (
                                         <div
                                             key={index}
-                                            className={styles.activity_row}
-                                            style={pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" ? {
-                                                gridTemplateColumns: '2fr 1.5fr 1fr 1fr 1.2fr'
-                                            } : {}}
+                                            className={`${styles.activity_row} ${
+                                                pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" 
+                                                    ? styles.activity_row_with_lock 
+                                                    : styles.activity_row_default
+                                            }`}
                                         >
                                             {/* User Info */}
                                             <div className={styles.user_info}>
