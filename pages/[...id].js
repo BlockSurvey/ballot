@@ -548,8 +548,8 @@ export default function Poll(props) {
             }
 
             // Check if current user has already voted via dust transactions
-            const currentUserAddress = getMyStxAddress();
-            if (userSession.isUserSignedIn() && allDustVoters[currentUserAddress]) {
+            const currentUserAddress = userSession.isUserSignedIn() ? getMyStxAddress() : null;
+            if (userSession.isUserSignedIn() && currentUserAddress && allDustVoters[currentUserAddress]) {
                 setUserDustVotingStatus(allDustVoters[currentUserAddress]);
                 setAlreadyVoted(true);
             }
@@ -558,7 +558,7 @@ export default function Poll(props) {
             const dustVotersList = Object.keys(allDustVoters).map(address => ({
                 address,
                 ...allDustVoters[address],
-                isCurrentUser: userSession.isUserSignedIn() && address === currentUserAddress
+                isCurrentUser: userSession.isUserSignedIn() && currentUserAddress && address === currentUserAddress
             }));
             setDustVotersList(dustVotersList);
 
