@@ -46,8 +46,22 @@ export default function Poll(props) {
     const [userDustVotingStatus, setUserDustVotingStatus] = useState(null);
     const [dustVotersList, setDustVotersList] = useState([]);
 
+    // Helper function to strip HTML tags from text
+    const stripHtmlTags = (html) => {
+        if (!html) return "";
+        // Remove HTML tags and decode HTML entities
+        return html.replace(/<[^>]*>/g, '')
+                  .replace(/&amp;/g, '&')
+                  .replace(/&lt;/g, '<')
+                  .replace(/&gt;/g, '>')
+                  .replace(/&quot;/g, '"')
+                  .replace(/&#39;/g, "'")
+                  .replace(/&nbsp;/g, ' ')
+                  .trim();
+    };
+
     const title = `${pollObject?.title} | Ballot`;
-    const description = pollObject?.description?.substr(0, 160);
+    const description = stripHtmlTags(pollObject?.description)?.substr(0, 160);
     const metaImage = "https://ballot.gg/images/ballot-meta.png";
     const displayURL = "";
 
