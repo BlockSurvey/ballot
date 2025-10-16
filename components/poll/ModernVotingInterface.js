@@ -4,6 +4,7 @@ import { authenticate, userSession } from "../../services/auth";
 import { castMyVoteContractCall } from "../../services/contract";
 import styles from "../../styles/Poll.module.css";
 import SendTxModal from "../common/SendTxModal";
+import CountdownTimer from "../common/CountdownTimer";
 
 export default function ModernVotingInterface({
     pollObject,
@@ -243,6 +244,14 @@ export default function ModernVotingInterface({
 
                     <h2 className={styles.section_title}>
                         {alreadyVoted ? 'Your Vote' : 'Cast Your Vote'}
+                        {/* Countdown Timer - Show only for active polls that haven't been voted on */}
+                        {!alreadyVoted && isPollActive() && (
+                            <CountdownTimer
+                                endAtBlock={pollObject?.endAtBlock}
+                                currentBitcoinBlockHeight={currentBitcoinBlockHeight}
+                                showTimer={true}
+                            />
+                        )}
                     </h2>
 
                     {/* Already Voted Banner */}
