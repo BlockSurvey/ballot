@@ -66,7 +66,7 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus }) {
             new Date(pollObject.endAtDateUTC) :
             new Date(pollObject?.endAtDate);
 
-        if (endDate && endDate < now) {
+        if ((endDate && endDate < now) || pollObject?.archived === true) {
             return { label: "Closed", className: styles.status_closed };
         }
 

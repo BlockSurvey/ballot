@@ -1,9 +1,121 @@
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
-import { deleteFileToGaia, getFileFromGaia, getGaiaAddressFromPublicKey, putFileToGaia } from "../../services/auth.js";
+import { getFileFromGaia, getGaiaAddressFromPublicKey } from "../../services/auth.js";
 import { convertToDisplayDateFormat } from "../../services/utils";
 import styles from "../../styles/Dashboard.module.css";
+import ArchiveConfirmationModal from "../common/ArchiveConfirmationModal";
+import EditDescriptionModal from "../common/EditDescriptionModal";
+
+// Modern Action Dropdown Component
+function ModernActionDropdown({ poll, onEditDescription, onArchive, isTableView = false }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+    const buttonRef = useRef(null);
+
+    useEffect(() => {
+        function handleClickOutside(event) {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        }
+
+        function handleKeyDown(event) {
+            if (event.key === 'Escape') {
+                setIsOpen(false);
+                buttonRef.current?.focus();
+            }
+        }
+
+        if (isOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleKeyDown);
+            return () => {
+                document.removeEventListener('mousedown', handleClickOutside);
+                document.removeEventListener('keydown', handleKeyDown);
+            };
+        }
+    }, [isOpen]);
+
+    const handleToggle = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(!isOpen);
+    };
+
+    const handleItemClick = (action, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsOpen(false);
+
+        if (action === 'edit') {
+            onEditDescription(poll, e);
+        } else if (action === 'archive') {
+            onArchive(poll, e);
+        }
+    };
+
+    const dropdownClass = isTableView
+        ? `${styles.table_modern_action_dropdown} ${isOpen ? styles.dropdown_open : ''}`
+        : `${styles.modern_action_dropdown} ${isOpen ? styles.dropdown_open : ''}`;
+
+    const buttonClass = isTableView
+        ? `${styles.modern_three_dot_button} ${styles.table_modern_three_dot_button}`
+        : styles.modern_three_dot_button;
+
+    return (
+        <div className={dropdownClass} ref={dropdownRef}>
+            <button
+                ref={buttonRef}
+                className={buttonClass}
+                onClick={handleToggle}
+                aria-label="Poll actions"
+                aria-expanded={isOpen}
+                aria-haspopup="true"
+            >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="3" cy="8" r="1.5" fill="currentColor" />
+                    <circle cx="8" cy="8" r="1.5" fill="currentColor" />
+                    <circle cx="13" cy="8" r="1.5" fill="currentColor" />
+                </svg>
+            </button>
+
+            <div className={`${styles.modern_dropdown_menu} ${isOpen ? styles.menu_open : ''}`}>
+                <button
+                    className={styles.modern_dropdown_item}
+                    onClick={(e) => handleItemClick('edit', e)}
+                    role="menuitem"
+                >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M11.013 1.427a1.75 1.75 0 0 1 2.474 0l1.086 1.086a1.75 1.75 0 0 1 0 2.474l-8.61 8.61a.25.25 0 0 1-.1.058l-6.5 2.6a.25.25 0 0 1-.321-.321l2.1-8.4a.25.25 0 0 1 .056-.104L11.013 1.427ZM1.717 14.582l5.294-2.117 8.126-8.127a.25.25 0 0 0 0-.354L14.051 2.898a.25.25 0 0 0-.354 0L5.571 11.024l-1.25 5-.604-2.442Z"
+                            fill="currentColor"
+                        />
+                    </svg>
+                    Edit Description
+                </button>
+
+                <hr className={styles.modern_dropdown_divider} />
+
+                <button
+                    className={`${styles.modern_dropdown_item} ${styles.item_danger}`}
+                    onClick={(e) => handleItemClick('archive', e)}
+                    role="menuitem"
+                >
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M2 4h12l-1.5 9H3.5L2 4zm2.5 0V2.5C4.5 2.224 4.724 2 5 2h6c.276 0 .5.224.5.5V4M6 6.5v5M10 6.5v5"
+                            stroke="currentColor"
+                            strokeWidth="1.5"
+                            fill="none"
+                        />
+                    </svg>
+                    Archive Poll
+                </button>
+            </div>
+        </div>
+    );
+}
 
 export default function DashboardAllPollsComponent() {
     // localStorage utility functions
@@ -29,7 +141,7 @@ export default function DashboardAllPollsComponent() {
 
     // Load saved preferences or use defaults
     const savedPreferences = getDashboardPreferences();
-    
+
     // Variables
     const [allPolls, setAllPolls] = useState();
     const [isDeleting, setIsDeleting] = useState(false);
@@ -39,6 +151,15 @@ export default function DashboardAllPollsComponent() {
     const [sortBy, setSortBy] = useState(savedPreferences?.sortBy || "date");
     const [isSearchFocused, setIsSearchFocused] = useState(false);
     const [viewMode, setViewMode] = useState(savedPreferences?.viewMode || "grid"); // "grid" or "list"
+
+    // Edit description modal state
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [selectedPoll, setSelectedPoll] = useState(null);
+
+    // Archive confirmation modal state
+    const [showArchiveModal, setShowArchiveModal] = useState(false);
+    const [pollToArchive, setPollToArchive] = useState(null);
+
 
     // Functions
     useEffect(() => {
@@ -80,38 +201,42 @@ export default function DashboardAllPollsComponent() {
     // Filter and search functions
     function filterPolls(polls) {
         if (!polls?.list || !polls?.ref) return [];
-        
+
         return polls.list.filter(pollId => {
             const poll = polls.ref[pollId];
             if (!poll) return false;
-            
+
+            // Filter out archived polls from main dashboard
+            if (poll.archived === true) return false;
+
             // Search filter
-            const matchesSearch = searchQuery === "" || 
+            const matchesSearch = searchQuery === "" ||
                 poll.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 poll.description?.toLowerCase().includes(searchQuery.toLowerCase());
-            
+
             // Status filter
             let matchesStatus = true;
             if (statusFilter !== "all") {
                 const pollStatus = getPollStatus(poll);
                 matchesStatus = pollStatus === statusFilter;
             }
-            
+
             return matchesSearch && matchesStatus;
         });
     }
-    
+
     function getPollStatus(poll) {
+        if (poll?.archived === true) return "archived";
         if (poll?.status === "draft") return "draft";
         if (poll?.endAt && new Date(poll?.endAt) < new Date()) return "closed";
         return "active";
     }
-    
+
     function sortPolls(pollIds) {
         return pollIds.sort((a, b) => {
             const pollA = allPolls.ref[a];
             const pollB = allPolls.ref[b];
-            
+
             if (sortBy === "date") {
                 const dateA = new Date(pollA?.updatedAt || pollA?.createdAt || 0);
                 const dateB = new Date(pollB?.updatedAt || pollB?.createdAt || 0);
@@ -127,7 +252,68 @@ export default function DashboardAllPollsComponent() {
         });
     }
 
-    function renderPollList(pollIndexObject) {
+    // Edit description modal functions
+    function handleEditDescription(poll, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        setSelectedPoll(poll);
+        setShowEditModal(true);
+    }
+
+    function handleCloseEditModal() {
+        setShowEditModal(false);
+        setSelectedPoll(null);
+    }
+
+    function handleDescriptionUpdated(pollId, newDescription, updatedAt) {
+        if (allPolls?.ref && allPolls.ref[pollId]) {
+            // Update the poll in the state
+            const updatedRef = { ...allPolls.ref };
+            updatedRef[pollId] = {
+                ...updatedRef[pollId],
+                description: newDescription,
+                updatedAt: updatedAt
+            };
+
+            setAllPolls({
+                ...allPolls,
+                ref: updatedRef
+            });
+        }
+    }
+
+    // Archive modal functions
+    function handleArchivePoll(poll, event) {
+        event.preventDefault();
+        event.stopPropagation();
+        setPollToArchive(poll);
+        setShowArchiveModal(true);
+    }
+
+    function handleCloseArchiveModal() {
+        setShowArchiveModal(false);
+        setPollToArchive(null);
+    }
+
+    function handlePollArchived(pollId, updatedAt) {
+        if (allPolls?.ref && allPolls.ref[pollId]) {
+            // Update the poll in the state to mark it as archived
+            const updatedRef = { ...allPolls.ref };
+            updatedRef[pollId] = {
+                ...updatedRef[pollId],
+                archived: true,
+                status: "closed",
+                updatedAt: updatedAt
+            };
+
+            setAllPolls({
+                ...allPolls,
+                ref: updatedRef
+            });
+        }
+    }
+
+    function renderPollTableRow(pollIndexObject) {
         const getStatusConfig = (poll) => {
             if (poll?.status === "draft") {
                 return { type: "draft", label: "Draft" };
@@ -139,40 +325,66 @@ export default function DashboardAllPollsComponent() {
         };
 
         const statusConfig = getStatusConfig(pollIndexObject);
-        const pollUrl = pollIndexObject?.status == "draft" 
-            ? `/builder/${pollIndexObject.id}/draft` 
+        const pollUrl = pollIndexObject?.status == "draft"
+            ? `/builder/${pollIndexObject.id}/draft`
             : `/${pollIndexObject.id}/${gaiaAddress}`;
 
+        const truncateDescription = (text, maxLength = 120) => {
+            if (!text) return "";
+            const cleanText = text.replace(/<[^>]*>/g, '');
+            return cleanText.length > maxLength ? cleanText.slice(0, maxLength) + "..." : cleanText;
+        };
+
+        const handleRowClick = (e) => {
+            // Only navigate if the click is not on the dropdown or its children
+            const isDropdownClick = e.target.closest(`.${styles.table_modern_action_dropdown}`) ||
+                e.target.closest(`.${styles.modern_action_dropdown}`) ||
+                e.target.closest(`.${styles.modern_three_dot_button}`) ||
+                e.target.closest(`.${styles.modern_dropdown_menu}`);
+
+            if (!isDropdownClick) {
+                window.location.href = pollUrl;
+            }
+        };
+
         return (
-            <Link href={pollUrl} key={pollIndexObject.id}>
-                <div className={styles.poll_list_item}>
-                    <div className={styles.poll_list_content}>
-                        <div className={styles.poll_list_main}>
-                            <div className={styles.poll_list_header}>
-                                <h3 className={styles.poll_list_title}>
-                                    {pollIndexObject?.title || "Untitled Poll"}
-                                </h3>
-                                {pollIndexObject?.description && (
-                                    <div className={styles.poll_list_description}>
-                                        {pollIndexObject.description.replace(/<[^>]*>/g, '')}
-                                    </div>
-                                )}
+            <tr key={pollIndexObject.id} className={styles.table_row} onClick={handleRowClick}>
+                <td className={styles.table_cell_title}>
+                    <div className={styles.poll_title_wrapper}>
+                        <h3 className={styles.table_poll_title}>
+                            {pollIndexObject?.title || "Untitled Poll"}
+                        </h3>
+                        {pollIndexObject?.description && (
+                            <div className={styles.table_poll_description}>
+                                {truncateDescription(pollIndexObject.description)}
                             </div>
-                        </div>
-                        <div className={styles.poll_list_meta}>
-                            <div className={`${styles.status_pill} ${styles[`status_pill_${statusConfig.type}`]}`}>
-                                {statusConfig.label}
-                            </div>
-                            <div className={styles.poll_list_date}>
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path fillRule="evenodd" clipRule="evenodd" d="M3 0.5C3.27614 0.5 3.5 0.723858 3.5 1V2H10.5V1C10.5 0.723858 10.7239 0.5 11 0.5C11.2761 0.5 11.5 0.723858 11.5 1V2H12.5C13.0523 2 13.5 2.44772 13.5 3V12.5C13.5 13.0523 13.0523 13.5 12.5 13.5H1.5C0.947715 13.5 0.5 13.0523 0.5 12.5V3C0.5 2.44772 0.947715 2 1.5 2H2.5V1C2.5 0.723858 2.72386 0.5 3 0.5ZM1.5 5.5V12.5H12.5V5.5H1.5ZM3 7C3 6.72386 3.22386 6.5 3.5 6.5H4.5C4.77614 6.5 5 6.72386 5 7V8C5 8.27614 4.77614 8.5 4.5 8.5H3.5C3.22386 8.5 3 8.27614 3 8V7Z" fill="currentColor" />
-                                </svg>
-                                <span>{convertToDisplayDateFormat(pollIndexObject?.updatedAt)}</span>
-                            </div>
-                        </div>
+                        )}
                     </div>
-                </div>
-            </Link>
+                </td>
+                <td className={styles.table_cell_status}>
+                    <div className={`${styles.status_pill} ${styles[`status_pill_${statusConfig.type}`]}`}>
+                        {statusConfig.label}
+                    </div>
+                </td>
+                <td className={styles.table_cell_date}>
+                    <div className={styles.table_date_content}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M3 0.5C3.27614 0.5 3.5 0.723858 3.5 1V2H10.5V1C10.5 0.723858 10.7239 0.5 11 0.5C11.2761 0.5 11.5 0.723858 11.5 1V2H12.5C13.0523 2 13.5 2.44772 13.5 3V12.5C13.5 13.0523 13.0523 13.5 12.5 13.5H1.5C0.947715 13.5 0.5 13.0523 0.5 12.5V3C0.5 2.44772 0.947715 2 1.5 2H2.5V1C2.5 0.723858 2.72386 0.5 3 0.5ZM1.5 5.5V12.5H12.5V5.5H1.5ZM3 7C3 6.72386 3.22386 6.5 3.5 6.5H4.5C4.77614 6.5 5 6.72386 5 7V8C5 8.27614 4.77614 8.5 4.5 8.5H3.5C3.22386 8.5 3 8.27614 3 8V7Z" fill="currentColor" />
+                        </svg>
+                        <span>{convertToDisplayDateFormat(pollIndexObject?.updatedAt)}</span>
+                    </div>
+                </td>
+                <td className={styles.table_cell_actions}>
+                    {pollIndexObject?.status !== "draft" && (
+                        <ModernActionDropdown
+                            poll={pollIndexObject}
+                            onEditDescription={handleEditDescription}
+                            onArchive={handleArchivePoll}
+                            isTableView={true}
+                        />
+                    )}
+                </td>
+            </tr>
         );
     }
 
@@ -188,38 +400,57 @@ export default function DashboardAllPollsComponent() {
         };
 
         const statusConfig = getStatusConfig(pollIndexObject);
-        const pollUrl = pollIndexObject?.status == "draft" 
-            ? `/builder/${pollIndexObject.id}/draft` 
+        const pollUrl = pollIndexObject?.status == "draft"
+            ? `/builder/${pollIndexObject.id}/draft`
             : `/${pollIndexObject.id}/${gaiaAddress}`;
 
+        const handleCardClick = (e) => {
+            // Only navigate if the click is not on the dropdown or its children
+            const isDropdownClick = e.target.closest(`.${styles.modern_action_dropdown}`) ||
+                e.target.closest(`.${styles.modern_three_dot_button}`) ||
+                e.target.closest(`.${styles.modern_dropdown_menu}`);
+
+            if (!isDropdownClick) {
+                window.location.href = pollUrl;
+            }
+        };
+
         return (
-            <Link href={pollUrl} key={pollIndexObject.id}>
-                <div className={styles.poll_card}>
-                    <div className={styles.poll_card_header}>
-                        <h3 className={styles.poll_card_title}>
-                            {pollIndexObject?.title || "Untitled Poll"}
-                        </h3>
-                        <div className={`${styles.status_pill} ${styles[`status_pill_${statusConfig.type}`]}`}>
-                            {statusConfig.label}
-                        </div>
-                    </div>
+            <div key={pollIndexObject.id} className={styles.poll_card} onClick={handleCardClick}>
+                {/* Action Dropdown Button */}
+                {pollIndexObject?.status !== "draft" && (
+                    <ModernActionDropdown
+                        poll={pollIndexObject}
+                        onEditDescription={handleEditDescription}
+                        onArchive={handleArchivePoll}
+                        isTableView={false}
+                    />
+                )}
 
-                    {pollIndexObject?.description && (
-                        <div className={styles.poll_card_description}>
-                            {pollIndexObject.description.replace(/<[^>]*>/g, '')}
-                        </div>
-                    )}
-
-                    <div className={styles.poll_card_meta}>
-                        <div className={styles.poll_card_date}>
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path fillRule="evenodd" clipRule="evenodd" d="M3 0.5C3.27614 0.5 3.5 0.723858 3.5 1V2H10.5V1C10.5 0.723858 10.7239 0.5 11 0.5C11.2761 0.5 11.5 0.723858 11.5 1V2H12.5C13.0523 2 13.5 2.44772 13.5 3V12.5C13.5 13.0523 13.0523 13.5 12.5 13.5H1.5C0.947715 13.5 0.5 13.0523 0.5 12.5V3C0.5 2.44772 0.947715 2 1.5 2H2.5V1C2.5 0.723858 2.72386 0.5 3 0.5ZM1.5 5.5V12.5H12.5V5.5H1.5ZM3 7C3 6.72386 3.22386 6.5 3.5 6.5H4.5C4.77614 6.5 5 6.72386 5 7V8C5 8.27614 4.77614 8.5 4.5 8.5H3.5C3.22386 8.5 3 8.27614 3 8V7Z" fill="currentColor" />
-                            </svg>
-                            {convertToDisplayDateFormat(pollIndexObject?.updatedAt)}
-                        </div>
+                <div className={styles.poll_card_header}>
+                    <h3 className={styles.poll_card_title}>
+                        {pollIndexObject?.title || "Untitled Poll"}
+                    </h3>
+                    <div className={`${styles.status_pill} ${styles[`status_pill_${statusConfig.type}`]}`}>
+                        {statusConfig.label}
                     </div>
                 </div>
-            </Link>
+
+                {pollIndexObject?.description && (
+                    <div className={styles.poll_card_description}>
+                        {pollIndexObject.description.replace(/<[^>]*>/g, '')}
+                    </div>
+                )}
+
+                <div className={styles.poll_card_meta}>
+                    <div className={styles.poll_card_date}>
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fillRule="evenodd" clipRule="evenodd" d="M3 0.5C3.27614 0.5 3.5 0.723858 3.5 1V2H10.5V1C10.5 0.723858 10.7239 0.5 11 0.5C11.2761 0.5 11.5 0.723858 11.5 1V2H12.5C13.0523 2 13.5 2.44772 13.5 3V12.5C13.5 13.0523 13.0523 13.5 12.5 13.5H1.5C0.947715 13.5 0.5 13.0523 0.5 12.5V3C0.5 2.44772 0.947715 2 1.5 2H2.5V1C2.5 0.723858 2.72386 0.5 3 0.5ZM1.5 5.5V12.5H12.5V5.5H1.5ZM3 7C3 6.72386 3.22386 6.5 3.5 6.5H4.5C4.77614 6.5 5 6.72386 5 7V8C5 8.27614 4.77614 8.5 4.5 8.5H3.5C3.22386 8.5 3 8.27614 3 8V7Z" fill="currentColor" />
+                        </svg>
+                        {convertToDisplayDateFormat(pollIndexObject?.updatedAt)}
+                    </div>
+                </div>
+            </div>
         );
     }
 
@@ -354,45 +585,95 @@ export default function DashboardAllPollsComponent() {
                             )}
 
                             {/* Polls Container */}
-                            <div className={viewMode === "grid" ? styles.polls_grid : styles.polls_list}>
-                                {(() => {
-                                    const filteredPolls = filterPolls(allPolls);
-                                    const sortedPolls = sortPolls(filteredPolls);
-                                    
-                                    if (sortedPolls.length === 0 && (searchQuery || statusFilter !== "all")) {
-                                        return (
-                                            <div className={styles.no_results}>
-                                                <div className={styles.no_results_icon}>
-                                                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <circle cx="32" cy="32" r="30" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
-                                                        <path d="M28 28L36 36M36 28L28 36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
-                                                    </svg>
+                            {viewMode === "grid" ? (
+                                <div className={styles.polls_grid}>
+                                    {(() => {
+                                        const filteredPolls = filterPolls(allPolls);
+                                        const sortedPolls = sortPolls(filteredPolls);
+
+                                        if (sortedPolls.length === 0 && (searchQuery || statusFilter !== "all")) {
+                                            return (
+                                                <div className={styles.no_results}>
+                                                    <div className={styles.no_results_icon}>
+                                                        <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <circle cx="32" cy="32" r="30" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
+                                                            <path d="M28 28L36 36M36 28L28 36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+                                                        </svg>
+                                                    </div>
+                                                    <h3 className={styles.no_results_title}>No polls found</h3>
+                                                    <p className={styles.no_results_description}>
+                                                        Try adjusting your search or filter criteria
+                                                    </p>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSearchQuery("");
+                                                            setStatusFilter("all");
+                                                        }}
+                                                        className={styles.clear_filters_btn}
+                                                    >
+                                                        Clear all filters
+                                                    </button>
                                                 </div>
-                                                <h3 className={styles.no_results_title}>No polls found</h3>
-                                                <p className={styles.no_results_description}>
-                                                    Try adjusting your search or filter criteria
-                                                </p>
-                                                <button 
-                                                    onClick={() => {
-                                                        setSearchQuery("");
-                                                        setStatusFilter("all");
-                                                    }}
-                                                    className={styles.clear_filters_btn}
-                                                >
-                                                    Clear all filters
-                                                </button>
-                                            </div>
-                                        );
+                                            );
+                                        }
+
+                                        return sortedPolls.map((pollId) => renderPollCard(allPolls.ref[pollId]));
+                                    })()
                                     }
-                                    
-                                    return sortedPolls.map((pollId) => 
-                                        viewMode === "grid" 
-                                            ? renderPollCard(allPolls.ref[pollId])
-                                            : renderPollList(allPolls.ref[pollId])
-                                    );
-                                })()
-                                }
-                            </div>
+                                </div>
+                            ) : (
+                                <div className={styles.polls_table_container}>
+                                    <table className={styles.polls_table}>
+                                        <thead className={styles.table_header}>
+                                            <tr>
+                                                <th className={styles.table_header_cell_title}>Poll</th>
+                                                <th className={styles.table_header_cell_status}>Status</th>
+                                                <th className={styles.table_header_cell_date}>Last Modified</th>
+                                                <th className={styles.table_header_cell_actions}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className={styles.table_body}>
+                                            {(() => {
+                                                const filteredPolls = filterPolls(allPolls);
+                                                const sortedPolls = sortPolls(filteredPolls);
+
+                                                if (sortedPolls.length === 0 && (searchQuery || statusFilter !== "all")) {
+                                                    return (
+                                                        <tr>
+                                                            <td colSpan="4" className={styles.table_no_results}>
+                                                                <div className={styles.no_results}>
+                                                                    <div className={styles.no_results_icon}>
+                                                                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <circle cx="24" cy="24" r="22" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" opacity="0.3" />
+                                                                            <path d="M18 18L30 30M30 18L18 30" stroke="currentColor" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
+                                                                        </svg>
+                                                                    </div>
+                                                                    <h3 className={styles.no_results_title}>No polls found</h3>
+                                                                    <p className={styles.no_results_description}>
+                                                                        Try adjusting your search or filter criteria
+                                                                    </p>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setSearchQuery("");
+                                                                            setStatusFilter("all");
+                                                                        }}
+                                                                        className={styles.clear_filters_btn}
+                                                                    >
+                                                                        Clear all filters
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                }
+
+                                                return sortedPolls.map((pollId) => renderPollTableRow(allPolls.ref[pollId]));
+                                            })()
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
                         </>
                     ) : (
                         <div className={styles.empty_state}>
@@ -429,7 +710,7 @@ export default function DashboardAllPollsComponent() {
                         <div className={styles.section_header}>
                             <div className={`${styles.skeleton} ${styles.skeleton_title}`}></div>
                         </div>
-                        
+
                         <div className={styles.polls_grid}>
                             {[1, 2, 3, 4].map((i) => (
                                 <div key={i} className={styles.skeleton_card}>
@@ -443,6 +724,22 @@ export default function DashboardAllPollsComponent() {
                     </>
                 )}
             </div>
+
+            {/* Edit Description Modal */}
+            <EditDescriptionModal
+                show={showEditModal}
+                onHide={handleCloseEditModal}
+                poll={selectedPoll}
+                onDescriptionUpdated={handleDescriptionUpdated}
+            />
+
+            {/* Archive Confirmation Modal */}
+            <ArchiveConfirmationModal
+                show={showArchiveModal}
+                onHide={handleCloseArchiveModal}
+                poll={pollToArchive}
+                onArchiveSuccess={handlePollArchived}
+            />
         </div>
     );
 }

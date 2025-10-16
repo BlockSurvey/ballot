@@ -10,6 +10,640 @@
     z-index: 10000;
 }
 
+/* Edit Description Modal Specific Styles */
+.edit_poll_info {
+    padding: 24px 32px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fafafa;
+}
+
+.poll_info_main {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.poll_info_title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #111827;
+    margin: 0;
+    line-height: 1.4;
+}
+
+.poll_info_meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+}
+
+.poll_info_id {
+    color: #6b7280;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+}
+
+.poll_status_badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.status_active {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status_closed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status_draft {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.editor_container {
+    padding: 24px 32px;
+}
+
+.editor_label {
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 12px;
+}
+
+.required {
+    color: #dc2626;
+}
+
+.editor_field {
+    margin-bottom: 16px;
+}
+
+.error_message {
+    color: #dc2626;
+    font-size: 14px;
+    padding: 12px 16px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.help_text {
+    padding: 16px 32px 24px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.help_content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+}
+
+.help_content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.help_icon {
+    width: 16px;
+    height: 16px;
+    color: #3b82f6;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.help_text_content {
+    flex: 1;
+}
+
+.help_primary {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+    line-height: 1.4;
+}
+
+.help_secondary {
+    font-size: 13px;
+    color: #64748b;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.edit_modal_footer {
+    padding: 20px 32px 24px;
+    border-top: 1px solid #e5e7eb;
+    background: linear-gradient(135deg, #fafafa 0%, #f8fafc 100%);
+}
+
+.footer_content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.footer_info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.footer_icon {
+    width: 14px;
+    height: 14px;
+    color: #10b981;
+    flex-shrink: 0;
+}
+
+.footer_text {
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+.footer_actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.save_icon {
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    transition: transform 0.2s ease;
+}
+
+.minimal_button:hover .save_icon {
+    transform: scale(1.1);
+}
+
+.button_disabled {
+    position: relative;
+    overflow: hidden;
+}
+
+.button_disabled::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+.minimal_button {
+    background: #111827;
+    color: white;
+    border: 1px solid #111827;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.minimal_button:hover:not(:disabled) {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.minimal_button:disabled {
+    background: #9ca3af;
+    border-color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.minimal_button_secondary {
+    background: transparent;
+    color: #6b7280;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.minimal_button_secondary:hover:not(:disabled) {
+    background: #f3f4f6;
+    border-color: #9ca3af;
+    color: #111827;
+}
+
+.minimal_button_secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.minimal_spinner {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: minimal_spin 1s linear infinite;
+}
+
+@keyframes minimal_spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* === WORLD-CLASS DROPDOWN SYSTEM === */
+/* Modern dropdown implementation with smooth animations and professional styling */
+.dashboard_container {
+    position: relative;
+    z-index: 0;
+}
+
+.dashboard_content {
+    position: relative;
+    z-index: 1;
+}
+
+/* Ensure containers don't clip dropdowns */
+.polls_table_container,
+.polls_grid {
+    overflow: visible;
+}
+
+.polls_table {
+    overflow: visible;
+}
+
+.table_body {
+    overflow: visible;
+}
+
+.table_row {
+    overflow: visible;
+}
+
+/* Modern Action Dropdown - World Class Implementation */
+.modern_action_dropdown {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 1000;
+}
+
+.modern_action_dropdown.dropdown_open {
+    z-index: 1050;
+}
+
+/* World-Class Three Dot Button */
+.modern_three_dot_button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #6b7280;
+    opacity: 0;
+    transform: scale(0.95) translateZ(0);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle shine effect */
+.modern_three_dot_button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.4),
+        transparent
+    );
+    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modern_three_dot_button:hover::before {
+    left: 100%;
+}
+
+.modern_three_dot_button:hover {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.12);
+    transform: scale(1.02) translateZ(0);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+    color: #374151;
+}
+
+.modern_three_dot_button:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.modern_three_dot_button:active {
+    transform: scale(0.98) translateZ(0);
+    transition: transform 0.1s ease;
+}
+
+/* Show button on hover with smooth animation */
+.poll_card:hover .modern_three_dot_button,
+.table_row:hover .modern_three_dot_button {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+}
+
+/* World-Class Dropdown Menu */
+.modern_dropdown_menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    min-width: 200px;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    box-shadow: 
+        0 20px 25px -5px rgba(0, 0, 0, 0.1),
+        0 10px 10px -5px rgba(0, 0, 0, 0.04),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+    padding: 8px 0;
+    z-index: 9999;
+    transform-origin: top right;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.95) translateY(-8px) translateZ(0);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform, opacity;
+    isolation: isolate;
+}
+
+.modern_dropdown_menu.menu_open {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1) translateY(0) translateZ(0);
+}
+
+/* Dropdown Items with Enhanced Styling */
+.modern_dropdown_item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    background: none;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    margin: 2px 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+.modern_dropdown_item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #3b82f6;
+    transform: scaleY(0);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0 3px 3px 0;
+}
+
+.modern_dropdown_item:hover {
+    background: #f8fafc;
+    color: #111827;
+    transform: translateX(4px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.modern_dropdown_item:hover::before {
+    transform: scaleY(1);
+}
+
+.modern_dropdown_item:focus {
+    outline: none;
+    background: #f1f5f9;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.modern_dropdown_item:active {
+    transform: translateX(2px) scale(0.98);
+}
+
+.modern_dropdown_item svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.8;
+    transition: opacity 0.15s ease;
+    flex-shrink: 0;
+}
+
+.modern_dropdown_item:hover svg {
+    opacity: 1;
+}
+
+/* Danger Item Styling */
+.modern_dropdown_item.item_danger {
+    color: #dc2626;
+}
+
+.modern_dropdown_item.item_danger::before {
+    background: #dc2626;
+}
+
+.modern_dropdown_item.item_danger:hover {
+    background: #fef2f2;
+    color: #b91c1c;
+}
+
+.modern_dropdown_item.item_danger svg {
+    color: #dc2626;
+}
+
+/* Dropdown Divider */
+.modern_dropdown_divider {
+    height: 1px;
+    background: rgba(0, 0, 0, 0.06);
+    margin: 6px 0;
+    border: none;
+}
+
+/* Table specific adjustments */
+.table_modern_action_dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.table_modern_action_dropdown .modern_dropdown_menu {
+    /* Override positioning for table view to ensure visibility */
+    position: absolute;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 9999;
+}
+
+.table_modern_three_dot_button {
+    background: transparent;
+    border: 1px solid transparent;
+    opacity: 0;
+    transform: scale(0.95) translateZ(0);
+}
+
+.table_modern_three_dot_button:hover {
+    background: #f3f4f6;
+    border-color: rgba(0, 0, 0, 0.08);
+}
+
+.table_row:hover .table_modern_three_dot_button {
+    opacity: 1;
+    transform: scale(1) translateZ(0);
+}
+
+/* Always show dropdown button on mobile */
+@media (max-width: 768px) {
+    .table_modern_three_dot_button {
+        opacity: 1;
+        transform: scale(1) translateZ(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .modern_action_dropdown,
+    .table_modern_action_dropdown {
+        top: 8px;
+        right: 8px;
+    }
+    
+    .modern_three_dot_button,
+    .table_modern_three_dot_button {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        /* Always show on mobile for better UX */
+        opacity: 1;
+        transform: scale(1) translateZ(0);
+    }
+    
+    .modern_dropdown_menu {
+        min-width: 160px;
+        backdrop-filter: blur(16px);
+    }
+    
+    .modern_dropdown_item {
+        padding: 14px 16px;
+        font-size: 16px;
+        /* Larger touch targets on mobile */
+    }
+}
+
+
+/* Responsive styles for edit modal */
+@media (max-width: 768px) {
+    .edit_poll_info,
+    .editor_container,
+    .edit_modal_footer,
+    .help_text {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+    
+    .poll_info_meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .footer_content {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+    
+    .footer_info {
+        justify-content: center;
+        text-align: center;
+    }
+    
+    .footer_actions {
+        flex-direction: column;
+    }
+    
+    .minimal_button,
+    .minimal_button_secondary {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .edit_description_btn {
+        top: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+    }
+    
+    .edit_icon {
+        width: 12px;
+        height: 12px;
+    }
+}
+
 .minimal_modal .modal-dialog {
     max-width: 900px;
 }
@@ -19,6 +653,19 @@
     border-radius: 12px;
     overflow: hidden;
     border: 1px solid #e5e7eb;
+    animation: modalSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .minimal_modal_header {
@@ -100,6 +747,508 @@
     max-height: 600px;
     overflow-y: auto;
     background: white;
+}
+
+/* Clean Edit Description Button */
+.edit_description_btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.9);
+    z-index: 10;
+}
+
+.edit_description_btn:hover {
+    background: white;
+    border-color: rgba(0, 0, 0, 0.15);
+    transform: scale(1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.edit_icon {
+    width: 14px;
+    height: 14px;
+    color: #6b7280;
+    transition: color 0.2s ease;
+}
+
+.edit_description_btn:hover .edit_icon {
+    color: #374151;
+}
+
+.poll_card:hover .edit_description_btn,
+.poll_list_item:hover .edit_description_btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Action Dropdown Styles - Modern Three-Dot Design */
+.action_dropdown {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 1050;
+}
+
+.action_dropdown.show {
+    z-index: 1055;
+}
+
+/* Three-dot button styling */
+.three_dot_button {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.95);
+    color: #6b7280;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    text-decoration: none !important;
+    padding: 0 !important;
+}
+
+.three_dot_button::after {
+    display: none !important;
+}
+
+.three_dot_button:hover {
+    background: white !important;
+    border-color: rgba(0, 0, 0, 0.12) !important;
+    transform: scale(1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    color: #374151 !important;
+    text-decoration: none !important;
+}
+
+.three_dot_button:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    text-decoration: none !important;
+}
+
+.three_dot_button:active {
+    transform: scale(0.98);
+}
+
+/* Show button on hover */
+.poll_card:hover .three_dot_button,
+.poll_list_item:hover .three_dot_button {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Dropdown Menu Styling */
+.dropdown_menu {
+    background: white !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 8px 20px rgba(0, 0, 0, 0.08) !important;
+    padding: 8px 0 !important;
+    min-width: 180px !important;
+    margin-top: 4px !important;
+    backdrop-filter: blur(20px);
+    z-index: 9999 !important;
+    position: absolute !important;
+    will-change: transform, opacity;
+    animation: dropdown-slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    transform-origin: top right;
+    isolation: isolate;
+}
+
+
+/* Dropdown Items */
+.dropdown_item {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 18px !important;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151 !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    border: none !important;
+    background: none !important;
+    text-decoration: none !important;
+    cursor: pointer;
+    border-radius: 8px !important;
+    margin: 2px 8px !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.dropdown_item:hover {
+    background: #f8fafc !important;
+    color: #111827 !important;
+    transform: translateX(2px) scale(1.02) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+.dropdown_item:active {
+    transform: translateX(1px) scale(0.98) !important;
+}
+
+.dropdown_item:focus {
+    outline: none !important;
+    background: #f1f5f9 !important;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2) !important;
+}
+
+.dropdown_item svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.8;
+    transition: opacity 0.15s ease;
+}
+
+.dropdown_item:hover svg {
+    opacity: 1;
+}
+
+/* Danger item styling */
+.dropdown_item_danger {
+    color: #dc2626 !important;
+}
+
+.dropdown_item_danger:hover {
+    background: #fef2f2 !important;
+    color: #b91c1c !important;
+    transform: translateX(2px) scale(1.02) !important;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.15) !important;
+}
+
+.dropdown_item_danger svg {
+    color: #dc2626 !important;
+    opacity: 0.8;
+}
+
+.dropdown_item_danger:hover svg {
+    opacity: 1;
+}
+
+/* Dropdown Divider */
+.dropdown_divider {
+    margin: 6px 0;
+    border-color: rgba(0, 0, 0, 0.06);
+}
+
+/* Table View Styles */
+.polls_table_container {
+    background: white;
+    border-radius: 12px;
+    overflow: visible;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e5e7eb;
+    margin-top: var(--space-8);
+    position: relative;
+    z-index: 1;
+}
+
+.polls_table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    position: relative;
+    z-index: 1;
+}
+
+/* Table Header */
+.table_header {
+    background: #f8fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.table_header th {
+    padding: 16px 20px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: none;
+}
+
+.table_header_cell_title {
+    width: 50%;
+    min-width: 300px;
+}
+
+.table_header_cell_status {
+    width: 15%;
+    min-width: 100px;
+}
+
+.table_header_cell_date {
+    width: 25%;
+    min-width: 180px;
+}
+
+.table_header_cell_actions {
+    width: 10%;
+    min-width: 80px;
+    text-align: center;
+}
+
+/* Table Body */
+.table_body {
+    background: white;
+}
+
+.table_row {
+    border-bottom: 1px solid #f1f5f9;
+    transition: all 0.15s ease;
+    position: relative;
+}
+
+.table_row:hover {
+    background: #fafbfc;
+}
+
+.table_row:last-child {
+    border-bottom: none;
+}
+
+/* Table Cells */
+.table_cell_title {
+    padding: 20px;
+    border: none;
+    vertical-align: top;
+    cursor: pointer;
+}
+
+.table_cell_status {
+    padding: 20px;
+    border: none;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.table_cell_date {
+    padding: 20px;
+    border: none;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.table_cell_actions {
+    padding: 20px;
+    border: none;
+    vertical-align: middle;
+    text-align: center;
+    position: relative;
+    overflow: visible;
+}
+
+/* Poll Title Link */
+.poll_title_link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    transition: all 0.15s ease;
+}
+
+.poll_title_link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.poll_title_wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.table_poll_title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    line-height: 1.4;
+    transition: color 0.15s ease;
+}
+
+.poll_title_link:hover .table_poll_title {
+    color: #3b82f6;
+}
+
+.table_poll_description {
+    font-size: 14px;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Table Date Content */
+.table_date_content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: #64748b;
+}
+
+.table_date_content svg {
+    opacity: 0.7;
+}
+
+/* Table Action Dropdown */
+.table_action_dropdown {
+    position: relative;
+    z-index: 1050;
+}
+
+.table_action_dropdown.show {
+    z-index: 1055;
+}
+
+/* Ensure table cells with dropdowns have proper positioning context */
+.table_cell_actions {
+    position: relative;
+}
+
+.table_three_dot_button {
+    background: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    opacity: 0;
+    transform: scale(0.95);
+    text-decoration: none !important;
+    padding: 0 !important;
+}
+
+.table_three_dot_button::after {
+    display: none !important;
+}
+
+.table_three_dot_button:hover {
+    background: #f3f4f6 !important;
+    border-color: rgba(0, 0, 0, 0.08) !important;
+    transform: scale(1);
+    color: #374151 !important;
+    text-decoration: none !important;
+}
+
+.table_three_dot_button:focus {
+    outline: none !important;
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+    text-decoration: none !important;
+}
+
+.table_three_dot_button:active {
+    transform: scale(0.98);
+}
+
+.table_row:hover .table_three_dot_button {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Table No Results */
+.table_no_results {
+    padding: 60px 40px;
+    text-align: center;
+    border: none;
+}
+
+.table_no_results .no_results {
+    padding: 0;
+}
+
+.table_no_results .no_results_icon {
+    margin-bottom: 16px;
+}
+
+/* Responsive Table */
+@media (max-width: 768px) {
+    .polls_table_container {
+        margin: var(--space-6) -20px 0;
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    .table_header th {
+        padding: 12px 16px;
+        font-size: 12px;
+    }
+    
+    .table_cell_title,
+    .table_cell_status,
+    .table_cell_date,
+    .table_cell_actions {
+        padding: 16px;
+    }
+    
+    .table_poll_title {
+        font-size: 15px;
+    }
+    
+    .table_poll_description {
+        font-size: 13px;
+    }
+    
+    .table_date_content {
+        font-size: 13px;
+    }
+    
+    .table_header_cell_title {
+        width: 40%;
+        min-width: 200px;
+    }
+    
+    .table_header_cell_status {
+        width: 20%;
+        min-width: 80px;
+    }
+    
+    .table_header_cell_date {
+        width: 25%;
+        min-width: 120px;
+    }
+    
+    .table_header_cell_actions {
+        width: 15%;
+        min-width: 60px;
+    }
+}
+
+.poll_card {
+    position: relative;
+    cursor: pointer;
+    overflow: visible;
+}
+
+.poll_list_item {
+    position: relative;
 }
 
 /* Votes List */
@@ -751,6 +1900,8 @@
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-6);
     margin-top: var(--space-8);
+    position: relative;
+    z-index: 1;
 }
 
 @media (max-width: 1200px) {
