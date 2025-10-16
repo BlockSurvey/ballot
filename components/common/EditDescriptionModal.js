@@ -188,7 +188,6 @@ const EditDescriptionModal = ({
                             >
                                 {isLoading ? (
                                     <>
-                                        <span className={styles.minimal_spinner}></span>
                                         Saving changes...
                                     </>
                                 ) : (
