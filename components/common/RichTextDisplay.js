@@ -31,6 +31,24 @@ const RichTextDisplay = ({
                     line-height: 1.6;
                     word-wrap: break-word;
                     overflow-wrap: break-word;
+                    max-width: 100%;
+                    overflow-x: hidden;
+                }
+
+                .rich-text-display * {
+                    max-width: 100%;
+                }
+
+                .rich-text-display img {
+                    max-width: 100%;
+                    height: auto;
+                    display: block;
+                }
+
+                .rich-text-display table {
+                    max-width: 100%;
+                    overflow-x: auto;
+                    display: block;
                 }
 
                 .rich-text-display h1 {
@@ -132,6 +150,9 @@ const RichTextDisplay = ({
                     overflow-x: auto;
                     margin: 1rem 0;
                     border: 1px solid rgba(0, 0, 0, 0.1);
+                    max-width: 100%;
+                    word-wrap: break-word;
+                    white-space: pre-wrap;
                 }
 
                 .rich-text-display pre code {
@@ -139,12 +160,15 @@ const RichTextDisplay = ({
                     padding: 0;
                     border-radius: 0;
                     font-size: 0.875rem;
+                    word-break: break-all;
                 }
 
                 .rich-text-display a {
                     color: #3b82f6;
                     text-decoration: underline;
                     transition: color 0.2s ease;
+                    word-break: break-word;
+                    overflow-wrap: break-word;
                 }
 
                 .rich-text-display a:hover {
@@ -201,33 +225,62 @@ const RichTextDisplay = ({
 
                 /* Responsive adjustments */
                 @media (max-width: 768px) {
+                    .rich-text-display {
+                        font-size: 0.9375rem;
+                    }
+
                     .rich-text-display h1 {
                         font-size: 1.5rem;
                         line-height: 2rem;
                         margin: 1.25rem 0 0.75rem 0;
+                        word-break: break-word;
                     }
 
                     .rich-text-display h2 {
                         font-size: 1.25rem;
                         line-height: 1.75rem;
                         margin: 1rem 0 0.5rem 0;
+                        word-break: break-word;
                     }
 
                     .rich-text-display h3 {
                         font-size: 1.125rem;
                         line-height: 1.5rem;
                         margin: 0.875rem 0 0.5rem 0;
+                        word-break: break-word;
                     }
 
                     .rich-text-display blockquote {
                         margin: 1rem 0;
                         padding: 0.5rem 0 0.5rem 0.75rem;
+                        word-break: break-word;
                     }
 
                     .rich-text-display pre {
                         padding: 0.75rem;
                         margin: 0.75rem 0;
                         font-size: 0.8125rem;
+                        overflow-x: auto;
+                        -webkit-overflow-scrolling: touch;
+                    }
+
+                    .rich-text-display pre code {
+                        font-size: 0.75rem;
+                    }
+
+                    .rich-text-display ul,
+                    .rich-text-display ol {
+                        padding-left: 1.25rem;
+                        margin: 0.75rem 0;
+                    }
+
+                    .rich-text-display li {
+                        margin-bottom: 0.375rem;
+                        word-break: break-word;
+                    }
+
+                    .rich-text-display p {
+                        word-break: break-word;
                     }
                 }
 
