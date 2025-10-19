@@ -152,7 +152,7 @@ export default function PollComponent(props) {
                                 <div className={`${styles.card} ${styles.fade_in}`} style={{ marginTop: 'var(--space-4)' }}>
                                     <div className={styles.card_header}>
                                         <h2 className={styles.section_title}>
-                                            Dust Transactions
+                                            STX Dust Transactions
                                             <span className={styles.section_title_count}>
                                                 ({dustVotersList.length} {dustVotersList.length === 1 ? 'transaction' : 'transactions'})
                                             </span>
@@ -314,9 +314,8 @@ export default function PollComponent(props) {
                                         <div className={styles.loading_table_content}>
                                             <div className={`${styles.activity_row} ${styles.loading_simple_row}`}>
                                                 <div className={styles.loading_simple_content}>
-                                                    <div className={styles.loading_simple_icon}>₿</div>
                                                     <div className={styles.loading_simple_text}>
-                                                        Processing Bitcoin transactions...
+                                                        Processing Bitcoin dust transactions...
                                                     </div>
                                                     <div className={styles.loading_simple_time}>
                                                         This may take 2-4 minutes
