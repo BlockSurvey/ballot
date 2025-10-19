@@ -1,5 +1,7 @@
 import axios from 'axios';
-import { getStacksAPIHeaders, getStacksAPIPrefix } from './auth';
+import { Constants } from '../common/constants';
+import { getApiKey, getStacksAPIHeaders, getStacksAPIPrefix } from './auth';
+import { getPoxCycleMappingUrl } from './r2-storage';
 
 const MEMPOOL_API = 'https://mempool.space/api';
 const PAGE_LIMIT = 50;
@@ -7,6 +9,73 @@ const RETRY_LIMIT = 18;
 const RETRY_DELAY_MS = 10_000;
 
 const sleep = ms => new Promise(res => setTimeout(res, ms));
+
+/**
+ * Try to fetch cached PoxCycle mapping from CloudFlare R2
+ */
+const fetchCachedPoxCycleMapping = async (poxCycle) => {
+    try {
+        const network = Constants.STACKS_MAINNET_FLAG ? 'mainnet' : 'testnet';
+        const url = getPoxCycleMappingUrl(poxCycle, network);
+        const response = await axios.get(url, { timeout: 15000 });
+
+        if (response.data && response.data.mapping) {
+            return response.data.mapping;
+        }
+
+        return null;
+    } catch (error) {
+        if (error.response?.status === 404) {
+            console.log(`  No cached mapping found for PoX cycle ${poxCycle}`);
+            return null;
+        }
+        console.warn(`  Error fetching cached mapping for PoX cycle ${poxCycle}:`, error.message);
+        return null;
+    }
+};
+
+/**
+ * Store PoxCycle mapping to CloudFlare R2 via API
+ * Note: This requires a valid API key to be available in the application context
+ */
+const storePoxCycleMappingToR2 = async (poxCycle, mappingData) => {
+    try {
+        // Convert Map to plain object for storage
+        const mappingObject = {};
+        if (mappingData instanceof Map) {
+            for (const [key, value] of mappingData.entries()) {
+                mappingObject[key] = value;
+            }
+        } else {
+            Object.assign(mappingObject, mappingData);
+        }
+
+        const apiKey = await getApiKey();
+        const response = await axios.post('/api/stacks/pox-cycles', {
+            poxCycle: poxCycle,
+            mapping: mappingObject,
+            network: Constants.STACKS_MAINNET_FLAG ? 'mainnet' : 'testnet'
+        }, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 30000
+        });
+
+        if (response.status === 201) {
+            return true;
+        }
+
+        return false;
+    } catch (error) {
+        if (error.response?.status === 409) {
+            return true; // Consider this a success since data exists
+        }
+        console.warn(`  Error storing PoX cycle ${poxCycle} mapping to R2:`, error.message);
+        return false;
+    }
+};
 
 /**
  * Fetch with retry mechanism for API calls
@@ -48,7 +117,6 @@ export const getBitcoinTransactionsForAddress = async (btcAddress) => {
             });
         }
 
-        console.log(`  Fetched ${txs.length} BTC transactions for ${btcAddress}`);
         return events;
     } catch (error) {
         console.error(`Error fetching Bitcoin transactions for ${btcAddress}:`, error);
@@ -57,51 +125,122 @@ export const getBitcoinTransactionsForAddress = async (btcAddress) => {
 };
 
 /**
- * Build mapping from BTC addresses to STX addresses for given PoX cycles
+ * Build mapping for a single PoX cycle from the Stacks API
  */
-export const buildBtcToStacksMapping = async (poxCycles) => {
-    const map = new Map();
+const buildSingleCycleMapping = async (cycle) => {
+    const cycleMap = new Map();
+    let signerOffset = 0, signerTotal = Infinity;
 
-    for (const cycle of poxCycles) {
-        let signerOffset = 0, signerTotal = Infinity;
+    while (signerOffset < signerTotal) {
+        try {
+            const url = `${getStacksAPIPrefix()}/extended/v2/pox/cycles/${cycle}/signers?limit=${PAGE_LIMIT}&offset=${signerOffset}`;
+            const { total, results: signers } = await fetchWithRetry(url);
+            signerTotal = total;
+            signerOffset += PAGE_LIMIT;
 
-        while (signerOffset < signerTotal) {
-            try {
-                const url = `${getStacksAPIPrefix()}/extended/v2/pox/cycles/${cycle}/signers?limit=${PAGE_LIMIT}&offset=${signerOffset}`;
-                const { total, results: signers } = await fetchWithRetry(url);
-                signerTotal = total;
-                signerOffset += PAGE_LIMIT;
+            for (const { signing_key } of signers) {
+                let stackerOffset = 0, stackerTotal = Infinity;
 
-                for (const { signing_key } of signers) {
-                    let stackerOffset = 0, stackerTotal = Infinity;
+                while (stackerOffset < stackerTotal) {
+                    try {
+                        const sUrl = `${getStacksAPIPrefix()}/extended/v2/pox/cycles/${cycle}/signers/${signing_key}/stackers?limit=${PAGE_LIMIT}&offset=${stackerOffset}`;
+                        const { total: sTotal, results: stackers } = await fetchWithRetry(sUrl);
+                        stackerTotal = sTotal;
+                        stackerOffset += PAGE_LIMIT;
 
-                    while (stackerOffset < stackerTotal) {
-                        try {
-                            const sUrl = `${getStacksAPIPrefix()}/extended/v2/pox/cycles/${cycle}/signers/${signing_key}/stackers?limit=${PAGE_LIMIT}&offset=${stackerOffset}`;
-                            const { total: sTotal, results: stackers } = await fetchWithRetry(sUrl);
-                            stackerTotal = sTotal;
-                            stackerOffset += PAGE_LIMIT;
-
-                            for (const { pox_address, stacker_address } of stackers) {
-                                if (!map.has(pox_address)) {
-                                    map.set(pox_address, []);
-                                }
-                                map.get(pox_address).push(stacker_address);
+                        for (const { pox_address, stacker_address } of stackers) {
+                            if (!cycleMap.has(pox_address)) {
+                                cycleMap.set(pox_address, []);
                             }
-                        } catch (error) {
-                            console.error(`Error fetching stackers for cycle ${cycle}, signer ${signing_key}:`, error);
-                            break;
+                            cycleMap.get(pox_address).push(stacker_address);
                         }
+                    } catch (error) {
+                        console.error(`Error fetching stackers for cycle ${cycle}, signer ${signing_key}:`, error);
+                        break;
                     }
                 }
+            }
+        } catch (error) {
+            console.error(`Error fetching signers for cycle ${cycle}:`, error);
+            break;
+        }
+    }
+
+    return cycleMap;
+};
+
+/**
+ * Build mapping from BTC addresses to STX addresses for given PoX cycles
+ * First checks CloudFlare R2 cache, then builds from API if needed
+ */
+export const buildBtcToStacksMapping = async (poxCycles) => {
+    const finalMap = new Map();
+    const cyclesToProcess = [];
+
+    // First, try to fetch cached mappings from R2
+    for (const cycle of poxCycles) {
+        try {
+            const cachedMapping = await fetchCachedPoxCycleMapping(cycle);
+
+            if (cachedMapping) {
+                // Merge cached mapping into final map
+                Object.entries(cachedMapping).forEach(([btcAddress, stxAddresses]) => {
+                    if (!finalMap.has(btcAddress)) {
+                        finalMap.set(btcAddress, []);
+                    }
+                    const existingAddresses = finalMap.get(btcAddress);
+                    stxAddresses.forEach(address => {
+                        if (!existingAddresses.includes(address)) {
+                            existingAddresses.push(address);
+                        }
+                    });
+                });
+            } else {
+                // Need to process this cycle
+                cyclesToProcess.push(cycle);
+            }
+        } catch (error) {
+            console.warn(`Error checking cache for PoX cycle ${cycle}:`, error.message);
+            cyclesToProcess.push(cycle);
+        }
+    }
+
+    // Process uncached cycles
+    if (cyclesToProcess.length > 0) {
+        for (const cycle of cyclesToProcess) {
+            try {
+                // Build mapping from API
+                const cycleMap = await buildSingleCycleMapping(cycle);
+
+                // Merge into final map
+                cycleMap.forEach((stxAddresses, btcAddress) => {
+                    if (!finalMap.has(btcAddress)) {
+                        finalMap.set(btcAddress, []);
+                    }
+                    const existingAddresses = finalMap.get(btcAddress);
+                    stxAddresses.forEach(address => {
+                        if (!existingAddresses.includes(address)) {
+                            existingAddresses.push(address);
+                        }
+                    });
+                });
+
+                // Try to store in R2 cache for future use
+                // Note: This requires an API key - implement according to your auth flow
+                // For now, we'll skip automatic caching and let users manually cache via the API
+                try {
+                    await storePoxCycleMappingToR2(cycle, cycleMap);
+                } catch (storageError) {
+                    console.warn(`Failed to cache PoX cycle ${cycle} mapping:`, storageError.message);
+                }
+
             } catch (error) {
-                console.error(`Error fetching signers for cycle ${cycle}:`, error);
-                break;
+                console.error(`Failed to process PoX cycle ${cycle}:`, error);
             }
         }
     }
 
-    return map;
+    return finalMap;
 };
 
 /**
