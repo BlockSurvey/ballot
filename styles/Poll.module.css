@@ -1151,3 +1151,296 @@
         font-size: 0.75rem;
     }
 }
+
+/* ===================================== */
+/* World-Class BTC Loading Experience    */
+/* ===================================== */
+
+/* Card Enhancement */
+.btc_loading_card {
+    background: linear-gradient(135deg, #ffffff 0%, #fefefe 100%);
+    border: 1px solid #e1e5e9;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    position: relative;
+}
+
+.btc_loading_card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #f7931a, transparent);
+    animation: loading_shimmer 2s infinite;
+}
+
+@keyframes loading_shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Header Enhancements */
+.section_title_icon {
+    display: inline-block;
+    margin-right: var(--space-2);
+    font-size: 1.25em;
+    color: #f7931a;
+    animation: bitcoin_glow 2s ease-in-out infinite;
+}
+
+@keyframes bitcoin_glow {
+    0%, 100% { 
+        text-shadow: 0 0 8px rgba(247, 147, 26, 0.3);
+        transform: scale(1);
+    }
+    50% { 
+        text-shadow: 0 0 16px rgba(247, 147, 26, 0.5);
+        transform: scale(1.05);
+    }
+}
+
+.loading_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: var(--space-3);
+    padding: 4px 8px;
+    background: rgba(59, 130, 246, 0.1);
+    border-radius: 12px;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.loading_dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #3b82f6;
+    animation: loading_pulse 1.4s ease-in-out infinite;
+}
+
+.loading_dot:nth-child(1) { animation-delay: 0s; }
+.loading_dot:nth-child(2) { animation-delay: 0.2s; }
+.loading_dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes loading_pulse {
+    0%, 80%, 100% { 
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    40% { 
+        transform: scale(1.3);
+        opacity: 1;
+    }
+}
+
+.loading_subtitle {
+    font-size: 0.875rem;
+    color: var(--color-secondary);
+    margin-top: var(--space-1);
+    font-style: italic;
+}
+
+/* Table Header */
+.loading_header {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.shimmer_text {
+    position: relative;
+    background: linear-gradient(90deg, #64748b 25%, #94a3b8 50%, #64748b 75%);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Simple Loading Content */
+.loading_table_content {
+    background: #fafafa;
+}
+
+.loading_simple_row {
+    padding: var(--space-8) var(--space-6);
+    border: none;
+    background: transparent;
+    display: block;
+    text-align: center;
+}
+
+.loading_simple_content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.loading_simple_icon {
+    font-size: 2rem;
+    color: #f7931a;
+    animation: bitcoin_pulse 2s ease-in-out infinite;
+}
+
+@keyframes bitcoin_pulse {
+    0%, 100% { 
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% { 
+        transform: scale(1.1);
+        opacity: 1;
+    }
+}
+
+.loading_simple_text {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-primary);
+    margin: 0;
+}
+
+.loading_simple_time {
+    font-size: 0.875rem;
+    color: var(--color-secondary);
+    margin: 0;
+}
+
+/* Skeleton Rows */
+.skeleton_row {
+    opacity: 0;
+    animation: skeleton_appear 0.8s ease-out forwards;
+}
+
+@keyframes skeleton_appear {
+    to { opacity: 1; }
+}
+
+.skeleton_avatar {
+    background: linear-gradient(90deg, #f1f5f9, #e2e8f0, #f1f5f9);
+    background-size: 200% 100%;
+    animation: skeleton_pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton_text {
+    height: 12px;
+    border-radius: 6px;
+    background: linear-gradient(90deg, #f1f5f9, #e2e8f0, #f1f5f9);
+    background-size: 200% 100%;
+    animation: skeleton_pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton_address { width: 120px; }
+.skeleton_tag { width: 60px; height: 8px; margin-top: 4px; }
+.skeleton_choice { width: 80px; }
+.skeleton_btc { width: 100px; }
+.skeleton_power { width: 60px; }
+.skeleton_status { width: 45px; }
+
+.skeleton_text_group {
+    display: flex;
+    flex-direction: column;
+}
+
+.skeleton_status_group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+}
+
+@keyframes skeleton_pulse {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Loading Footer */
+.loading_footer {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-top: 1px solid #e2e8f0;
+    padding: var(--space-4) var(--space-6);
+}
+
+.loading_stats {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.stat_item {
+    text-align: center;
+}
+
+.stat_label {
+    font-size: 0.75rem;
+    color: var(--color-tertiary);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--space-1);
+}
+
+.stat_value {
+    font-size: 0.875rem;
+    color: var(--color-secondary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-1);
+}
+
+.status_indicator {
+    color: #10b981;
+    font-size: 0.625rem;
+    animation: status_blink 2s ease-in-out infinite;
+}
+
+@keyframes status_blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .loading_simple_row {
+        padding: var(--space-6) var(--space-4);
+    }
+    
+    .loading_simple_icon {
+        font-size: 1.75rem;
+    }
+    
+    .loading_simple_text {
+        font-size: 0.9375rem;
+    }
+    
+    .skeleton_address { width: 100px; }
+    .skeleton_choice { width: 70px; }
+    .skeleton_btc { width: 85px; }
+}
+
+@media (max-width: 480px) {
+    .loading_simple_row {
+        padding: var(--space-4) var(--space-3);
+    }
+    
+    .loading_simple_icon {
+        font-size: 1.5rem;
+    }
+    
+    .loading_simple_text {
+        font-size: 0.875rem;
+    }
+    
+    .loading_simple_time {
+        font-size: 0.8125rem;
+    }
+}

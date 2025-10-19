@@ -52,6 +52,7 @@ export default function Poll(props) {
     const [btcVotingMap, setBtcVotingMap] = useState({});
     const [userBtcVotingStatus, setUserBtcVotingStatus] = useState(null);
     const [btcVotersList, setBtcVotersList] = useState([]);
+    const [btcVotingLoading, setBtcVotingLoading] = useState(false);
 
     // Helper function to strip HTML tags from text
     const stripHtmlTags = (html) => {
@@ -609,6 +610,7 @@ export default function Poll(props) {
     };
 
     const getBtcVotingResultsForPoll = async (pollObject) => {
+        setBtcVotingLoading(true);
         try {
             const btcVotingData = await processBtcVotesForPoll(pollObject);
 
@@ -629,11 +631,10 @@ export default function Poll(props) {
                 setBtcVotingResults(btcVotingResults);
                 setBtcVotingMap(btcVotingMap);
                 setBtcVotersList(btcVotersList);
-
-                console.log(`BTC voting data processed: ${Object.keys(btcVotingResults).length} options, ${btcVotersList.length} BTC voters`);
             }
         } catch (error) {
-            console.error('Error fetching BTC voting results for poll:', error);
+        } finally {
+            setBtcVotingLoading(false);
         }
     };
 
@@ -831,6 +832,7 @@ export default function Poll(props) {
                 userBtcVotingStatus={userBtcVotingStatus}
                 btcVotingResults={btcVotingResults}
                 btcVotersList={btcVotersList}
+                btcVotingLoading={btcVotingLoading}
             />
         </>
     );

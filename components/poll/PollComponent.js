@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
-import { getFileFromGaia, putFileToGaia, getMyStxAddress, userSession } from "../../services/auth";
+import { getFileFromGaia, getMyStxAddress, putFileToGaia, userSession } from "../../services/auth";
 import { formStacksExplorerUrl } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 import ModernInformationPanel from "./ModernInformationPanel";
@@ -39,6 +39,7 @@ export default function PollComponent(props) {
         userBtcVotingStatus,
         btcVotingResults,
         btcVotersList,
+        btcVotingLoading,
     } = props;
 
     const [txId, setTxId] = useState();
@@ -284,7 +285,50 @@ export default function PollComponent(props) {
                                 </div>
                             )}
 
-                            {/* BTC Transaction Activity */}
+                            {/* BTC Address Votes - Loading State */}
+                            {(btcVotingLoading) && (
+                                <div className={`${styles.card} ${styles.fade_in} ${styles.btc_loading_card}`} style={{ marginTop: 'var(--space-4)' }}>
+                                    <div className={styles.card_header}>
+                                        <h2 className={styles.section_title}>
+                                            Bitcoin Address Votes
+                                            <span className={styles.loading_badge}>
+                                                <div className={styles.loading_dot}></div>
+                                                <div className={styles.loading_dot}></div>
+                                                <div className={styles.loading_dot}></div>
+                                            </span>
+                                        </h2>
+                                        <div className={styles.loading_subtitle}>Analyzing blockchain data across PoX cycles...</div>
+                                    </div>
+
+                                    <div className={styles.activity_table}>
+                                        {/* Table Header */}
+                                        <div className={`${styles.activity_header} ${styles.activity_header_with_lock} ${styles.loading_header}`}>
+                                            <span className={styles.shimmer_text}>STX Voter</span>
+                                            <span className={styles.shimmer_text}>Choice</span>
+                                            <span className={styles.shimmer_text}>BTC Address</span>
+                                            <span className={styles.shimmer_text}>Power</span>
+                                            <span className={styles.shimmer_text}>Lock Status</span>
+                                        </div>
+
+                                        {/* Loading Content */}
+                                        <div className={styles.loading_table_content}>
+                                            <div className={`${styles.activity_row} ${styles.loading_simple_row}`}>
+                                                <div className={styles.loading_simple_content}>
+                                                    <div className={styles.loading_simple_icon}>₿</div>
+                                                    <div className={styles.loading_simple_text}>
+                                                        Processing Bitcoin transactions...
+                                                    </div>
+                                                    <div className={styles.loading_simple_time}>
+                                                        This may take 2-4 minutes
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* BTC Voting Activity */}
                             {btcVotersList && btcVotersList.length > 0 && (
                                 <div className={`${styles.card} ${styles.fade_in}`} style={{ marginTop: 'var(--space-4)' }}>
                                     <div className={styles.card_header}>
