@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
-import { getFileFromGaia, putFileToGaia } from "../../services/auth";
+import { getFileFromGaia, putFileToGaia, getMyStxAddress, userSession } from "../../services/auth";
 import { formStacksExplorerUrl } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 import ModernInformationPanel from "./ModernInformationPanel";
@@ -35,6 +35,10 @@ export default function PollComponent(props) {
         userDustVotingStatus,
         dustVotingResults,
         dustVotersList,
+        btcVotingMap,
+        userBtcVotingStatus,
+        btcVotingResults,
+        btcVotersList,
     } = props;
 
     const [txId, setTxId] = useState();
@@ -124,6 +128,9 @@ export default function PollComponent(props) {
                                 dustVotingMap={dustVotingMap}
                                 userDustVotingStatus={userDustVotingStatus}
                                 dustVotingResults={dustVotingResults}
+                                btcVotingMap={btcVotingMap}
+                                userBtcVotingStatus={userBtcVotingStatus}
+                                btcVotingResults={btcVotingResults}
                                 onVoteSuccess={handleVoteSuccess}
                             />
 
@@ -276,6 +283,155 @@ export default function PollComponent(props) {
                                     </div>
                                 </div>
                             )}
+
+                            {/* BTC Transaction Activity */}
+                            {btcVotersList && btcVotersList.length > 0 && (
+                                <div className={`${styles.card} ${styles.fade_in}`} style={{ marginTop: 'var(--space-4)' }}>
+                                    <div className={styles.card_header}>
+                                        <h2 className={styles.section_title}>
+                                            Bitcoin Address Votes
+                                            <span className={styles.section_title_count}>
+                                                ({btcVotersList.length} {btcVotersList.length === 1 ? 'vote' : 'votes'})
+                                            </span>
+                                        </h2>
+                                    </div>
+
+                                    <div className={styles.activity_table}>
+                                        {/* Table Header */}
+                                        <div className={`${styles.activity_header} ${styles.activity_header_with_lock}`}>
+                                            <span>STX Voter</span>
+                                            <span>Choice</span>
+                                            <span>BTC Address</span>
+                                            <span>Power</span>
+                                            <span>Lock Status</span>
+                                        </div>
+
+                                        {/* BTC Vote Rows */}
+                                        <div>
+                                            {btcVotersList.map((voter, index) => {
+                                                const generateUserAvatar = (address) => {
+                                                    if (!address) return "?";
+                                                    return address.substring(0, 2).toUpperCase();
+                                                };
+
+                                                const formatAddress = (address) => {
+                                                    if (!address) return "";
+                                                    if (address.length <= 16) return address;
+                                                    return `${address.substring(0, 8)}...${address.substring(address.length - 6)}`;
+                                                };
+
+                                                const currentUserAddress = userSession?.isUserSignedIn() ? getMyStxAddress() : null;
+                                                const isCurrentUser = currentUserAddress && voter.address === currentUserAddress;
+
+                                                return (
+                                                    <div
+                                                        key={voter.address || index}
+                                                        className={`${styles.activity_row} ${styles.activity_row_with_lock}`}
+                                                    >
+                                                        {/* User Info */}
+                                                        <div className={styles.user_info}>
+                                                            <div
+                                                                className={styles.user_avatar}
+                                                                style={{
+                                                                    background: `hsl(${(voter.address?.charCodeAt(0) || 0) * 7}, 50%, 45%)`
+                                                                }}
+                                                            >
+                                                                {generateUserAvatar(voter.address)}
+                                                            </div>
+                                                            <div>
+                                                                <a
+                                                                    className={styles.user_address}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    href={formStacksExplorerUrl(voter.address, 'address')}
+                                                                >
+                                                                    {formatAddress(voter.address)}
+                                                                </a>
+                                                                {isCurrentUser && (
+                                                                    <div style={{
+                                                                        background: '#10B981',
+                                                                        color: 'white',
+                                                                        padding: '1px 6px',
+                                                                        borderRadius: '8px',
+                                                                        fontSize: '0.625rem',
+                                                                        fontWeight: '700',
+                                                                        textTransform: 'uppercase',
+                                                                        marginTop: '2px',
+                                                                        display: 'inline-block'
+                                                                    }}>
+                                                                        You
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Vote Options */}
+                                                        <div className={styles.vote_option}>
+                                                            {voter.votedOptions.map((option, voteIndex) => (
+                                                                <div key={voteIndex} className={styles.vote_item}>
+                                                                    {option.optionValue}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* BTC Address Info */}
+                                                        <div className={styles.vote_count}>
+                                                            {voter.votedOptions.map((option, voteIndex) => (
+                                                                <div key={voteIndex} className={styles.vote_item}>
+                                                                    <a
+                                                                        href={`https://mempool.space/address/${option.btcAddress}`}
+                                                                        target="_blank"
+                                                                        rel="noreferrer"
+                                                                        style={{
+                                                                            color: '#F7931A',
+                                                                            textDecoration: 'none',
+                                                                            fontSize: '0.75rem'
+                                                                        }}
+                                                                    >
+                                                                        {formatAddress(option.btcAddress)}
+                                                                    </a>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
+                                                        {/* Voting Power */}
+                                                        <div className={styles.voting_power_display}>
+                                                            {voter.stxBalance || 0}
+                                                            <span className={styles.token_name}>
+                                                                STX
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Locked/Unlocked Status */}
+                                                        <div className={styles.lock_status}>
+                                                            <div className={styles.lock_status_container}>
+                                                                <div className={styles.status_indicator}>
+                                                                    <div className={`${styles.status_dot} ${styles.status_dot_locked}`} />
+                                                                    <span className={styles.status_text}>
+                                                                        {voter.lockedStx || 0}
+                                                                        <span className={styles.token_name}>
+                                                                            STX
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                                <div className={styles.status_indicator}>
+                                                                    <div className={`${styles.status_dot} ${styles.status_dot_unlocked}`} />
+                                                                    <span className={styles.status_text}>
+                                                                        {voter.unlockedStx || 0}
+                                                                        <span className={styles.token_name}>
+                                                                            STX
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {/* Sidebar */}
@@ -289,6 +445,8 @@ export default function PollComponent(props) {
                                 totalUniqueVotes={totalUniqueVotes}
                                 dustVotingResults={dustVotingResults}
                                 dustVotersList={dustVotersList}
+                                btcVotingResults={btcVotingResults}
+                                btcVotersList={btcVotersList}
                             />
                         </div>
                     </div>

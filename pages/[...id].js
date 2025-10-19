@@ -8,6 +8,7 @@ import { DashboardNavBarComponent } from "../components/common/DashboardNavBarCo
 import PollComponent from "../components/poll/PollComponent";
 import { getIndividualResultByStartAndEndPosition } from "../components/poll/PollService";
 import { getMyStxAddress, getStacksAPIHeaders, getStacksAPIPrefix, userSession } from "../services/auth";
+import { checkUserBtcVotingStatus, processBtcVotesForPoll } from "../services/btc-vote-utils";
 import { getCurrentBlockHeights } from "../services/utils";
 
 export default function Poll(props) {
@@ -46,18 +47,24 @@ export default function Poll(props) {
     const [userDustVotingStatus, setUserDustVotingStatus] = useState(null);
     const [dustVotersList, setDustVotersList] = useState([]);
 
+    // BTC transaction voting
+    const [btcVotingResults, setBtcVotingResults] = useState({});
+    const [btcVotingMap, setBtcVotingMap] = useState({});
+    const [userBtcVotingStatus, setUserBtcVotingStatus] = useState(null);
+    const [btcVotersList, setBtcVotersList] = useState([]);
+
     // Helper function to strip HTML tags from text
     const stripHtmlTags = (html) => {
         if (!html) return "";
         // Remove HTML tags and decode HTML entities
         return html.replace(/<[^>]*>/g, '')
-                  .replace(/&amp;/g, '&')
-                  .replace(/&lt;/g, '<')
-                  .replace(/&gt;/g, '>')
-                  .replace(/&quot;/g, '"')
-                  .replace(/&#39;/g, "'")
-                  .replace(/&nbsp;/g, ' ')
-                  .trim();
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .replace(/&nbsp;/g, ' ')
+            .trim();
     };
 
     const title = `${pollObject?.title} | Ballot`;
@@ -97,6 +104,23 @@ export default function Poll(props) {
             // Fetch dust voting results in addition to regular voting
             if (hasDustOptions) {
                 getDustVotingResultsForPoll(pollObject);
+            }
+
+            // Check if any options have BTC address and PoX cycle properties
+            const hasBtcOptions = pollObject?.options?.some(option => {
+                if (!option.dustBtcAddress || !option.poxCycles) return false;
+
+                // Handle both string (comma-separated) and array formats
+                if (typeof option.poxCycles === 'string') {
+                    return option.poxCycles.trim().length > 0;
+                }
+
+                return Array.isArray(option.poxCycles) && option.poxCycles.length > 0;
+            });
+
+            // Fetch BTC voting results in addition to regular voting
+            if (hasBtcOptions) {
+                getBtcVotingResultsForPoll(pollObject);
             }
         }
     }, [pollObject, pollId, gaiaAddress]);
@@ -584,6 +608,35 @@ export default function Poll(props) {
         }
     };
 
+    const getBtcVotingResultsForPoll = async (pollObject) => {
+        try {
+            const btcVotingData = await processBtcVotesForPoll(pollObject);
+
+            if (btcVotingData) {
+                const { btcVotingResults, btcVotingMap, btcVotersList } = btcVotingData;
+
+                // Check if current user has already voted via BTC transactions
+                const currentUserAddress = userSession.isUserSignedIn() ? getMyStxAddress() : null;
+                if (currentUserAddress) {
+                    const userBtcStatus = checkUserBtcVotingStatus(currentUserAddress, btcVotingMap);
+                    if (userBtcStatus) {
+                        setUserBtcVotingStatus(userBtcStatus);
+                        setAlreadyVoted(true);
+                    }
+                }
+
+                // Set BTC voting data for UI access
+                setBtcVotingResults(btcVotingResults);
+                setBtcVotingMap(btcVotingMap);
+                setBtcVotersList(btcVotersList);
+
+                console.log(`BTC voting data processed: ${Object.keys(btcVotingResults).length} options, ${btcVotersList.length} BTC voters`);
+            }
+        } catch (error) {
+            console.error('Error fetching BTC voting results for poll:', error);
+        }
+    };
+
     const getPollResults = async (pollObject) => {
         if (pollObject?.publishedInfo?.contractAddress && pollObject?.publishedInfo?.contractName) {
             try {
@@ -774,6 +827,10 @@ export default function Poll(props) {
                 userDustVotingStatus={userDustVotingStatus}
                 dustVotingResults={dustVotingResults}
                 dustVotersList={dustVotersList}
+                btcVotingMap={btcVotingMap}
+                userBtcVotingStatus={userBtcVotingStatus}
+                btcVotingResults={btcVotingResults}
+                btcVotersList={btcVotersList}
             />
         </>
     );

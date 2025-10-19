@@ -10,6 +10,10 @@ export default function DustTransactionModal({
 }) {
     const [dustAddress, setDustAddress] = useState('');
     const [dustAmount, setDustAmount] = useState('');
+    const [dustBtcAddress, setDustBtcAddress] = useState('');
+    const [dustBtcAmount, setDustBtcAmount] = useState('');
+    const [poxCycles, setPoxCycles] = useState('');
+    const [enableBtcDust, setEnableBtcDust] = useState(false);
     const [errors, setErrors] = useState({});
 
     // Initialize form with existing values when modal opens
@@ -17,6 +21,11 @@ export default function DustTransactionModal({
         if (show && option) {
             setDustAddress(option.dustAddress || '');
             setDustAmount(option.dustAmount || '');
+            setDustBtcAddress(option.dustBtcAddress || '');
+            setDustBtcAmount(option.dustBtcAmount || '');
+            setPoxCycles(option.poxCycles || '');
+            // Enable BTC dust section if any BTC fields have values
+            setEnableBtcDust(!!(option.dustBtcAddress || option.dustBtcAmount || option.poxCycles));
             setErrors({});
         }
     }, [show, option]);
@@ -30,10 +39,32 @@ export default function DustTransactionModal({
             newErrors.dustAddress = 'Please enter a valid transaction address';
         }
 
-        if (!dustAmount || dustAmount.trim() === '') {
+        if (!dustAmount || dustAmount.toString().trim() === '') {
             newErrors.dustAmount = 'Dust amount is required';
         } else if (isNaN(parseFloat(dustAmount)) || parseFloat(dustAmount) <= 0) {
             newErrors.dustAmount = 'Please enter a valid amount greater than 0';
+        }
+
+        // Only validate BTC fields if BTC dust is enabled
+        if (enableBtcDust) {
+            // Validate BTC Address (optional)
+            if (dustBtcAddress && dustBtcAddress.trim() !== '' && dustBtcAddress.trim().length < 10) {
+                newErrors.dustBtcAddress = 'Please enter a valid BTC address';
+            }
+
+            // Validate BTC Amount (optional, but if provided must be valid)
+            if (dustBtcAmount && dustBtcAmount.toString().trim() !== '' && (isNaN(parseFloat(dustBtcAmount)) || parseFloat(dustBtcAmount) <= 0)) {
+                newErrors.dustBtcAmount = 'Please enter a valid BTC amount greater than 0';
+            }
+
+            // Validate Pox Cycles (optional, but if provided must be comma-separated numbers)
+            if (poxCycles && poxCycles.trim() !== '') {
+                const cycles = poxCycles.split(',').map(cycle => cycle.trim());
+                const invalidCycles = cycles.filter(cycle => isNaN(parseInt(cycle)) || parseInt(cycle) <= 0);
+                if (invalidCycles.length > 0) {
+                    newErrors.poxCycles = 'Please enter comma-separated cycle numbers (e.g., 112,113,114)';
+                }
+            }
         }
 
         setErrors(newErrors);
@@ -44,7 +75,10 @@ export default function DustTransactionModal({
         if (validateForm()) {
             onSave({
                 dustAddress: dustAddress.trim(),
-                dustAmount: parseFloat(dustAmount)
+                dustAmount: parseFloat(dustAmount),
+                dustBtcAddress: enableBtcDust ? dustBtcAddress.trim() : '',
+                dustBtcAmount: (enableBtcDust && dustBtcAmount) ? parseFloat(dustBtcAmount) : '',
+                poxCycles: enableBtcDust ? poxCycles.trim() : ''
             });
             onHide();
         }
@@ -53,6 +87,10 @@ export default function DustTransactionModal({
     const handleClose = () => {
         setDustAddress('');
         setDustAmount('');
+        setDustBtcAddress('');
+        setDustBtcAmount('');
+        setPoxCycles('');
+        setEnableBtcDust(false);
         setErrors({});
         onHide();
     };
@@ -60,9 +98,30 @@ export default function DustTransactionModal({
     const handleClear = () => {
         onSave({
             dustAddress: '',
-            dustAmount: ''
+            dustAmount: '',
+            dustBtcAddress: '',
+            dustBtcAmount: '',
+            poxCycles: ''
         });
         onHide();
+    };
+
+    const handleBtcDustToggle = (e) => {
+        const enabled = e.target.checked;
+        setEnableBtcDust(enabled);
+        
+        // Clear BTC fields when disabling
+        if (!enabled) {
+            setDustBtcAddress('');
+            setDustBtcAmount('');
+            setPoxCycles('');
+            // Clear any BTC-related errors
+            const newErrors = { ...errors };
+            delete newErrors.dustBtcAddress;
+            delete newErrors.dustBtcAmount;
+            delete newErrors.poxCycles;
+            setErrors(newErrors);
+        }
     };
 
     return (
@@ -77,7 +136,10 @@ export default function DustTransactionModal({
             </Modal.Header>
 
             <Modal.Body className={styles.modal_body}>
-                <div className={styles.modal_form}>
+                <div className={styles.modal_form}>                    
+                    {/* STX Transaction Settings */}
+                    <div className={styles.form_section_group}>
+                        <h5 className={styles.section_group_title}>STX Transaction</h5>
                     <Form.Group className={styles.form_group}>
                         <Form.Label className={styles.form_label}>
                             Transaction Address *
@@ -122,6 +184,94 @@ export default function DustTransactionModal({
                             Minimum dust amount to send (typically 0.000001 STX)
                         </small>
                     </Form.Group>
+                    </div>
+
+                    {/* BTC Dust Toggle */}
+                    <div className={styles.toggle_section}>
+                        <Form.Check
+                            type="switch"
+                            id="enable-btc-dust"
+                            label="Add Bitcoin Dust Settings"
+                            checked={enableBtcDust}
+                            onChange={handleBtcDustToggle}
+                            className={styles.form_switch}
+                        />
+                        <small className={styles.field_hint}>
+                            Enable to add Bitcoin address, amount, and Pox cycle configuration for this option
+                        </small>
+                    </div>
+
+                    {/* BTC & Pox Settings - Only show if enabled */}
+                    {enableBtcDust && (
+                    <div className={styles.form_section_group}>
+                        <h5 className={styles.section_group_title}>Bitcoin & Pox Settings</h5>
+
+                    <Form.Group className={styles.form_group}>
+                        <Form.Label className={styles.form_label}>
+                            BTC Address (Optional)
+                        </Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={dustBtcAddress}
+                            onChange={(e) => setDustBtcAddress(e.target.value)}
+                            placeholder="e.g., 11111111111mdWK2VXcrA1ebnetG5Y"
+                            className={`${styles.form_input} ${errors.dustBtcAddress ? styles.error : ''}`}
+                        />
+                        {errors.dustBtcAddress && (
+                            <small className={styles.field_error}>
+                                {errors.dustBtcAddress}
+                            </small>
+                        )}
+                        <small className={styles.field_hint}>
+                            Bitcoin address associated with this voting option for Pox rewards
+                        </small>
+                    </Form.Group>
+
+                    <Form.Group className={styles.form_group}>
+                        <Form.Label className={styles.form_label}>
+                            BTC Amount (Optional)
+                        </Form.Label>
+                        <Form.Control
+                            type="number"
+                            step="0.00000001"
+                            min="0.00000001"
+                            value={dustBtcAmount}
+                            onChange={(e) => setDustBtcAmount(e.target.value)}
+                            placeholder="e.g., 0.000001"
+                            className={`${styles.form_input} ${errors.dustBtcAmount ? styles.error : ''}`}
+                        />
+                        {errors.dustBtcAmount && (
+                            <small className={styles.field_error}>
+                                {errors.dustBtcAmount}
+                            </small>
+                        )}
+                        <small className={styles.field_hint}>
+                            Bitcoin amount associated with this voting option
+                        </small>
+                    </Form.Group>
+
+                    <Form.Group className={styles.form_group}>
+                        <Form.Label className={styles.form_label}>
+                            Pox Cycles (Optional)
+                        </Form.Label>
+                        <Form.Control
+                            type="text"
+                            value={poxCycles}
+                            onChange={(e) => setPoxCycles(e.target.value)}
+                            placeholder="e.g., 112,113,114"
+                            className={`${styles.form_input} ${errors.poxCycles ? styles.error : ''}`}
+                        />
+                        {errors.poxCycles && (
+                            <small className={styles.field_error}>
+                                {errors.poxCycles}
+                            </small>
+                        )}
+                        <small className={styles.field_hint}>
+                            Comma-separated Pox cycle numbers for stacking rewards (e.g., 112,113,114)
+                        </small>
+                    </Form.Group>
+                    </div>
+                    )}
 
                     <div className={styles.modal_info}>
                         <div className={styles.info_icon}>
@@ -132,7 +282,8 @@ export default function DustTransactionModal({
                         </div>
                         <p>
                             Dust transactions are minimal STX amounts sent when voters select this option.
-                            This can be used for tracking, analytics, or micro-incentives.
+                            You can also specify BTC addresses and amounts for Pox rewards, along with specific cycle numbers.
+                            This can be used for tracking, analytics, micro-incentives, or stacking rewards distribution.
                         </p>
                     </div>
                 </div>
@@ -140,7 +291,11 @@ export default function DustTransactionModal({
 
             <Modal.Footer className={styles.modal_footer}>
                 <div className={styles.modal_actions}>
-                    {(option?.dustAddress && option?.dustAddress.trim()) || (option?.dustAmount && option?.dustAmount.toString().trim()) ? (
+                    {(option?.dustAddress && option?.dustAddress.trim()) || 
+                     (option?.dustAmount && option?.dustAmount.toString().trim()) ||
+                     (option?.dustBtcAddress && option?.dustBtcAddress.trim()) ||
+                     (option?.dustBtcAmount && option?.dustBtcAmount.toString().trim()) ||
+                     (option?.poxCycles && option?.poxCycles.trim()) ? (
                         <Button
                             onClick={handleClear}
                             className={styles.modal_delete_button}

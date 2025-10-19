@@ -8,7 +8,7 @@ import {
 } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 
-export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes, dustVotingResults, dustVotersList }) {
+export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes, dustVotingResults, dustVotersList, btcVotingResults, btcVotersList }) {
     const votingSystemInfo = useMemo(() => {
         return Constants.VOTING_SYSTEMS.find(system => system.id === pollObject?.votingSystem);
     }, [pollObject?.votingSystem]);
@@ -206,7 +206,13 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                         dustVotes = Object.values(dustVotingResults).reduce((sum, result) => sum + (result.totalStx || 0), 0);
                                     }
 
-                                    return regularVotes + dustVotes;
+                                    // Calculate BTC votes
+                                    let btcVotes = 0;
+                                    if (btcVotingResults && Object.keys(btcVotingResults).length > 0) {
+                                        btcVotes = Object.values(btcVotingResults).reduce((sum, result) => sum + (result.totalStx || 0), 0);
+                                    }
+
+                                    return regularVotes + dustVotes + btcVotes;
                                 })()}
                             </span>
                             <span className={styles.results_stat_label}>Total Votes</span>
@@ -214,10 +220,11 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                         <div className={styles.results_stat}>
                             <span className={styles.results_stat_value}>
                                 {(() => {
-                                    // Calculate total unique voters from regular + dust
+                                    // Calculate total unique voters from regular + dust + BTC
                                     const regularVoters = parseInt(totalUniqueVotes) >= 0 ? parseInt(totalUniqueVotes) : 0;
                                     const dustVoters = dustVotersList ? dustVotersList.length : 0;
-                                    return regularVoters + dustVoters;
+                                    const btcVoters = btcVotersList ? btcVotersList.length : 0;
+                                    return regularVoters + dustVoters + btcVoters;
                                 })()}
                             </span>
                             <span className={styles.results_stat_label}>Voters</span>
@@ -244,10 +251,19 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                             });
                         }
 
+                        // Calculate BTC results totals
+                        const btcTotals = { locked: 0, unlocked: 0 };
+                        if (btcVotingResults && Object.keys(btcVotingResults).length > 0) {
+                            Object.values(btcVotingResults).forEach(result => {
+                                btcTotals.locked += result.totalLockedStx || 0;
+                                btcTotals.unlocked += result.totalUnlockedStx || 0;
+                            });
+                        }
+
                         // Combine totals
                         const totals = {
-                            locked: regularTotals.locked + dustTotals.locked,
-                            unlocked: regularTotals.unlocked + dustTotals.unlocked
+                            locked: regularTotals.locked + dustTotals.locked + btcTotals.locked,
+                            unlocked: regularTotals.unlocked + dustTotals.unlocked + btcTotals.unlocked
                         };
 
                         if (totals.locked === 0 && totals.unlocked === 0) return null;
@@ -377,7 +393,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                 );
                             }
 
-                            // Calculate and sort results (merging regular + dust)
+                            // Calculate and sort results (merging regular + dust + BTC)
                             const resultsData = pollObject.options.map(option => {
                                 // Get regular results
                                 const regularResult = resultsByOption[option.id] || { total: 0, percentage: 0, lockedStx: 0, unlockedStx: 0 };
@@ -385,24 +401,30 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                 // Get dust results for this option
                                 const dustResult = dustVotingResults && dustVotingResults[option.id] ? dustVotingResults[option.id] : null;
 
-                                // Combine regular and dust votes
+                                // Get BTC results for this option
+                                const btcResult = btcVotingResults && btcVotingResults[option.id] ? btcVotingResults[option.id] : null;
+
+                                // Combine regular, dust, and BTC votes
                                 const regularVotes = parseInt(regularResult.total) || 0;
                                 const dustVotes = dustResult ? dustResult.totalStx || 0 : 0;
-                                const totalVotes = regularVotes + dustVotes;
+                                const btcVotes = btcResult ? btcResult.totalStx || 0 : 0;
+                                const totalVotes = regularVotes + dustVotes + btcVotes;
 
                                 // Combine locked/unlocked STX
                                 const regularLockedStx = parseInt(regularResult.lockedStx) || 0;
                                 const regularUnlockedStx = parseInt(regularResult.unlockedStx) || 0;
                                 const dustLockedStx = dustResult ? dustResult.totalLockedStx || 0 : 0;
                                 const dustUnlockedStx = dustResult ? dustResult.totalUnlockedStx || 0 : 0;
+                                const btcLockedStx = btcResult ? btcResult.totalLockedStx || 0 : 0;
+                                const btcUnlockedStx = btcResult ? btcResult.totalUnlockedStx || 0 : 0;
 
                                 return {
                                     id: option.id,
                                     name: option.value,
                                     votes: totalVotes,
                                     percentage: 0, // Will calculate after getting all totals
-                                    lockedStx: regularLockedStx + dustLockedStx,
-                                    unlockedStx: regularUnlockedStx + dustUnlockedStx
+                                    lockedStx: regularLockedStx + dustLockedStx + btcLockedStx,
+                                    unlockedStx: regularUnlockedStx + dustUnlockedStx + btcUnlockedStx
                                 };
                             });
 

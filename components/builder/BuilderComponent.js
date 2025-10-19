@@ -124,13 +124,19 @@ export default function BuilderComponent(props) {
                     id: uuidv4(),
                     value: "Choice 1",
                     dustAddress: "",
-                    dustAmount: ""
+                    dustAmount: "",
+                    dustBtcAddress: "",
+                    dustBtcAmount: "",
+                    poxCycles: ""
                 },
                 {
                     id: uuidv4(),
                     value: "Choice 2",
                     dustAddress: "",
-                    dustAmount: ""
+                    dustAmount: "",
+                    dustBtcAddress: "",
+                    dustBtcAmount: "",
+                    poxCycles: ""
                 }
             ],
             votingStrategyFlag: false,
@@ -237,7 +243,10 @@ export default function BuilderComponent(props) {
                 id: uuidv4(),
                 value: `Choice ${pollObject.options.length + 1}`,
                 dustAddress: "",
-                dustAmount: ""
+                dustAmount: "",
+                dustBtcAddress: "",
+                dustBtcAmount: "",
+                poxCycles: ""
             })
         }
         setPollObject({ ...pollObject });
@@ -327,9 +336,21 @@ export default function BuilderComponent(props) {
                 if (!pollObject.options[optionIndex].hasOwnProperty('dustAmount')) {
                     pollObject.options[optionIndex].dustAmount = "";
                 }
+                if (!pollObject.options[optionIndex].hasOwnProperty('dustBtcAddress')) {
+                    pollObject.options[optionIndex].dustBtcAddress = "";
+                }
+                if (!pollObject.options[optionIndex].hasOwnProperty('dustBtcAmount')) {
+                    pollObject.options[optionIndex].dustBtcAmount = "";
+                }
+                if (!pollObject.options[optionIndex].hasOwnProperty('poxCycles')) {
+                    pollObject.options[optionIndex].poxCycles = "";
+                }
 
                 pollObject.options[optionIndex].dustAddress = dustDetails.dustAddress;
                 pollObject.options[optionIndex].dustAmount = dustDetails.dustAmount;
+                pollObject.options[optionIndex].dustBtcAddress = dustDetails.dustBtcAddress;
+                pollObject.options[optionIndex].dustBtcAmount = dustDetails.dustBtcAmount;
+                pollObject.options[optionIndex].poxCycles = dustDetails.poxCycles;
                 setPollObject({ ...pollObject });
             }
         }
