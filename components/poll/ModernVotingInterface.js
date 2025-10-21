@@ -244,8 +244,8 @@ export default function ModernVotingInterface({
 
                     <h2 className={styles.section_title}>
                         {alreadyVoted ? 'Your Vote' : 'Cast Your Vote'}
-                        {/* Countdown Timer - Show only for active polls that haven't been voted on */}
-                        {!alreadyVoted && isPollActive() && (
+                        {/* Countdown Timer - Show for active polls regardless of voting status */}
+                        {isPollActive() && (
                             <CountdownTimer
                                 endAtBlock={pollObject?.endAtBlock}
                                 currentBitcoinBlockHeight={currentBitcoinBlockHeight}
