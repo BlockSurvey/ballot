@@ -135,6 +135,21 @@ export default function PollComponent(props) {
                                 onVoteSuccess={handleVoteSuccess}
                             />
 
+                            {/* Modern Information Panel - Mobile Only (after Cast Your Vote) */}
+                            <div className={styles.mobile_only}>
+                                <ModernInformationPanel
+                                    pollObject={pollObject}
+                                    resultsByOption={resultsByOption}
+                                    currentBitcoinBlockHeight={currentBitcoinBlockHeight}
+                                    currentStacksBlockHeight={currentStacksBlockHeight}
+                                    totalVotes={totalVotes}
+                                    totalUniqueVotes={totalUniqueVotes}
+                                    dustVotingResults={dustVotingResults}
+                                    dustVotersList={dustVotersList}
+                                    btcVotingResults={btcVotingResults}
+                                    btcVotersList={btcVotersList}
+                                />
+                            </div>
 
                             {/* Modern Voting Activity */}
                             <ModernVotingActivity
@@ -477,8 +492,8 @@ export default function PollComponent(props) {
                             )}
                         </div>
 
-                        {/* Sidebar */}
-                        <div>
+                        {/* Sidebar - Desktop Only */}
+                        <div className={styles.desktop_only}>
                             <ModernInformationPanel
                                 pollObject={pollObject}
                                 resultsByOption={resultsByOption}

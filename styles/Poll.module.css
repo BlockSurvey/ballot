@@ -795,6 +795,26 @@
     animation: pulse 2s infinite;
 }
 
+/* Responsive visibility utilities */
+.desktop_only {
+    display: block;
+}
+
+.mobile_only {
+    display: none;
+}
+
+@media (max-width: 992px) {
+    .desktop_only {
+        display: none;
+    }
+
+    .mobile_only {
+        display: block;
+        margin-bottom: var(--space-6);
+    }
+}
+
 /* Responsive Design - Tablet breakpoint */
 @media (max-width: 992px) {
     .activity_header_default {
