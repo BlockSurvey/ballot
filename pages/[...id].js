@@ -572,7 +572,7 @@ export default function Poll(props) {
                 };
 
                 // Process each voter's STX balance at snapshot height in parallel batches of 50
-                const balanceResults = await processInBatches(uniqueVoters, 50, (voterAddress) =>
+                const balanceResults = await processInBatches(uniqueVoters, 20, (voterAddress) =>
                     fetchStxBalanceAtSnapshot(voterAddress, snapshotHeight)
                         .then(balanceData => ({ voterAddress, balanceData }))
                 );
