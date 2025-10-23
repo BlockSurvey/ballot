@@ -275,7 +275,7 @@ export function getStacksAPIPrefix() {
  */
 export function getStacksAPIHeaders(additionalHeaders = {}) {
   return {
-    // "x-api-key": Constants.STACKS_API_KEY,
+    "x-api-key": Constants.STACKS_API_KEY,
     "Accept": "application/json",
     ...additionalHeaders
   };
