@@ -278,31 +278,23 @@ export const getStxBalanceAtHeight = async (stxAddress, blockHeight = null) => {
 export const processBtcVotesForPoll = async (pollObject) => {
     try {
         // Check if any options have BTC address and PoX cycle details
-        const btcOptions = pollObject?.options?.filter(async (option) => {
-            if (!option.dustBtcAddress || !option.poxCycles) return false;
-
-            // Check if address has any transactions
-            const btcTransactions = await getBitcoinTransactionsForAddress(option.dustBtcAddress);
-            if (!btcTransactions || btcTransactions.length === 0) return false;
-
-            // Handle both string (comma-separated) and array formats
-            if (typeof option.poxCycles === 'string') {
-                return option.poxCycles.trim().length > 0;
-            }
-
-            return Array.isArray(option.poxCycles) && option.poxCycles.length > 0;
-        }).map(option => {
-            // Normalize poxCycles to array format
-            let poxCycles = option.poxCycles;
-            if (typeof poxCycles === 'string') {
-                poxCycles = poxCycles.split(',').map(cycle => parseInt(cycle.trim())).filter(cycle => !isNaN(cycle));
-            }
-
-            return {
-                ...option,
-                poxCycles
-            };
-        });
+        const btcOptions = (pollObject?.options || [])
+            .filter((option) => {
+                if (!option.dustBtcAddress || !option.poxCycles) return false;
+                // We don't await here; we'll fetch txs later to avoid async filter issues
+                if (typeof option.poxCycles === 'string') {
+                    return option.poxCycles.trim().length > 0;
+                }
+                return Array.isArray(option.poxCycles) && option.poxCycles.length > 0;
+            })
+            .map(option => {
+                // Normalize poxCycles to array format
+                let poxCycles = option.poxCycles;
+                if (typeof poxCycles === 'string') {
+                    poxCycles = poxCycles.split(',').map(cycle => parseInt(cycle.trim())).filter(cycle => !isNaN(cycle));
+                }
+                return { ...option, poxCycles };
+            });
 
         if (!btcOptions || btcOptions.length === 0) {
             console.log('No BTC voting options found in this poll');
@@ -330,6 +322,11 @@ export const processBtcVotesForPoll = async (pollObject) => {
             // Get Bitcoin transactions for this address
             const btcTransactions = await getBitcoinTransactionsForAddress(btcAddress);
 
+            // If no transactions, skip option early
+            if (!btcTransactions || btcTransactions.length === 0) {
+                continue;
+            }
+
             // Map BTC addresses to STX addresses
             const validStxAddresses = btcTransactions.flatMap(tx =>
                 btcToStxMap.get(tx.address) || []
@@ -352,13 +349,25 @@ export const processBtcVotesForPoll = async (pollObject) => {
                 voterAddresses: []
             };
 
-            // Process each unique STX address
-            for (const stxAddress of uniqueStxAddresses) {
-                const balanceData = await getStxBalanceAtHeight(
-                    stxAddress,
-                    pollObject?.snapshotBlockHeight
-                );
+            // Helper to process items in parallel batches
+            const processInBatches = async (items, batchSize, worker) => {
+                const results = [];
+                for (let i = 0; i < items.length; i += batchSize) {
+                    const batch = items.slice(i, i + batchSize);
+                    const batchResults = await Promise.all(batch.map(worker));
+                    results.push(...batchResults);
+                }
+                return results;
+            };
 
+            // Fetch balances in parallel batches of 50
+            const balanceResults = await processInBatches(uniqueStxAddresses, 50, (stxAddress) =>
+                getStxBalanceAtHeight(stxAddress, pollObject?.snapshotBlockHeight)
+                    .then(balanceData => ({ stxAddress, balanceData }))
+            );
+
+            // Process results
+            for (const { stxAddress, balanceData } of balanceResults) {
                 if (balanceData.total > 0) {
                     // Add voter to this option's results
                     btcVotingResults[option.id].totalVoters++;

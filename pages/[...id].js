@@ -489,6 +489,17 @@ export default function Poll(props) {
         }
     };
 
+    // Helper to process items in parallel batches
+    const processInBatches = async (items, batchSize, worker) => {
+        const results = [];
+        for (let i = 0; i < items.length; i += batchSize) {
+            const batch = items.slice(i, i + batchSize);
+            const batchResults = await Promise.all(batch.map(worker));
+            results.push(...batchResults);
+        }
+        return results;
+    };
+
     const getDustVotingResultsForPoll = async (pollObject) => {
         setDustVotingLoading(true);
         try {
@@ -560,10 +571,14 @@ export default function Poll(props) {
                     voterAddresses: []
                 };
 
-                // Process each voter's STX balance at snapshot height
-                for (const voterAddress of uniqueVoters) {
-                    const balanceData = await fetchStxBalanceAtSnapshot(voterAddress, snapshotHeight);
+                // Process each voter's STX balance at snapshot height in parallel batches of 50
+                const balanceResults = await processInBatches(uniqueVoters, 50, (voterAddress) =>
+                    fetchStxBalanceAtSnapshot(voterAddress, snapshotHeight)
+                        .then(balanceData => ({ voterAddress, balanceData }))
+                );
 
+                // Process the balance results
+                for (const { voterAddress, balanceData } of balanceResults) {
                     if (balanceData.total > 0) {
                         // Add voter to this option's results
                         dustOptionResults[option.id].totalVoters++;
