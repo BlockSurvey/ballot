@@ -361,7 +361,7 @@ export const processBtcVotesForPoll = async (pollObject) => {
             };
 
             // Fetch balances in parallel batches of 50
-            const balanceResults = await processInBatches(uniqueStxAddresses, 10, (stxAddress) =>
+            const balanceResults = await processInBatches(uniqueStxAddresses, 5, (stxAddress) =>
                 getStxBalanceAtHeight(stxAddress, pollObject?.snapshotBlockHeight)
                     .then(balanceData => ({ stxAddress, balanceData }))
             );
