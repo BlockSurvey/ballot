@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
 import { getFileFromGaia, getMyStxAddress, putFileToGaia, userSession } from "../../services/auth";
-import { formStacksExplorerUrl } from "../../services/utils";
+import { formStacksExplorerUrl, formatNumber } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 import ModernInformationPanel from "./ModernInformationPanel";
 import ModernPollHeader from "./ModernPollHeader";
@@ -253,7 +253,7 @@ export default function PollComponent(props) {
                                                         <div className={styles.vote_count}>
                                                             {voter.votedOptions.map((option, voteIndex) => (
                                                                 <div key={voteIndex} className={styles.vote_item}>
-                                                                    {option.dustAmount}
+                                                                    {formatNumber(option.dustAmount)}
                                                                     <span className={styles.token_name}>
                                                                         STX
                                                                     </span>
@@ -263,7 +263,7 @@ export default function PollComponent(props) {
 
                                                         {/* Voting Power */}
                                                         <div className={styles.voting_power_display}>
-                                                            {voter.stxBalance || 0}
+                                                            {formatNumber(voter.stxBalance || 0)}
                                                             <span className={styles.token_name}>
                                                                 STX
                                                             </span>
@@ -275,7 +275,7 @@ export default function PollComponent(props) {
                                                                 <div className={styles.status_indicator}>
                                                                     <div className={`${styles.status_dot} ${styles.status_dot_locked}`} />
                                                                     <span className={styles.status_text}>
-                                                                        {voter.lockedStx || 0}
+                                                                        {formatNumber(voter.lockedStx || 0)}
                                                                         <span className={styles.token_name}>
                                                                             STX
                                                                         </span>
@@ -284,7 +284,7 @@ export default function PollComponent(props) {
                                                                 <div className={styles.status_indicator}>
                                                                     <div className={`${styles.status_dot} ${styles.status_dot_unlocked}`} />
                                                                     <span className={styles.status_text}>
-                                                                        {voter.unlockedStx || 0}
+                                                                        {formatNumber(voter.unlockedStx || 0)}
                                                                         <span className={styles.token_name}>
                                                                             STX
                                                                         </span>
@@ -454,7 +454,7 @@ export default function PollComponent(props) {
 
                                                         {/* Voting Power */}
                                                         <div className={styles.voting_power_display}>
-                                                            {voter.stxBalance || 0}
+                                                            {formatNumber(voter.stxBalance || 0)}
                                                             <span className={styles.token_name}>
                                                                 STX
                                                             </span>
@@ -466,7 +466,7 @@ export default function PollComponent(props) {
                                                                 <div className={styles.status_indicator}>
                                                                     <div className={`${styles.status_dot} ${styles.status_dot_locked}`} />
                                                                     <span className={styles.status_text}>
-                                                                        {voter.lockedStx || 0}
+                                                                        {formatNumber(voter.lockedStx || 0)}
                                                                         <span className={styles.token_name}>
                                                                             STX
                                                                         </span>
@@ -475,7 +475,7 @@ export default function PollComponent(props) {
                                                                 <div className={styles.status_indicator}>
                                                                     <div className={`${styles.status_dot} ${styles.status_dot_unlocked}`} />
                                                                     <span className={styles.status_text}>
-                                                                        {voter.unlockedStx || 0}
+                                                                        {formatNumber(voter.unlockedStx || 0)}
                                                                         <span className={styles.token_name}>
                                                                             STX
                                                                         </span>

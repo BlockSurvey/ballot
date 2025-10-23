@@ -1,6 +1,23 @@
 import { Constants } from "../common/constants";
 import { getMyStxAddress, getStacksAPIPrefix, getStacksAPIHeaders, getUserData, userSession } from "../services/auth";
 
+/**
+ * Formats a number with comma separators for better readability
+ * @param {number|string} number - The number to format (can be string or number)
+ * @returns {string} Formatted number with commas (e.g., "1,234,567")
+ */
+export function formatNumber(number) {
+    if (number === null || number === undefined || number === '') return "0";
+
+    // Handle both string and number types
+    const numValue = typeof number === 'string' ? parseFloat(number) : number;
+
+    // Check if the result is a valid number
+    if (isNaN(numValue)) return "0";
+
+    return numValue.toLocaleString('en-US');
+}
+
 export async function getRecentBlock() {
     try {
         const response = await fetch(

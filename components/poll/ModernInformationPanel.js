@@ -4,7 +4,8 @@ import {
     calculateDateFromBitcoinBlockHeight,
     convertToDisplayDateFormat,
     formStacksExplorerUrl,
-    formatLocalDateTime
+    formatLocalDateTime,
+    formatNumber
 } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 
@@ -212,7 +213,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                         btcVotes = Object.values(btcVotingResults).reduce((sum, result) => sum + (result.totalStx || 0), 0);
                                     }
 
-                                    return regularVotes + dustVotes + btcVotes;
+                                    return formatNumber(regularVotes + dustVotes + btcVotes);
                                 })()}
                             </span>
                             <span className={styles.results_stat_label}>Total Votes</span>
@@ -323,7 +324,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                             color: 'var(--color-primary)',
                                             letterSpacing: '-0.02em'
                                         }}>
-                                            {totals.locked}
+                                            {formatNumber(totals.locked)}
                                             <span style={{
                                                 marginLeft: '4px',
                                                 fontSize: '0.75rem',
@@ -363,7 +364,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                             color: 'var(--color-primary)',
                                             letterSpacing: '-0.02em'
                                         }}>
-                                            {totals.unlocked}
+                                            {formatNumber(totals.unlocked)}
                                             <span style={{
                                                 marginLeft: '4px',
                                                 fontSize: '0.75rem',
@@ -458,7 +459,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                                 fontSize: '0.75rem',
                                                 marginLeft: 'var(--space-1)'
                                             }}>
-                                                ({result.votes})
+                                                ({formatNumber(result.votes)})
                                             </span>
                                         </div>
                                     </div>
@@ -518,7 +519,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                                     color: 'var(--color-primary)',
                                                     letterSpacing: '-0.01em'
                                                 }}>
-                                                    {result.lockedStx}
+                                                    {formatNumber(result.lockedStx)}
                                                     <span style={{
                                                         marginLeft: '4px',
                                                         fontSize: '0.75rem',
@@ -557,7 +558,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                                     color: 'var(--color-primary)',
                                                     letterSpacing: '-0.01em'
                                                 }}>
-                                                    {result.unlockedStx}
+                                                    {formatNumber(result.unlockedStx)}
                                                     <span style={{
                                                         marginLeft: '4px',
                                                         fontSize: '0.75rem',

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { formStacksExplorerUrl } from "../../services/utils";
+import { formStacksExplorerUrl, formatNumber } from "../../services/utils";
 import { getIndividualResultByStartAndEndPosition } from "./PollService";
 import styles from "../../styles/Poll.module.css";
 
@@ -159,7 +159,7 @@ export default function ModernVotingActivity({
                                             <div className={styles.vote_count}>
                                                 {Object.values(result?.vote || {}).map((value, voteIndex) => (
                                                     <div key={voteIndex} className={styles.vote_item}>
-                                                        {value}
+                                                        {formatNumber(value)}
                                                         {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.strategyTokenName && (
                                                             <span className={styles.token_name}>
                                                                 {pollObject.strategyTokenName}
@@ -171,7 +171,7 @@ export default function ModernVotingActivity({
 
                                             {/* Voting Power */}
                                             <div className={styles.voting_power_display}>
-                                                {result?.votingPower || 0}
+                                                {formatNumber(result?.votingPower || 0)}
 
                                                 {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && (
                                                     <span className={styles.token_name}>
@@ -187,7 +187,7 @@ export default function ModernVotingActivity({
                                                         <div className={styles.status_indicator}>
                                                             <div className={`${styles.status_dot} ${styles.status_dot_locked}`} />
                                                             <span className={styles.status_text}>
-                                                                {result?.lockedStx}
+                                                                {formatNumber(result?.lockedStx)}
                                                                 <span className={styles.token_name}>
                                                                     {pollObject.strategyTokenName}
                                                                 </span>
@@ -196,7 +196,7 @@ export default function ModernVotingActivity({
                                                         <div className={styles.status_indicator}>
                                                             <div className={`${styles.status_dot} ${styles.status_dot_unlocked}`} />
                                                             <span className={styles.status_text}>
-                                                                {result?.unlockedStx}
+                                                                {formatNumber(result?.unlockedStx)}
                                                                 <span className={styles.token_name}>
                                                                     {pollObject.strategyTokenName}
                                                                 </span>

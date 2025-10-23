@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
 import { authenticate, userSession } from "../../services/auth";
 import { castMyVoteContractCall } from "../../services/contract";
+import { formatNumber } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 import SendTxModal from "../common/SendTxModal";
 import CountdownTimer from "../common/CountdownTimer";
@@ -108,7 +109,7 @@ export default function ModernVotingInterface({
             }, 0);
 
             if (totalVotes > (votingPower || 1)) {
-                setErrorMessage(`Total votes (${totalVotes}) cannot exceed your voting power (${votingPower || 1})`);
+                setErrorMessage(`Total votes (${formatNumber(totalVotes)}) cannot exceed your voting power (${formatNumber(votingPower || 1)})`);
                 return false;
             }
         }
@@ -313,15 +314,15 @@ export default function ModernVotingInterface({
                                     }}>
                                         <div style={{ textAlign: 'center' }}>
                                             <div style={{ opacity: 0.8, marginBottom: '4px' }}>Total STX</div>
-                                            <div style={{ fontWeight: '700', fontSize: '1rem' }}>{userDustVotingStatus.stxBalance}</div>
+                                            <div style={{ fontWeight: '700', fontSize: '1rem' }}>{formatNumber(userDustVotingStatus.stxBalance)}</div>
                                         </div>
                                         <div style={{ textAlign: 'center' }}>
                                             <div style={{ opacity: 0.8, marginBottom: '4px' }}>Locked</div>
-                                            <div style={{ fontWeight: '600' }}>{userDustVotingStatus.lockedStx || 0}</div>
+                                            <div style={{ fontWeight: '600' }}>{formatNumber(userDustVotingStatus.lockedStx || 0)}</div>
                                         </div>
                                         <div style={{ textAlign: 'center' }}>
                                             <div style={{ opacity: 0.8, marginBottom: '4px' }}>Unlocked</div>
-                                            <div style={{ fontWeight: '600' }}>{userDustVotingStatus.unlockedStx || 0}</div>
+                                            <div style={{ fontWeight: '600' }}>{formatNumber(userDustVotingStatus.unlockedStx || 0)}</div>
                                         </div>
                                     </div>
 
@@ -421,7 +422,7 @@ export default function ModernVotingInterface({
                                                 </a>
                                             )}
                                         </div>
-                                        <span style={{ fontWeight: '700' }}>{dustVoteTransaction.amount} STX</span>
+                                        <span style={{ fontWeight: '700' }}>{formatNumber(dustVoteTransaction.amount)} STX</span>
                                     </div>
                                 )}
                             </div>
@@ -520,12 +521,12 @@ export default function ModernVotingInterface({
                         {votingPower && (
                             <div className={styles.voting_power_value}>
                                 Voting Power:
-                                {
+                                {formatNumber(
                                     pollObject?.votingStrategyFlag &&
                                         pollObject?.strategyTokenType === "ft" &&
                                         pollObject?.votingStrategyTemplate === "stx" &&
                                         stacksBalance && stacksBalance > 0 ? (stacksBalance / 1000000) : votingPower
-                                }
+                                )}
 
                                 {/* Show strategy token name */}
                                 {pollObject?.votingStrategyFlag && pollObject?.strategyTokenType === "ft" && pollObject?.votingSystem === "fptp" && (
@@ -587,7 +588,7 @@ export default function ModernVotingInterface({
                                                     letterSpacing: '0.025em',
                                                     animation: 'fadeIn 0.3s ease'
                                                 }}>
-                                                    {option.dustAmount} STX
+                                                    {formatNumber(option.dustAmount)} STX
                                                 </span>
                                             )}
                                         </div>
