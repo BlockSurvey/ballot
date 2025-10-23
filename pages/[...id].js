@@ -54,6 +54,9 @@ export default function Poll(props) {
     const [btcVotersList, setBtcVotersList] = useState([]);
     const [btcVotingLoading, setBtcVotingLoading] = useState(false);
 
+    // Dust transaction voting loading
+    const [dustVotingLoading, setDustVotingLoading] = useState(false);
+
     // Helper function to strip HTML tags from text
     const stripHtmlTags = (html) => {
         if (!html) return "";
@@ -102,11 +105,6 @@ export default function Poll(props) {
                 option.dustAddress && option.dustAmount && option.dustAmount > 0
             );
 
-            // Fetch dust voting results in addition to regular voting
-            if (hasDustOptions) {
-                getDustVotingResultsForPoll(pollObject);
-            }
-
             // Check if any options have BTC address and PoX cycle properties
             const hasBtcOptions = pollObject?.options?.some(option => {
                 if (!option.dustBtcAddress || !option.poxCycles) return false;
@@ -119,9 +117,22 @@ export default function Poll(props) {
                 return Array.isArray(option.poxCycles) && option.poxCycles.length > 0;
             });
 
-            // Fetch BTC voting results in addition to regular voting
+            // Fetch dust and BTC voting results in parallel for better performance
+            const votingPromises = [];
+            
+            if (hasDustOptions) {
+                votingPromises.push(getDustVotingResultsForPoll(pollObject));
+            }
+            
             if (hasBtcOptions) {
-                getBtcVotingResultsForPoll(pollObject);
+                votingPromises.push(getBtcVotingResultsForPoll(pollObject));
+            }
+
+            // Execute both in parallel
+            if (votingPromises.length > 0) {
+                Promise.all(votingPromises).catch(error => {
+                    console.error("Error fetching dust/BTC voting results:", error);
+                });
             }
         }
     }, [pollObject, pollId, gaiaAddress]);
@@ -479,6 +490,7 @@ export default function Poll(props) {
     };
 
     const getDustVotingResultsForPoll = async (pollObject) => {
+        setDustVotingLoading(true);
         try {
             const snapshotHeight = pollObject?.snapshotBlockHeight;
 
@@ -606,6 +618,8 @@ export default function Poll(props) {
             setDustVotingMap(allDustVoters);
         } catch (error) {
             console.error("Error fetching dust voting results for poll:", error);
+        } finally {
+            setDustVotingLoading(false);
         }
     };
 
@@ -828,6 +842,7 @@ export default function Poll(props) {
                 userDustVotingStatus={userDustVotingStatus}
                 dustVotingResults={dustVotingResults}
                 dustVotersList={dustVotersList}
+                dustVotingLoading={dustVotingLoading}
                 btcVotingMap={btcVotingMap}
                 userBtcVotingStatus={userBtcVotingStatus}
                 btcVotingResults={btcVotingResults}

@@ -9,7 +9,7 @@ import {
 } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 
-export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes, dustVotingResults, dustVotersList, btcVotingResults, btcVotersList }) {
+export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes, dustVotingResults, dustVotersList, dustVotingLoading, btcVotingResults, btcVotersList, btcVotingLoading }) {
     const votingSystemInfo = useMemo(() => {
         return Constants.VOTING_SYSTEMS.find(system => system.id === pollObject?.votingSystem);
     }, [pollObject?.votingSystem]);
@@ -185,7 +185,29 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
             {/* Comprehensive Poll Results Card */}
             <div className={`${styles.info_card} ${styles.fade_in}`}>
                 <div className={styles.info_card_header}>
-                    <h3 className={styles.info_card_title}>Poll Results</h3>
+                    <h3 className={styles.info_card_title}>
+                        Poll Results
+                        {(dustVotingLoading || btcVotingLoading) && (
+                            <span style={{
+                                marginLeft: '8px',
+                                fontSize: '0.625rem',
+                                fontWeight: '600',
+                                color: '#F59E0B',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                            }}>
+                                <div style={{
+                                    width: '6px',
+                                    height: '6px',
+                                    borderRadius: '50%',
+                                    background: '#F59E0B',
+                                    animation: 'pulse 1.5s ease-in-out infinite'
+                                }} />
+                                Processing {dustVotingLoading && btcVotingLoading ? 'STX & BTC' : dustVotingLoading ? 'STX' : 'BTC'} Dust Votes
+                            </span>
+                        )}
+                    </h3>
                 </div>
                 <div className={styles.info_card_content}>
                     {/* Results Summary */}

@@ -35,6 +35,7 @@ export default function PollComponent(props) {
         userDustVotingStatus,
         dustVotingResults,
         dustVotersList,
+        dustVotingLoading,
         btcVotingMap,
         userBtcVotingStatus,
         btcVotingResults,
@@ -146,8 +147,10 @@ export default function PollComponent(props) {
                                     totalUniqueVotes={totalUniqueVotes}
                                     dustVotingResults={dustVotingResults}
                                     dustVotersList={dustVotersList}
+                                    dustVotingLoading={dustVotingLoading}
                                     btcVotingResults={btcVotingResults}
                                     btcVotersList={btcVotersList}
+                                    btcVotingLoading={btcVotingLoading}
                                 />
                             </div>
 
@@ -161,6 +164,48 @@ export default function PollComponent(props) {
                                 noOfResultsLoaded={noOfResultsLoaded}
                                 setNoOfResultsLoaded={setNoOfResultsLoaded}
                             />
+
+                            {/* STX Dust Transaction Activity - Loading State */}
+                            {(dustVotingLoading) && (
+                                <div className={`${styles.card} ${styles.fade_in} ${styles.btc_loading_card}`} style={{ marginTop: 'var(--space-4)' }}>
+                                    <div className={styles.card_header}>
+                                        <h2 className={styles.section_title}>
+                                            STX Dust Transactions
+                                            <span className={styles.loading_badge}>
+                                                <div className={styles.loading_dot}></div>
+                                                <div className={styles.loading_dot}></div>
+                                                <div className={styles.loading_dot}></div>
+                                            </span>
+                                        </h2>
+                                        <div className={styles.loading_subtitle}>Processing STX dust transactions...</div>
+                                    </div>
+
+                                    <div className={styles.activity_table}>
+                                        {/* Table Header */}
+                                        <div className={`${styles.activity_header} ${styles.activity_header_with_lock} ${styles.loading_header}`}>
+                                            <span className={styles.shimmer_text}>Voter</span>
+                                            <span className={styles.shimmer_text}>Choice</span>
+                                            <span className={styles.shimmer_text}>Votes</span>
+                                            <span className={styles.shimmer_text}>Power</span>
+                                            <span className={styles.shimmer_text}>Lock Status</span>
+                                        </div>
+
+                                        {/* Loading Content */}
+                                        <div className={styles.loading_table_content}>
+                                            <div className={`${styles.activity_row} ${styles.loading_simple_row}`}>
+                                                <div className={styles.loading_simple_content}>
+                                                    <div className={styles.loading_simple_text}>
+                                                        Analyzing STX dust transactions...
+                                                    </div>
+                                                    <div className={styles.loading_simple_time}>
+                                                        This may take 1-2 minutes
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Dust Transaction Activity */}
                             {dustVotersList && dustVotersList.length > 0 && (
@@ -503,8 +548,10 @@ export default function PollComponent(props) {
                                 totalUniqueVotes={totalUniqueVotes}
                                 dustVotingResults={dustVotingResults}
                                 dustVotersList={dustVotersList}
+                                dustVotingLoading={dustVotingLoading}
                                 btcVotingResults={btcVotingResults}
                                 btcVotersList={btcVotersList}
+                                btcVotingLoading={btcVotingLoading}
                             />
                         </div>
                     </div>
