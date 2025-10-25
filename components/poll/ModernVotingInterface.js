@@ -109,7 +109,7 @@ export default function ModernVotingInterface({
             }, 0);
 
             if (totalVotes > (votingPower || 1)) {
-                setErrorMessage(`Total votes (${formatNumber(totalVotes)}) cannot exceed your voting power (${formatNumber(votingPower || 1)})`);
+                setErrorMessage(`Total votes (${totalVotes}) cannot exceed your voting power (${votingPower || 1})`);
                 return false;
             }
         }
@@ -588,7 +588,7 @@ export default function ModernVotingInterface({
                                                     letterSpacing: '0.025em',
                                                     animation: 'fadeIn 0.3s ease'
                                                 }}>
-                                                    {formatNumber(option.dustAmount)} STX
+                                                    {option.dustAmount} STX
                                                 </span>
                                             )}
                                         </div>
