@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
 import { openSTXTransfer } from '@stacks/connect';
-import { getNetworkType } from '../../services/auth';
+import { getNonce } from '@stacks/transactions';
+import React, { useEffect, useState } from 'react';
+import { Button, Modal } from 'react-bootstrap';
+import { getMyStxAddress, getNetworkType } from '../../services/auth';
 import styles from '../../styles/Builder.module.css';
 
 export default function SendTxModal({
@@ -52,31 +53,53 @@ export default function SendTxModal({
         try {
             // Since it's always one transaction, get the first (and only) transaction
             const dustTx = dustTransactions[0];
-            
+
+            // Fetch the current nonce for the user's address
+            const network = getNetworkType();
+
+            let senderAddress;
+            try {
+                senderAddress = getMyStxAddress();
+            } catch (addressError) {
+                console.error('Failed to get sender address:', addressError);
+                throw new Error('Could not retrieve wallet address. Please make sure you are logged in.');
+            }
+
+            let nonce;
+            try {
+                const fetchedNonce = await getNonce(senderAddress, network);
+                // Convert BigInt to Number
+                nonce = Number(fetchedNonce);
+            } catch (nonceError) {
+                console.warn('Failed to fetch nonce, letting Stacks Connect handle it:', nonceError);
+                // If nonce fetch fails, let Stacks Connect handle it
+            }
+
             const txOptions = {
                 recipient: dustTx.address,
                 amount: Math.floor(dustTx.amount * 1000000), // Convert to microSTX
                 memo: `Vote for: ${dustTx.optionName}`,
-                network: getNetworkType(),
+                network: network,
+                ...(nonce !== undefined && { nonce }), // Only include nonce if successfully fetched
                 appDetails: {
                     name: "Ballot",
                     icon: window.location.origin + "/images/logo/ballot.png"
                 },
                 onFinish: (data) => {
-                    console.log('Transaction sent:', data);
-                    
+                    console.log('Transaction successfully sent:', data);
+
                     // Create completed transaction with proper ID and URL
                     const completedTx = {
                         ...dustTx,
                         txId: data.txId,
-                        explorerUrl: getNetworkType().coreApiUrl.includes('testnet') 
+                        explorerUrl: network.coreApiUrl.includes('testnet')
                             ? `https://explorer.stacks.co/txid/${data.txId}?chain=testnet`
                             : `https://explorer.stacks.co/txid/${data.txId}?chain=mainnet`
                     };
-                    
+
                     setIsProcessing(false);
                     onHide();
-                    
+
                     // Call success callback after modal is closed
                     setTimeout(() => {
                         if (onTransactionSuccess) {
@@ -85,16 +108,35 @@ export default function SendTxModal({
                     }, 100);
                 },
                 onCancel: () => {
-                    console.log('Transaction cancelled');
+                    console.log('Transaction cancelled by user');
                     setIsProcessing(false);
                     setErrorMessage('Transaction was cancelled.');
                 }
             };
 
+            console.log('Opening STX transfer with options:', {
+                ...txOptions,
+                network: 'NetworkObject',
+                appDetails: txOptions.appDetails
+            });
+
             await openSTXTransfer(txOptions);
         } catch (error) {
-            console.error('Error sending transactions:', error);
-            setErrorMessage('Failed to send transactions. Please try again.');
+            console.error('Error sending dust voting transaction:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
+
+            let errorMsg = 'Failed to send transaction. ';
+            if (error.message) {
+                errorMsg += error.message;
+            } else {
+                errorMsg += 'Please try again or check your wallet connection.';
+            }
+
+            setErrorMessage(errorMsg);
             setIsProcessing(false);
         }
     };
@@ -127,24 +169,24 @@ export default function SendTxModal({
                                     </svg>
                                 </div>
                                 <p>
-                                    You're about to send dust transactions to the selected options. 
+                                    You're about to send dust transactions to the selected options.
                                     These small STX amounts will be sent to the option creators.
                                 </p>
                             </div>
 
                             <div style={{ marginBottom: 'var(--space-4)' }}>
-                                <h6 style={{ 
-                                    fontSize: '0.875rem', 
-                                    fontWeight: '600', 
-                                    color: 'var(--color-primary)', 
-                                    marginBottom: 'var(--space-3)' 
+                                <h6 style={{
+                                    fontSize: '0.875rem',
+                                    fontWeight: '600',
+                                    color: 'var(--color-primary)',
+                                    marginBottom: 'var(--space-3)'
                                 }}>
                                     Transactions Summary:
                                 </h6>
-                                
+
                                 {dustTransactions.map((tx, index) => (
-                                    <div 
-                                        key={index} 
+                                    <div
+                                        key={index}
                                         style={{
                                             background: 'var(--color-surface)',
                                             border: '1px solid var(--color-border)',
@@ -157,22 +199,22 @@ export default function SendTxModal({
                                         }}
                                     >
                                         <div>
-                                            <div style={{ 
-                                                fontWeight: '600', 
+                                            <div style={{
+                                                fontWeight: '600',
                                                 color: 'var(--color-primary)',
                                                 fontSize: '0.875rem'
                                             }}>
                                                 {tx.optionName}
                                             </div>
-                                            <div style={{ 
-                                                fontSize: '0.75rem', 
+                                            <div style={{
+                                                fontSize: '0.75rem',
                                                 color: 'var(--color-tertiary)',
                                                 fontFamily: 'monospace'
                                             }}>
                                                 {tx.address.substring(0, 8)}...{tx.address.substring(tx.address.length - 8)}
                                             </div>
                                         </div>
-                                        <div style={{ 
+                                        <div style={{
                                             fontWeight: '700',
                                             color: 'var(--color-primary)',
                                             fontSize: '0.875rem'
@@ -193,10 +235,10 @@ export default function SendTxModal({
                                     <span style={{ fontWeight: '600', color: 'var(--color-primary)' }}>
                                         Total Amount:
                                     </span>
-                                    <span style={{ 
-                                        fontWeight: '700', 
+                                    <span style={{
+                                        fontWeight: '700',
                                         fontSize: '1.1rem',
-                                        color: 'var(--color-primary)' 
+                                        color: 'var(--color-primary)'
                                     }}>
                                         {calculateTotalAmount()} STX
                                     </span>
