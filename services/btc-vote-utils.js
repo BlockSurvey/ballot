@@ -390,8 +390,6 @@ export const processBtcVotesForPoll = async (pollObject) => {
             // Get unique STX addresses
             const uniqueStxAddresses = [...new Set(validStxAddresses)];
 
-            console.log('uniqueStxAddresses', uniqueStxAddresses);
-
             // Initialize results for this option
             btcVotingResults[option.id] = {
                 optionId: option.id,

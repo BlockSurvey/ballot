@@ -80,7 +80,6 @@ export default function SendTxModal({
                 amount: Math.floor(dustTx.amount * 1000000), // Convert to microSTX
                 memo: `Vote for: ${dustTx.optionName}`,
                 network: network,
-                ...(nonce !== undefined && { nonce }), // Only include nonce if successfully fetched
                 appDetails: {
                     name: "Ballot",
                     icon: window.location.origin + "/images/logo/ballot.png"
