@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Constants } from '../common/constants';
 import { getApiKey, getStacksAPIHeaders, getStacksAPIPrefix } from './auth';
-import { getPoxCycleMappingUrl } from './r2-storage';
+import { getPoxCycleMappingUrl, getStxBalanceSnapshotUrl } from './r2-storage';
 
 const MEMPOOL_API = 'https://mempool.space/api';
 const PAGE_LIMIT = 50;
@@ -244,6 +244,61 @@ export const buildBtcToStacksMapping = async (poxCycles) => {
 };
 
 /**
+ * Try to fetch cached STX balance snapshot from CloudFlare R2
+ */
+const fetchCachedStxBalanceSnapshot = async (pollId, snapshotHeight) => {
+    try {
+        const network = Constants.STACKS_MAINNET_FLAG ? 'mainnet' : 'testnet';
+        const url = getStxBalanceSnapshotUrl(pollId, snapshotHeight, network);
+        const response = await axios.get(url, { timeout: 15000 });
+
+        if (response.data && response.data.walletBalances) {
+            return response.data.walletBalances;
+        }
+
+        return null;
+    } catch (error) {
+        if (error.response?.status === 404) {
+            console.log(`  No cached STX balance snapshot found for poll ${pollId} at height ${snapshotHeight}`);
+            return null;
+        }
+        console.warn(`  Error fetching cached STX balance snapshot:`, error.message);
+        return null;
+    }
+};
+
+/**
+ * Store STX balance snapshot to CloudFlare R2 via API
+ */
+const storeStxBalanceSnapshotToR2 = async (pollId, snapshotHeight, walletBalances) => {
+    try {
+        const apiKey = await getApiKey();
+        const response = await axios.post(`/api/stacks/stx-balances/${pollId}`, {
+            snapshotHeight: snapshotHeight,
+            walletBalances: walletBalances
+        }, {
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 30000
+        });
+
+        if (response.status === 201 || response.status === 200) {
+            return true;
+        }
+
+        return false;
+    } catch (error) {
+        if (error.response?.status === 200) {
+            return true; // Data already exists, consider success
+        }
+        console.warn(`  Error storing STX balance snapshot to R2:`, error.message);
+        return false;
+    }
+};
+
+/**
  * Get STX balance information for a given address at a specific block height
  */
 export const getStxBalanceAtHeight = async (stxAddress, blockHeight = null) => {
@@ -335,6 +390,8 @@ export const processBtcVotesForPoll = async (pollObject) => {
             // Get unique STX addresses
             const uniqueStxAddresses = [...new Set(validStxAddresses)];
 
+            console.log('uniqueStxAddresses', uniqueStxAddresses);
+
             // Initialize results for this option
             btcVotingResults[option.id] = {
                 optionId: option.id,
@@ -360,11 +417,54 @@ export const processBtcVotesForPoll = async (pollObject) => {
                 return results;
             };
 
-            // Fetch balances in parallel batches of 50
-            const balanceResults = await processInBatches(uniqueStxAddresses, 5, (stxAddress) =>
-                getStxBalanceAtHeight(stxAddress, pollObject?.snapshotBlockHeight)
-                    .then(balanceData => ({ stxAddress, balanceData }))
-            );
+            // Try to fetch cached balances first
+            const pollId = pollObject?.id || pollObject?.contractAddress;
+            const snapshotHeight = pollObject?.snapshotBlockHeight;
+            let cachedBalances = null;
+            let balancesToCache = {};
+            
+            if (pollId && snapshotHeight) {
+                cachedBalances = await fetchCachedStxBalanceSnapshot(pollId, snapshotHeight);
+                if (cachedBalances) {
+                    console.log(`  Using cached STX balances for ${Object.keys(cachedBalances).length} addresses`);
+                }
+            }
+
+            // Fetch balances - use cache or make API calls
+            const balanceResults = [];
+            
+            for (const stxAddress of uniqueStxAddresses) {
+                let balanceData;
+                
+                // Check if we have cached data for this address
+                if (cachedBalances && cachedBalances[stxAddress]) {
+                    balanceData = cachedBalances[stxAddress];
+                } else {
+                    // Fetch from API
+                    balanceData = await getStxBalanceAtHeight(stxAddress, snapshotHeight);
+                    // Store for caching later
+                    balancesToCache[stxAddress] = {
+                        locked: balanceData.locked,
+                        unlocked: balanceData.unlocked,
+                        total: balanceData.total
+                    };
+                }
+                
+                balanceResults.push({ stxAddress, balanceData });
+            }
+            
+            // Store newly fetched balances to R2 if we fetched any
+            if (Object.keys(balancesToCache).length > 0 && pollId && snapshotHeight) {
+                console.log(`  Caching ${Object.keys(balancesToCache).length} newly fetched STX balances...`);
+                try {
+                    // Merge with existing cached balances if any
+                    const allBalances = cachedBalances ? { ...cachedBalances, ...balancesToCache } : balancesToCache;
+                    await storeStxBalanceSnapshotToR2(pollId, snapshotHeight, allBalances);
+                    console.log(`  Successfully cached STX balance snapshot`);
+                } catch (storageError) {
+                    console.warn(`  Failed to cache STX balances:`, storageError.message);
+                }
+            }
 
             // Process results
             for (const { stxAddress, balanceData } of balanceResults) {

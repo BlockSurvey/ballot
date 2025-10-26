@@ -20,3 +20,15 @@ export const getPoxCycleMappingUrl = (poxCycleNumber, network = null) => {
     const networkSuffix = network || getNetworkSuffix();
     return `${R2_PUBLIC_URL}/stacks/${networkSuffix}/pox-cycles/${poxCycleNumber}.json`;
 };
+
+/**
+ * Get the public URL for STX balance snapshot by block height and poll ID
+ * @param {string} pollId - The poll ID (contract deployer address)
+ * @param {number} snapshotHeight - The snapshot block height
+ * @param {string} network - Optional network override ('mainnet' or 'testnet')
+ * @returns {string} - The public URL
+ */
+export const getStxBalanceSnapshotUrl = (pollId, snapshotHeight, network = null) => {
+    const networkSuffix = network || getNetworkSuffix();
+    return `${R2_PUBLIC_URL}/stacks/${networkSuffix}/polls/${pollId}/stx-balance-by-snapshot-${snapshotHeight}.json`;
+};
