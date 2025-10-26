@@ -22,15 +22,15 @@ const getNetworkSuffix = () => {
 };
 
 /**
- * Generate the R2 key path for STX balance snapshot
+ * Generate the R2 key path for STX dust voting snapshot
  */
-const getStxBalanceSnapshotKey = (pollId, snapshotHeight) => {
+const getStxDustVotingSnapshotKey = (pollId, snapshotHeight) => {
   const networkSuffix = getNetworkSuffix();
-  return `stacks/${networkSuffix}/polls/${pollId}/stx-balance-by-snapshot-${snapshotHeight}.json`;
+  return `stacks/${networkSuffix}/polls/${pollId}/stx-dust-voting-by-snapshot-${snapshotHeight}.json`;
 };
 
 /**
- * API endpoint for STX balance snapshots
+ * API endpoint for STX dust voting snapshots
  * GET: Retrieve existing snapshot (no auth required) - pollId in URL, snapshotHeight in query
  * POST: Create new snapshot (auth required) - pollId in URL, snapshotHeight and balances in body
  */
@@ -67,7 +67,7 @@ export default async function handler(req, res) {
 }
 
 /**
- * Handle GET requests - retrieve existing STX balance snapshot (no auth required)
+ * Handle GET requests - retrieve existing STX dust voting snapshot (no auth required)
  * Expected query params: ?snapshotHeight=12345
  */
 async function handleGet(req, res) {
@@ -92,7 +92,7 @@ async function handleGet(req, res) {
   const snapshotHeightNum = parseInt(snapshotHeight);
 
   try {
-    const key = getStxBalanceSnapshotKey(pollId, snapshotHeightNum);
+    const key = getStxDustVotingSnapshotKey(pollId, snapshotHeightNum);
 
     const command = new GetObjectCommand({
       Bucket: BUCKET_NAME,
@@ -115,7 +115,7 @@ async function handleGet(req, res) {
   } catch (error) {
     if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
       return res.status(404).json({
-        error: 'STX balance snapshot not found',
+        error: 'STX dust voting snapshot not found',
         pollId: pollId,
         snapshotHeight: snapshotHeightNum,
         network: getNetworkSuffix(),
@@ -123,16 +123,16 @@ async function handleGet(req, res) {
       });
     }
 
-    console.error('Error retrieving STX balance snapshot:', error);
+    console.error('Error retrieving STX dust voting snapshot:', error);
     return res.status(500).json({
-      error: 'Failed to retrieve STX balance snapshot',
+      error: 'Failed to retrieve STX dust voting snapshot',
       message: error.message
     });
   }
 }
 
 /**
- * Handle POST requests - create new STX balance snapshot (auth required)
+ * Handle POST requests - create new STX dust voting snapshot (auth required)
  * Expected body: { snapshotHeight, walletBalances }
  */
 async function handlePost(req, res) {
@@ -167,14 +167,23 @@ async function handlePost(req, res) {
       });
     }
 
+    // If snapshotHeight is not a number, return an error
     const snapshotHeightNum = parseInt(snapshotHeight);
 
+    // Validate walletBalances structure
+    if (!isValidBalancesStructure(walletBalances)) {
+      return res.status(400).json({
+        error: 'Invalid wallet balances structure',
+        message: 'Wallet balances must be a valid object with address to balance mappings'
+      });
+    }
+
     // Check if snapshot already exists and merge with new data
-    const key = getStxBalanceSnapshotKey(pollId, snapshotHeightNum);
+    const key = getStxDustVotingSnapshotKey(pollId, snapshotHeightNum);
     let existingBalances = {};
     let existingData = null;
     let isUpdate = false;
-    
+
     try {
       const getCommand = new GetObjectCommand({
         Bucket: BUCKET_NAME,
@@ -183,26 +192,18 @@ async function handlePost(req, res) {
       const response = await r2Client.send(getCommand);
       const bodyString = await response.Body.transformToString();
       existingData = JSON.parse(bodyString);
-      
+
       // Extract existing wallet balances
       if (existingData && existingData.walletBalances) {
         existingBalances = existingData.walletBalances;
         isUpdate = true;
-        console.log(`Merging with existing snapshot containing ${Object.keys(existingBalances).length} addresses`);
+        console.log(`Merging with existing dust voting snapshot containing ${Object.keys(existingBalances).length} addresses`);
       }
     } catch (error) {
       // File doesn't exist, which is fine - we'll create a new one
       if (error.name !== 'NoSuchKey' && error.$metadata?.httpStatusCode !== 404) {
         throw error;
       }
-    }
-
-    // Validate walletBalances structure
-    if (!isValidBalancesStructure(walletBalances)) {
-      return res.status(400).json({
-        error: 'Invalid wallet balances structure',
-        message: 'Wallet balances must be a valid object with address to balance mappings'
-      });
     }
 
     // Merge new wallet balances with existing ones
@@ -223,6 +224,7 @@ async function handlePost(req, res) {
       metadata: {
         version: '1.0',
         source: 'ballot.gg-api',
+        votingType: 'stx-dust-voting',
         stacksMainnetFlag: Constants.STACKS_MAINNET_FLAG,
         isUpdate: isUpdate,
         newAddressesInThisUpdate: newAddressesCount
@@ -238,8 +240,9 @@ async function handlePost(req, res) {
       Metadata: {
         'poll-id': pollId,
         'snapshot-height': snapshotHeightNum.toString(),
+        'voting-type': 'stx-dust-voting',
         'network': getNetworkSuffix(),
-        'created-at': new Date().toISOString(),
+        'updated-at': new Date().toISOString(),
         'created-by': gaiaAddress
       }
     });
@@ -268,9 +271,9 @@ async function handlePost(req, res) {
       });
     }
 
-    console.error('Error creating STX balance snapshot:', error);
+    console.error('Error creating STX dust voting snapshot:', error);
     return res.status(500).json({
-      error: 'Failed to create STX balance snapshot',
+      error: 'Failed to create STX dust voting snapshot',
       message: error.message
     });
   }

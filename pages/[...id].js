@@ -9,6 +9,7 @@ import PollComponent from "../components/poll/PollComponent";
 import { getIndividualResultByStartAndEndPosition } from "../components/poll/PollService";
 import { getMyStxAddress, getStacksAPIHeaders, getStacksAPIPrefix, userSession } from "../services/auth";
 import { checkUserBtcVotingStatus, processBtcVotesForPoll } from "../services/btc-vote-utils";
+import { processDustVotingBalancesWithCache } from "../services/stx-dust-vote-utils";
 import { getCurrentBlockHeights } from "../services/utils";
 
 export default function Poll(props) {
@@ -571,10 +572,12 @@ export default function Poll(props) {
                     voterAddresses: []
                 };
 
-                // Process each voter's STX balance at snapshot height in parallel batches of 50
-                const balanceResults = await processInBatches(uniqueVoters, 5, (voterAddress) =>
-                    fetchStxBalanceAtSnapshot(voterAddress, snapshotHeight)
-                        .then(balanceData => ({ voterAddress, balanceData }))
+                // Process each voter's STX balance using caching
+                const pollId = pollObject?.id || pollObject?.contractAddress;
+                const balanceResults = await processDustVotingBalancesWithCache(
+                    uniqueVoters,
+                    pollId,
+                    snapshotHeight
                 );
 
                 // Process the balance results
