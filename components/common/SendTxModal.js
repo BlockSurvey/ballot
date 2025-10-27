@@ -106,7 +106,6 @@ export default function SendTxModal({
             const txOptions = {
                 recipient: dustTx.address,
                 amount: Math.floor(dustTx.amount * 1000000), // Convert to microSTX
-                memo: `Vote for: ${dustTx.optionName}`,
                 network: network,
                 appDetails: {
                     name: "Ballot",
