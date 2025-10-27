@@ -10,11 +10,13 @@ export default function SendTxModal({
     onHide,
     selectedOptions,
     pollObject,
-    onTransactionSuccess
+    onTransactionSuccess,
+    onVoteDirectly
 }) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const [dustTransactions, setDustTransactions] = useState([]);
+    const [transactionTimeout, setTransactionTimeout] = useState(null);
 
     useEffect(() => {
         if (show && selectedOptions && pollObject?.options) {
@@ -37,6 +39,15 @@ export default function SendTxModal({
         }
     }, [show, selectedOptions, pollObject]);
 
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (transactionTimeout) {
+                clearTimeout(transactionTimeout);
+            }
+        };
+    }, [transactionTimeout]);
+
     const calculateTotalAmount = () => {
         return dustTransactions.reduce((total, tx) => total + tx.amount, 0);
     };
@@ -50,6 +61,17 @@ export default function SendTxModal({
         setIsProcessing(true);
         setErrorMessage('');
 
+        // Set a timeout to detect stuck transactions
+        const timeout = setTimeout(() => {
+            if (isProcessing) {
+                setIsProcessing(false);
+                setErrorMessage(
+                    'Transaction timed out. Please try again. If the wallet popup did not appear, make sure your wallet extension is unlocked and try again.'
+                );
+            }
+        }, 60000); // 60 second timeout
+        setTransactionTimeout(timeout);
+
         try {
             // Since it's always one transaction, get the first (and only) transaction
             const dustTx = dustTransactions[0];
@@ -62,6 +84,12 @@ export default function SendTxModal({
                 senderAddress = getMyStxAddress();
             } catch (addressError) {
                 console.error('Failed to get sender address:', addressError);
+                clearTimeout(timeout);
+
+                // Check for extension context invalidated error
+                if (addressError.message && addressError.message.includes('Extension context invalidated')) {
+                    throw new Error('Extension context invalidated');
+                }
                 throw new Error('Could not retrieve wallet address. Please make sure you are logged in.');
             }
 
@@ -86,6 +114,7 @@ export default function SendTxModal({
                 },
                 onFinish: (data) => {
                     console.log('Transaction successfully sent:', data);
+                    clearTimeout(timeout);
 
                     // Create completed transaction with proper ID and URL
                     const completedTx = {
@@ -108,17 +137,21 @@ export default function SendTxModal({
                 },
                 onCancel: () => {
                     console.log('Transaction cancelled by user');
+                    clearTimeout(timeout);
                     setIsProcessing(false);
-                    setErrorMessage('Transaction was cancelled.');
+                    setErrorMessage('Transaction was cancelled. You can try again or cast your vote directly without dust transactions.');
                 }
             };
 
-            console.log('Opening STX transfer with options:', {
-                ...txOptions,
-                network: 'NetworkObject',
-                appDetails: txOptions.appDetails
-            });
+            // 3. Only set nonce if you are *sure* it's correct (no pending TXs, network state is up to date)
+            if (nonce !== undefined) {
+                console.log('Setting nonce:', nonce);
+                txOptions.nonce = nonce;
+            }
 
+            console.log('Initiating STX transfer with options:', txOptions);
+
+            // Initialize the transaction
             await openSTXTransfer(txOptions);
         } catch (error) {
             console.error('Error sending dust voting transaction:', error);
@@ -128,11 +161,30 @@ export default function SendTxModal({
                 name: error.name
             });
 
-            let errorMsg = 'Failed to send transaction. ';
+            clearTimeout(timeout);
+
+            let errorMsg = 'Failed to initiate transaction. ';
+
+            // Provide more specific error messages based on error type
             if (error.message) {
-                errorMsg += error.message;
+                if (error.message.includes('Extension context invalidated')) {
+                    errorMsg = 'Wallet extension was reloaded. Please refresh this page and try again. ';
+                } else if (error.message.includes('wallet') || error.message.includes('extension')) {
+                    errorMsg = 'Wallet connection error. Please make sure your Hiro Wallet extension is installed and unlocked. ';
+                } else if (error.message.includes('insufficient')) {
+                    errorMsg = 'Insufficient balance. Please make sure you have enough STX to complete this transaction (including network fees). ';
+                } else if (error.message.includes('network')) {
+                    errorMsg = 'Network error. Please check your internet connection and try again. ';
+                } else {
+                    errorMsg += error.message + '. ';
+                }
+            }
+
+            // Add refresh instruction for extension context errors
+            if (error.message && error.message.includes('Extension context invalidated')) {
+                errorMsg += 'Refreshing the page will re-establish the connection with your wallet.';
             } else {
-                errorMsg += 'Please try again or check your wallet connection.';
+                errorMsg += 'You can try again or cast your vote directly without dust transactions.';
             }
 
             setErrorMessage(errorMsg);
@@ -141,6 +193,10 @@ export default function SendTxModal({
     };
 
     const handleClose = () => {
+        if (transactionTimeout) {
+            clearTimeout(transactionTimeout);
+        }
+        setIsProcessing(false);
         setErrorMessage('');
         onHide();
     };
@@ -259,19 +315,89 @@ export default function SendTxModal({
                     )}
 
                     {errorMessage && (
-                        <div className={styles.field_error} style={{ marginTop: 'var(--space-3)' }}>
+                        <div className={styles.field_error} style={{
+                            marginTop: 'var(--space-3)',
+                            padding: 'var(--space-3)',
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            borderLeft: '3px solid rgb(239, 68, 68)',
+                            borderRadius: 'var(--radius-md)',
+                            fontSize: '0.875rem',
+                            lineHeight: '1.5'
+                        }}>
+                            <strong style={{ display: 'block', marginBottom: '0.25rem' }}>⚠️ Transaction Error</strong>
                             {errorMessage}
+                            
+                            {/* Vote Directly or Refresh Page button inside error box */}
+                            {errorMessage.includes('Extension context invalidated') ? (
+                                <div style={{ 
+                                    marginTop: 'var(--space-3)',
+                                    paddingTop: 'var(--space-3)',
+                                    borderTop: '1px solid rgba(239, 68, 68, 0.2)'
+                                }}>
+                                    <Button
+                                        onClick={() => window.location.reload()}
+                                        style={{
+                                            width: '100%',
+                                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                            border: 'none',
+                                            color: 'white',
+                                            padding: 'var(--space-2) var(--space-3)',
+                                            borderRadius: 'var(--radius-md)',
+                                            fontWeight: '600',
+                                            fontSize: '0.875rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px'
+                                        }}
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M17.65 6.35A7.958 7.958 0 0 0 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0 1 12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z" />
+                                        </svg>
+                                        Refresh Page
+                                    </Button>
+                                </div>
+                            ) : onVoteDirectly ? (
+                                <div style={{ 
+                                    marginTop: 'var(--space-3)',
+                                    paddingTop: 'var(--space-3)',
+                                    borderTop: '1px solid rgba(239, 68, 68, 0.2)'
+                                }}>
+                                    <Button
+                                        onClick={() => {
+                                            handleClose();
+                                            onVoteDirectly();
+                                        }}
+                                        className="action_primary_btn"
+                                        style={{
+                                            width: '100%',
+                                            padding: 'var(--space-2) var(--space-3)',
+                                            fontSize: '0.875rem',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px'
+                                        }}
+                                    >
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                                        </svg>
+                                        Vote Directly
+                                    </Button>
+                                </div>
+                            ) : null}
                         </div>
                     )}
                 </div>
             </Modal.Body>
 
             <Modal.Footer className={styles.modal_footer}>
-                <div className={styles.modal_actions}>
-                    <div className={styles.modal_main_actions}>
+                <div className={styles.modal_actions} style={{ width: '100%' }}>
+                    <div className={styles.modal_main_actions} style={{ display: 'flex', gap: 'var(--space-2)', width: '100%' }}>
                         <Button
                             onClick={handleClose}
                             className="action_secondary_btn"
+                            style={{ flex: 1 }}
                         >
                             Cancel
                         </Button>
@@ -280,6 +406,7 @@ export default function SendTxModal({
                             onClick={handleSendTransactions}
                             className="action_primary_btn"
                             disabled={isProcessing || dustTransactions.length === 0}
+                            style={{ flex: 1 }}
                         >
                             {isProcessing ? (
                                 <>
@@ -289,15 +416,11 @@ export default function SendTxModal({
                                             <path d="M12 2C17.523 2 22 6.477 22 12s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z" opacity="0.6" />
                                         </svg>
                                     </div>
-                                    Sending...
+                                    <span>Sending...</span>
                                 </>
                             ) : (
                                 <>
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4.5 1a.5.5 0 0 0-.5.5V2H2a.5.5 0 0 0 0 1h12a.5.5 0 0 0 0-1h-2v-.5a.5.5 0 0 0-.5-.5h-7zM11 2H5v.5a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5V2z" fill="currentColor" />
-                                        <path d="M15.354 3.354A.5.5 0 0 0 15 3H1a.5.5 0 0 0-.5.5v11a2.5 2.5 0 0 0 2.5 2.5h10a2.5 2.5 0 0 0 2.5-2.5v-11a.5.5 0 0 0-.146-.354z" fill="currentColor" />
-                                    </svg>
-                                    Send Transactions ({dustTransactions.length})
+                                    Send Dust Transaction
                                 </>
                             )}
                         </Button>

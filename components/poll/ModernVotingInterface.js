@@ -220,6 +220,18 @@ export default function ModernVotingInterface({
         }
     };
 
+    // Handle direct voting when user wants to skip dust transactions
+    const handleVoteDirectly = async () => {
+        // Disable dust voting
+        setEnableDustVoting(false);
+
+        // Close the send transaction modal
+        setShowSendTxModal(false);
+
+        // Handle the regular vote
+        await handleRegularVote();
+    };
+
     return (
         <div className={`${styles.card} ${styles.fade_in}`}>
             <div className={styles.card_content}>
@@ -689,6 +701,7 @@ export default function ModernVotingInterface({
                 selectedOptions={selectedOptions}
                 pollObject={pollObject}
                 onTransactionSuccess={handleTransactionSuccess}
+                onVoteDirectly={handleVoteDirectly}
             />
         </div>
     );
