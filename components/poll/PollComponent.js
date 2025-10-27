@@ -298,7 +298,7 @@ export default function PollComponent(props) {
                                                         <div className={styles.vote_count}>
                                                             {voter.votedOptions.map((option, voteIndex) => (
                                                                 <div key={voteIndex} className={styles.vote_item}>
-                                                                    {formatNumber(option.dustAmount)}
+                                                                    {formatNumber(voter.stxBalance || 0)}
                                                                     <span className={styles.token_name}>
                                                                         STX
                                                                     </span>
