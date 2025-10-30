@@ -120,11 +120,11 @@ export default function Poll(props) {
 
             // Fetch dust and BTC voting results in parallel for better performance
             const votingPromises = [];
-            
+
             if (hasDustOptions) {
                 votingPromises.push(getDustVotingResultsForPoll(pollObject));
             }
-            
+
             if (hasBtcOptions) {
                 votingPromises.push(getBtcVotingResultsForPoll(pollObject));
             }
@@ -430,19 +430,6 @@ export default function Poll(props) {
         }
     };
 
-    const filterTransactionsByDustAmount = (transactions, dustAmount) => {
-        return transactions.filter(tx => {
-            // Check for STX transfers that match the dust amount
-            if (tx.tx_type === 'token_transfer' &&
-                tx.token_transfer &&
-                tx.token_transfer.amount) {
-                const transferAmount = parseInt(tx.token_transfer.amount);
-                return transferAmount === dustAmount;
-            }
-            return false;
-        });
-    };
-
     const getUniqueAddressesFromTransactions = (transactions) => {
         const uniqueAddresses = new Set();
         const addressToOptionMap = {};
@@ -550,9 +537,7 @@ export default function Poll(props) {
                 const dustTransactions = allTransactions.filter(tx => {
                     return tx.tx_type === 'token_transfer' &&
                         tx.token_transfer &&
-                        tx.token_transfer.amount &&
-                        tx.token_transfer.recipient_address.toLowerCase() === dustAddress.toLowerCase() &&
-                        parseInt(tx.token_transfer.amount) === (dustAmount * 1000000);
+                        tx.token_transfer.recipient_address.toLowerCase() === dustAddress.toLowerCase();
                 });
 
                 // Get unique voter addresses for this option
