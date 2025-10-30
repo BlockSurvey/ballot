@@ -551,8 +551,6 @@
 
 /* Information Panel */
 .info_panel {
-    position: sticky;
-    top: var(--space-4);
     height: fit-content;
 }
 

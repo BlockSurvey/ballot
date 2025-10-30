@@ -46,6 +46,10 @@ export default function PollComponent(props) {
     const [txId, setTxId] = useState();
     const [show, setShow] = useState(false);
     const [voteObject, setVoteObject] = useState({});
+    const [showAllDustVotes, setShowAllDustVotes] = useState(false);
+    const [showAllBtcVotes, setShowAllBtcVotes] = useState(false);
+
+    const INITIAL_DISPLAY_COUNT = 10;
 
     const handleShow = () => setShow(true);
     const handleClose = () => {
@@ -231,7 +235,7 @@ export default function PollComponent(props) {
 
                                         {/* Transaction Rows */}
                                         <div>
-                                            {dustVotersList.map((voter, index) => {
+                                            {(showAllDustVotes ? dustVotersList : dustVotersList.slice(0, INITIAL_DISPLAY_COUNT)).map((voter, index) => {
                                                 const generateUserAvatar = (address) => {
                                                     if (!address) return "?";
                                                     return address.substring(0, 2).toUpperCase();
@@ -342,6 +346,37 @@ export default function PollComponent(props) {
                                             })}
                                         </div>
                                     </div>
+                                    
+                                    {/* Show All Button for Dust Votes */}
+                                    {dustVotersList.length > INITIAL_DISPLAY_COUNT && (
+                                        <div style={{
+                                            padding: 'var(--space-3)',
+                                            textAlign: 'center',
+                                            borderTop: '1px solid var(--color-border)'
+                                        }}>
+                                            <button
+                                                onClick={() => setShowAllDustVotes(!showAllDustVotes)}
+                                                style={{
+                                                    padding: '10px 20px',
+                                                    background: 'var(--color-primary)',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: '600',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                }}
+                                                onMouseOver={(e) => e.target.style.opacity = '0.9'}
+                                                onMouseOut={(e) => e.target.style.opacity = '1'}
+                                            >
+                                                {showAllDustVotes 
+                                                    ? 'Show Less' 
+                                                    : `Show All ${dustVotersList.length} Transactions`
+                                                }
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
 
@@ -411,7 +446,7 @@ export default function PollComponent(props) {
 
                                         {/* BTC Vote Rows */}
                                         <div>
-                                            {btcVotersList.map((voter, index) => {
+                                            {(showAllBtcVotes ? btcVotersList : btcVotersList.slice(0, INITIAL_DISPLAY_COUNT)).map((voter, index) => {
                                                 const generateUserAvatar = (address) => {
                                                     if (!address) return "?";
                                                     return address.substring(0, 2).toUpperCase();
@@ -533,6 +568,37 @@ export default function PollComponent(props) {
                                             })}
                                         </div>
                                     </div>
+                                    
+                                    {/* Show All Button for BTC Votes */}
+                                    {btcVotersList.length > INITIAL_DISPLAY_COUNT && (
+                                        <div style={{
+                                            padding: 'var(--space-3)',
+                                            textAlign: 'center',
+                                            borderTop: '1px solid var(--color-border)'
+                                        }}>
+                                            <button
+                                                onClick={() => setShowAllBtcVotes(!showAllBtcVotes)}
+                                                style={{
+                                                    padding: '10px 20px',
+                                                    background: 'var(--color-primary)',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: '600',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease',
+                                                }}
+                                                onMouseOver={(e) => e.target.style.opacity = '0.9'}
+                                                onMouseOut={(e) => e.target.style.opacity = '1'}
+                                            >
+                                                {showAllBtcVotes 
+                                                    ? 'Show Less' 
+                                                    : `Show All ${btcVotersList.length} Votes`
+                                                }
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
