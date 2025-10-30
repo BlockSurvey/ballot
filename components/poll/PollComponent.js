@@ -349,31 +349,20 @@ export default function PollComponent(props) {
                                     
                                     {/* Show All Button for Dust Votes */}
                                     {dustVotersList.length > INITIAL_DISPLAY_COUNT && (
-                                        <div style={{
-                                            padding: 'var(--space-3)',
-                                            textAlign: 'center',
-                                            borderTop: '1px solid var(--color-border)'
-                                        }}>
+                                        <div style={{ padding: 'var(--space-4)', textAlign: 'center', borderTop: '1px solid var(--color-border-light)' }}>
                                             <button
+                                                className={styles.load_more_button}
                                                 onClick={() => setShowAllDustVotes(!showAllDustVotes)}
-                                                style={{
-                                                    padding: '10px 20px',
-                                                    background: 'var(--color-primary)',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: 'var(--radius-md)',
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: '600',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s ease',
-                                                }}
-                                                onMouseOver={(e) => e.target.style.opacity = '0.9'}
-                                                onMouseOut={(e) => e.target.style.opacity = '1'}
                                             >
                                                 {showAllDustVotes 
                                                     ? 'Show Less' 
-                                                    : `Show All ${dustVotersList.length} Transactions`
+                                                    : `Show All Transactions`
                                                 }
+                                                {!showAllDustVotes && (
+                                                    <span style={{ marginLeft: '4px', opacity: 0.7 }}>
+                                                        ({INITIAL_DISPLAY_COUNT} of {dustVotersList.length})
+                                                    </span>
+                                                )}
                                             </button>
                                         </div>
                                     )}
@@ -571,31 +560,20 @@ export default function PollComponent(props) {
                                     
                                     {/* Show All Button for BTC Votes */}
                                     {btcVotersList.length > INITIAL_DISPLAY_COUNT && (
-                                        <div style={{
-                                            padding: 'var(--space-3)',
-                                            textAlign: 'center',
-                                            borderTop: '1px solid var(--color-border)'
-                                        }}>
+                                        <div style={{ padding: 'var(--space-4)', textAlign: 'center', borderTop: '1px solid var(--color-border-light)' }}>
                                             <button
+                                                className={styles.load_more_button}
                                                 onClick={() => setShowAllBtcVotes(!showAllBtcVotes)}
-                                                style={{
-                                                    padding: '10px 20px',
-                                                    background: 'var(--color-primary)',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: 'var(--radius-md)',
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: '600',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s ease',
-                                                }}
-                                                onMouseOver={(e) => e.target.style.opacity = '0.9'}
-                                                onMouseOut={(e) => e.target.style.opacity = '1'}
                                             >
                                                 {showAllBtcVotes 
                                                     ? 'Show Less' 
-                                                    : `Show All ${btcVotersList.length} Votes`
+                                                    : `Show All Votes`
                                                 }
+                                                {!showAllBtcVotes && (
+                                                    <span style={{ marginLeft: '4px', opacity: 0.7 }}>
+                                                        ({INITIAL_DISPLAY_COUNT} of {btcVotersList.length})
+                                                    </span>
+                                                )}
                                             </button>
                                         </div>
                                     )}
