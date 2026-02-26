@@ -419,12 +419,11 @@ export default function BuilderComponent(props) {
                 "status": pollObject.status,
                 "startAt": pollObject.startAtDate,
                 "endAt": pollObject.endAtDate,
-                "publishedInfo": pollObject?.publishedInfo,
-                "ipfsLocation": pollObject?.ipfsLocation
+                "publishedInfo": pollObject?.publishedInfo
             };
 
             putFileToGaia("pollIndex.json", JSON.stringify(currentPollIndexObj), {}).then(async (response) => {
-                if (pollObject?.ipfsLocation) {
+                if (pollObject?.status === "live") {
                     const gaiaAddress = await getGaiaAddressFromPublicKey();
                     setPublishProgress('Redirecting...');
                     Router.replace("/" + pollObject?.id + "/" + gaiaAddress);
@@ -708,70 +707,21 @@ export default function BuilderComponent(props) {
 
     const callbackFunction = (data) => {
         if (data?.txId) {
-            setPublishProgress('Contract deployed! Publishing to IPFS...');
+            setPublishProgress('Contract deployed! Saving poll...');
             // Update the contract deployed information
             pollObject.publishedInfo["txId"] = data?.txId;
 
             // Update the status
             pollObject["status"] = "live";
 
-            publishPollToIPFS();
+            // Save poll to storage
+            savePollToGaia(false);
         } else {
             setErrorMessage('Contract deployment failed. Please try again.');
             setIsPublishing(false);
             setIsProcessing(false);
             setPublishProgress('');
         }
-    }
-
-    const publishPollToIPFS = async () => {
-        setPublishProgress('Publishing to IPFS...');
-
-        // Publish JSON to IPFS
-        const data = JSON.stringify({
-            "pinataOptions": {
-                "cidVersion": 1
-            },
-            "pinataMetadata": {
-                "name": pollObject?.title,
-                "keyvalues": {
-                    "id": pollObject?.id
-                }
-            },
-            "pinataContent": pollObject
-        });
-
-        fetch('https://api.pinata.cloud/pinning/pinJSONToIPFS', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySW5mb3JtYXRpb24iOnsiaWQiOiI0MDgzMzAwOC0wNWE2LTQxNzYtYjZlNy01ZGZjYzliOTg0NTYiLCJlbWFpbCI6InJhamFAYmxvY2tzdXJ2ZXkub3JnIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsInBpbl9wb2xpY3kiOnsicmVnaW9ucyI6W3siaWQiOiJGUkExIiwiZGVzaXJlZFJlcGxpY2F0aW9uQ291bnQiOjF9XSwidmVyc2lvbiI6MX0sIm1mYV9lbmFibGVkIjpmYWxzZSwic3RhdHVzIjoiQUNUSVZFIn0sImF1dGhlbnRpY2F0aW9uVHlwZSI6InNjb3BlZEtleSIsInNjb3BlZEtleUtleSI6ImIwOWMzZjVjMTQ1ZWMxMjIwNGIxIiwic2NvcGVkS2V5U2VjcmV0IjoiMGUxMWNhZGZhMDFiMmQ3MGQ4YTJiZWMwZTRmNzBkMWJiN2I2NWZlYTA3OWQzZjNkNGI1YmQ5ODk0M2U4MTk3ZiIsImlhdCI6MTY2MTc4NjY4N30.qmkn_YrtU1jJExIpqZLN3FfMqbIzciuerWIUUutCayc'
-            },
-            body: data
-        }).then(async (response) => {
-            const responseBody = await response.json();
-
-            if (responseBody?.IpfsHash) {
-                setPublishProgress('IPFS published! Finalizing...');
-
-                // Update the IPFS location
-                pollObject["ipfsLocation"] = responseBody?.IpfsHash
-                setPollObject({ ...pollObject });
-
-                // Save poll to gaia
-                savePollToGaia(false);
-            } else {
-                setErrorMessage('Failed to publish to IPFS. Please try again.');
-                setIsPublishing(false);
-                setIsProcessing(false);
-                setPublishProgress('');
-            }
-        }).catch(error => {
-            setErrorMessage('IPFS publishing failed. Please try again.');
-            setIsPublishing(false);
-            setIsProcessing(false);
-            setPublishProgress('');
-        });
     }
 
     const getTitleWithOutSpecialChar = () => {

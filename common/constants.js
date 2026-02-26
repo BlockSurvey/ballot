@@ -11,9 +11,6 @@ export const Constants = {
   STACKS_MAINNET_API_URL: "https://api.mainnet.hiro.so",
   STACKS_TESTNET_API_URL: "https://api.testnet.hiro.so",
 
-  // IPFS gateway
-  IPFS_GATEWAY: "https://cloudflare-ipfs.com/ipfs/",
-
   VOTING_SYSTEMS: [
     {
       "id": "fptp",
