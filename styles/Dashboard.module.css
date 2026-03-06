@@ -2738,3 +2738,383 @@
         padding: var(--space-12) var(--space-4);
     }
 }
+
+/* ============================================
+   Burn Address Generator Modal
+   ============================================ */
+
+.burn_subtitle {
+    font-size: 13px;
+    color: #6b7280;
+    margin: 4px 0 0 0;
+    font-weight: 400;
+}
+
+.burn_input_section {
+    padding: 20px 32px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fafafa;
+}
+
+.burn_input_row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.burn_input_wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.burn_input_label {
+    font-size: 12px;
+    font-weight: 600;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.burn_input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #111827;
+    background: white;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.burn_input:focus {
+    border-color: #111827;
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.06);
+}
+
+.burn_input::placeholder {
+    color: #9ca3af;
+}
+
+.burn_input_hint {
+    font-size: 12px;
+    color: #9ca3af;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.burn_generate_btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    height: 42px;
+    background: #111827;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    margin-bottom: 22px;
+}
+
+.burn_generate_btn:hover:not(:disabled) {
+    background: #000;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.burn_generate_btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.burn_error {
+    color: #dc2626;
+    font-size: 13px;
+    margin: 8px 0 0 0;
+    font-weight: 500;
+}
+
+/* Empty State */
+.burn_empty_state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 32px;
+    text-align: center;
+}
+
+.burn_empty_title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+    margin: 16px 0 4px 0;
+}
+
+.burn_empty_desc {
+    font-size: 14px;
+    color: #9ca3af;
+    margin: 0;
+    max-width: 320px;
+}
+
+/* Burn Address List */
+.burn_list {
+    padding: 16px 32px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.burn_card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: white;
+    overflow: hidden;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.burn_card:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.burn_card_header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 18px;
+    cursor: pointer;
+    transition: background 0.1s ease;
+}
+
+.burn_card_header:hover {
+    background: #fafafa;
+}
+
+.burn_card_info {
+    flex: 1;
+    min-width: 0;
+}
+
+.burn_card_label_row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.burn_card_label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.burn_card_date {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.burn_card_preview {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.burn_card_addr_preview {
+    font-size: 12px;
+    color: #9ca3af;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.burn_tag_yes {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+
+.burn_tag_no {
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.burn_card_actions_row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.burn_delete_btn {
+    background: none;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: #9ca3af;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.burn_delete_btn:hover {
+    color: #dc2626;
+    background: #fef2f2;
+}
+
+.burn_chevron {
+    color: #9ca3af;
+    transition: transform 0.2s ease;
+}
+
+.burn_chevron_open {
+    transform: rotate(180deg);
+}
+
+/* Expanded Card Body */
+.burn_card_body {
+    padding: 0 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    border-top: 1px solid #f3f4f6;
+    padding-top: 16px;
+    animation: burnSlideDown 0.2s ease;
+}
+
+@keyframes burnSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.burn_address_group {
+    background: #f9fafb;
+    border-radius: 8px;
+    padding: 14px;
+    border: 1px solid #f3f4f6;
+}
+
+.burn_group_header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.burn_group_msg {
+    font-size: 13px;
+    color: #6b7280;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.burn_address_row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+}
+
+.burn_address_row + .burn_address_row {
+    border-top: 1px solid #e5e7eb;
+}
+
+.burn_address_type {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    min-width: 32px;
+}
+
+.burn_address_value {
+    flex: 1;
+    font-size: 13px;
+    color: #111827;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    word-break: break-all;
+    line-height: 1.4;
+    background: transparent;
+}
+
+.burn_copy_btn {
+    background: none;
+    border: 1px solid #e5e7eb;
+    padding: 6px;
+    cursor: pointer;
+    color: #6b7280;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+}
+
+.burn_copy_btn:hover {
+    background: #f3f4f6;
+    color: #111827;
+    border-color: #d1d5db;
+}
+
+.burn_copy_btn_copied {
+    color: #059669;
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .burn_input_row {
+        flex-direction: column;
+    }
+
+    .burn_generate_btn {
+        margin-top: 0;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .burn_list {
+        padding: 12px 16px 20px;
+    }
+
+    .burn_input_section {
+        padding: 16px;
+    }
+
+    .burn_address_row {
+        flex-wrap: wrap;
+    }
+
+    .burn_address_value {
+        font-size: 11px;
+    }
+}

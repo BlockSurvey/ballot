@@ -1312,7 +1312,22 @@ export default function BuilderComponent(props) {
                                                     {/* Fungible Token Snapshot Height */}
                                                     {pollObject?.strategyTokenType === "ft" && (
                                                         <Form.Group className={styles.form_group}>
-                                                            <Form.Label className={styles.form_label}>Snapshot Stacks Block Height (Current Height: {stacksHeight}) *</Form.Label>
+                                                            <Form.Label className={styles.form_label}>
+                                                                Snapshot Stacks Block Height (Current Height: {stacksHeight}) *
+                                                                <OverlayTrigger
+                                                                    placement="top"
+                                                                    overlay={
+                                                                        <Tooltip>
+                                                                            The snapshot block height locks voter token balances at a specific point in time. This prevents vote manipulation — users cannot buy tokens to inflate voting power or transfer tokens between wallets to vote multiple times.
+                                                                        </Tooltip>
+                                                                    }
+                                                                >
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: '6px', cursor: 'pointer', verticalAlign: 'middle', color: '#9ca3af' }}>
+                                                                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5"/>
+                                                                        <path d="M12 16v-4m0-4h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                                                                    </svg>
+                                                                </OverlayTrigger>
+                                                            </Form.Label>
                                                             <Form.Control
                                                                 type="number"
                                                                 name="snapshotBlockHeight"

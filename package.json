@@ -17,6 +17,7 @@
     "@stacks/transactions": "^6.17.0",
     "axios": "^1.12.2",
     "bootstrap": "^5.2.0",
+    "bs58check": "^4.0.0",
     "dompurify": "^3.2.7",
     "lodash": "^4.17.21",
     "nanoid": "^4.0.0",
