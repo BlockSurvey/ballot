@@ -70,6 +70,14 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus }) {
             return { label: "Closed", className: styles.status_closed };
         }
 
+        const startDate = pollObject?.startAtDateUTC ?
+            new Date(pollObject.startAtDateUTC) :
+            new Date(pollObject?.startAtDate);
+
+        if (startDate && startDate > now) {
+            return { label: "Not Started", className: styles.status_pending };
+        }
+
         return { label: "Active", className: styles.status_active };
     };
 

@@ -249,6 +249,7 @@ export default function DashboardAllPollsComponent() {
         if (poll?.archived === true) return "archived";
         if (poll?.status === "draft") return "draft";
         if (poll?.endAt && new Date(poll?.endAt) < new Date()) return "closed";
+        if (poll?.startAt && new Date(poll?.startAt) > new Date()) return "not_started";
         return "active";
     }
 
@@ -348,6 +349,9 @@ export default function DashboardAllPollsComponent() {
             if (poll?.endAt && new Date(poll?.endAt) < new Date()) {
                 return { type: "closed", label: "Closed" };
             }
+            if (poll?.startAt && new Date(poll?.startAt) > new Date()) {
+                return { type: "not_started", label: "Not Started" };
+            }
             return { type: "active", label: "Active" };
         };
 
@@ -421,6 +425,9 @@ export default function DashboardAllPollsComponent() {
             }
             if (poll?.endAt && new Date(poll?.endAt) < new Date()) {
                 return { type: "closed", label: "Closed" };
+            }
+            if (poll?.startAt && new Date(poll?.startAt) > new Date()) {
+                return { type: "not_started", label: "Not Started" };
             }
             return { type: "active", label: "Active" };
         };

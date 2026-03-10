@@ -1894,6 +1894,11 @@
     color: white;
 }
 
+.status_pill_not_started {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
 /* Polls Grid */
 .polls_grid {
     display: grid;
