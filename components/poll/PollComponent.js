@@ -116,6 +116,7 @@ export default function PollComponent(props) {
                                 pollObject={pollObject}
                                 publicUrl={publicUrl}
                                 txStatus={txStatus}
+                                currentBitcoinBlockHeight={currentBitcoinBlockHeight}
                             />
 
                             {/* Modern Voting Interface */}

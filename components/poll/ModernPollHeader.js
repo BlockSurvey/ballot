@@ -15,7 +15,7 @@ import QRCodePopup from "./QRCodePopup";
 import RichTextDisplay from "../common/RichTextDisplay";
 import styles from "../../styles/Poll.module.css";
 
-export default function ModernPollHeader({ pollObject, publicUrl, txStatus }) {
+export default function ModernPollHeader({ pollObject, publicUrl, txStatus, currentBitcoinBlockHeight }) {
     const [copyText, setCopyText] = useState("Copy");
     const [showQRCodePopup, setShowQRCodePopup] = useState(false);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -76,6 +76,16 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus }) {
 
         if (startDate && startDate > now) {
             return { label: "Not Started", className: styles.status_pending };
+        }
+
+        if (currentBitcoinBlockHeight && pollObject?.startAtBlock &&
+            currentBitcoinBlockHeight < pollObject.startAtBlock) {
+            return { label: "Not Started", className: styles.status_pending };
+        }
+
+        if (currentBitcoinBlockHeight && pollObject?.endAtBlock &&
+            currentBitcoinBlockHeight > pollObject.endAtBlock) {
+            return { label: "Closed", className: styles.status_closed };
         }
 
         return { label: "Active", className: styles.status_active };
