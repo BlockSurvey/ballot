@@ -73,7 +73,7 @@ export const Constants = {
       "strategyTokenType": "ft",
       "strategyTokenName": "newyorkcitycoin",
       "strategyContractName": "SP2H8PY27SEZ03MWRKS5XABZYQN17ETGQS3527SA5.newyorkcitycoin-token",
-      "strategyTokenDecimals": "0"
+      "strategyTokenDecimals": "6"
     }, {
       "id": "satoshibles",
       "name": "Satoshibles",

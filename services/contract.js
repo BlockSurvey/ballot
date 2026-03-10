@@ -622,6 +622,7 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
         functionName: "cast-my-vote",
         functionArgs: functionArgs,
         postConditions: [],
+        anchorMode: AnchorMode.Any,
         network: getNetworkType(),
         appDetails: {
             name: "Ballot",

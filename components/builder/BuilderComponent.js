@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
 import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
 import { deployContract } from "../../services/contract";
-import { getCurrentBlockHeights, isValidUtf8, calculateDateFromBitcoinBlockHeight, formatLocalDateTime } from "../../services/utils";
+import { getCurrentBlockHeights, isValidUtf8, calculateDateFromBitcoinBlockHeight, formatLocalDateTime, calculateBlockHeightFromDate } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
 import RichTextEditor, { stripHtmlTags, isEditorEmpty } from "../common/RichTextEditor";
@@ -644,6 +644,35 @@ export default function BuilderComponent(props) {
         return 0;
     }
 
+    const handleDateChange = (e) => {
+        const { name, value } = e.target;
+
+        if (name === "startAtDateInput") {
+            const blockHeight = calculateBlockHeightFromDate(bitcoinHeight, value);
+            pollObject["startAtBlock"] = blockHeight;
+            // Also update local date state for the input
+            pollObject["startAtDateInput"] = value;
+        } else if (name === "endAtDateInput") {
+            const blockHeight = calculateBlockHeightFromDate(bitcoinHeight, value);
+            pollObject["endAtBlock"] = blockHeight;
+            // Also update local date state for the input
+            pollObject["endAtDateInput"] = value;
+        }
+
+        setPollObject({ ...pollObject });
+
+        // Clear errors if any
+        if (name === "startAtDateInput" && fieldErrors.startAtBlock) {
+            const newErrors = { ...fieldErrors };
+            delete newErrors.startAtBlock;
+            setFieldErrors(newErrors);
+        } else if (name === "endAtDateInput" && fieldErrors.endAtBlock) {
+            const newErrors = { ...fieldErrors };
+            delete newErrors.endAtBlock;
+            setFieldErrors(newErrors);
+        }
+    }
+
     const calculateDate = (blockHeight, currentBlockHeight) => {
         if (blockHeight && currentBlockHeight && blockHeight > 0 && currentBlockHeight > 0 &&
             blockHeight > currentBlockHeight) {
@@ -975,10 +1004,10 @@ export default function BuilderComponent(props) {
                                                                             </svg>
                                                                             <span style={{ fontSize: '0.75rem', lineHeight: '1' }}>
                                                                                 Dust: <span style={{ fontFamily: 'monospace', fontWeight: '600' }}>
-                                                                                {option.dustAddress.length > 16 ? 
-                                                                                    `${option.dustAddress.substring(0, 6)}...${option.dustAddress.substring(option.dustAddress.length - 4)}` :
-                                                                                    option.dustAddress
-                                                                                }</span> ({option.dustAmount} STX)
+                                                                                    {option.dustAddress.length > 16 ?
+                                                                                        `${option.dustAddress.substring(0, 6)}...${option.dustAddress.substring(option.dustAddress.length - 4)}` :
+                                                                                        option.dustAddress
+                                                                                    }</span> ({option.dustAmount} STX)
                                                                             </span>
                                                                         </div>
                                                                     )}
@@ -1045,16 +1074,13 @@ export default function BuilderComponent(props) {
 
                                             <div className={styles.voting_period_grid}>
                                                 <Form.Group className={styles.form_group}>
-                                                    <Form.Label className={styles.form_label}>Start Bitcoin Block Height *</Form.Label>
+                                                    <Form.Label className={styles.form_label}>Start Date & Time ({Intl.DateTimeFormat().resolvedOptions().timeZone}) *</Form.Label>
                                                     <Form.Control
-                                                        type="number"
-                                                        name="startAtBlock"
-                                                        value={pollObject.startAtBlock || ''}
-                                                        placeholder={`e.g. ${bitcoinHeight + 10}`}
-                                                        onChange={handleChange}
+                                                        type="datetime-local"
+                                                        name="startAtDateInput"
+                                                        value={pollObject.startAtDateInput || ''}
+                                                        onChange={handleDateChange}
                                                         className={`${styles.form_input} ${fieldErrors.startAtBlock ? styles.error : ''}`}
-                                                        min={bitcoinHeight}
-                                                        ref={startAtBlockRef}
                                                     />
                                                     {fieldErrors.startAtBlock ? (
                                                         <small className={styles.field_error}>
@@ -1062,22 +1088,20 @@ export default function BuilderComponent(props) {
                                                         </small>
                                                     ) : (
                                                         <small className={styles.field_hint}>
-                                                            Must be {bitcoinHeight} or higher
+                                                            Estimated Start Block: {pollObject.startAtBlock || '-'}
                                                         </small>
                                                     )}
                                                 </Form.Group>
 
                                                 <Form.Group className={styles.form_group}>
-                                                    <Form.Label className={styles.form_label}>End Bitcoin Block Height *</Form.Label>
+                                                    <Form.Label className={styles.form_label}>End Date & Time ({Intl.DateTimeFormat().resolvedOptions().timeZone}) *</Form.Label>
                                                     <Form.Control
-                                                        type="number"
-                                                        name="endAtBlock"
-                                                        value={pollObject.endAtBlock || ''}
-                                                        placeholder={`e.g. ${bitcoinHeight + 100}`}
-                                                        onChange={handleChange}
+                                                        type="datetime-local"
+                                                        name="endAtDateInput"
+                                                        value={pollObject.endAtDateInput || ''}
+                                                        onChange={handleDateChange}
                                                         className={`${styles.form_input} ${fieldErrors.endAtBlock ? styles.error : ''}`}
-                                                        min={pollObject.startAtBlock || bitcoinHeight + 1}
-                                                        ref={endAtBlockRef}
+                                                        min={pollObject.startAtDateInput}
                                                     />
                                                     {fieldErrors.endAtBlock ? (
                                                         <small className={styles.field_error}>
@@ -1085,7 +1109,7 @@ export default function BuilderComponent(props) {
                                                         </small>
                                                     ) : (
                                                         <small className={styles.field_hint}>
-                                                            Must be greater than start block
+                                                            Estimated End Block: {pollObject.endAtBlock || '-'}
                                                         </small>
                                                     )}
                                                 </Form.Group>

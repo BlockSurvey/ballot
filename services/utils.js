@@ -283,7 +283,7 @@ export const calculateDateByBlockHeight = (currentBlockHeight, targetBlockHeight
 
 export const calculateDateFromBitcoinBlockHeight = (currentBitcoinBlockHeight, targetBitcoinBlockHeight) => {
     // Validate inputs
-    if (!targetBitcoinBlockHeight || !currentBitcoinBlockHeight || 
+    if (!targetBitcoinBlockHeight || !currentBitcoinBlockHeight ||
         targetBitcoinBlockHeight <= 0 || currentBitcoinBlockHeight <= 0) {
         console.warn('Invalid block heights:', { currentBitcoinBlockHeight, targetBitcoinBlockHeight });
         return new Date();
@@ -295,6 +295,26 @@ export const calculateDateFromBitcoinBlockHeight = (currentBitcoinBlockHeight, t
 
     // Calculate the date based on the difference (can be positive for future or negative for past)
     const calculatedDate = new Date(new Date().getTime() + (minutes * 60 * 1000));
-    
+
     return calculatedDate;
+}
+// Calculate block height from date
+export const calculateBlockHeightFromDate = (currentBitcoinBlockHeight, targetDate) => {
+    if (!targetDate || !currentBitcoinBlockHeight || currentBitcoinBlockHeight <= 0) {
+        return 0;
+    }
+
+    const targetTime = new Date(targetDate).getTime();
+    const currentTime = new Date().getTime();
+
+    // Difference in milliseconds
+    const diff = targetTime - currentTime;
+
+    // Bitcoin blocks are mined approximately every 10 minutes (600,000 ms)
+    const blocksDiff = Math.ceil(diff / (10 * 60 * 1000));
+
+    const targetBlockHeight = currentBitcoinBlockHeight + blocksDiff;
+
+    // Ensure we return at least current block height
+    return Math.max(currentBitcoinBlockHeight, targetBlockHeight);
 }

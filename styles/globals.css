@@ -81,6 +81,7 @@ div {
     border-radius: 4px;
     min-width: 184px;
 }
+
 .dropdown-toggle {
     padding: 6px 0px !important;
     background-color: transparent !important;
@@ -91,12 +92,15 @@ div {
     align-items: center;
     column-gap: 6px;
 }
+
 .dropdown-toggle:hover {
     color: rgba(0, 0, 0, 1);
 }
+
 .dropdown-toggle:focus {
     color: rgba(0, 0, 0, 1);
 }
+
 .dropdown-toggle::after {
     content: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
     width: 12px;
@@ -145,22 +149,26 @@ div {
     border-radius: 8px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .action_primary_btn:hover:not(:disabled) {
     background-color: #333333;
     border-color: #333333;
     color: #ffffff !important;
 }
+
 .action_primary_btn:focus:not(:disabled) {
     background-color: #333333;
     border-color: #333333;
     color: #ffffff !important;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.15);
 }
+
 .action_primary_btn:active:not(:disabled) {
     background-color: #000000;
     border-color: #000000;
     transform: scale(0.98);
 }
+
 .action_primary_btn:disabled {
     background-color: #f0f0f0 !important;
     border-color: #e6e6e6 !important;
@@ -186,21 +194,25 @@ div {
     border-radius: 8px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .action_secondary_btn:hover:not(:disabled) {
     background-color: #fafafa;
     color: #000000 !important;
     border-color: #000000 !important;
 }
+
 .action_secondary_btn:focus:not(:disabled) {
     background-color: #fafafa;
     color: #000000 !important;
     border-color: #000000;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }
+
 .action_secondary_btn:active:not(:disabled) {
     background-color: #f0f0f0;
     transform: scale(0.98);
 }
+
 .action_secondary_btn:disabled {
     background-color: #f0f0f0 !important;
     border-color: #e6e6e6 !important;
@@ -226,21 +238,25 @@ div {
     border-radius: 8px;
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .action_tertiary_btn:hover:not(:disabled) {
     background-color: #fafafa;
     color: #000000 !important;
     border-color: #333333;
 }
+
 .action_tertiary_btn:focus:not(:disabled) {
     background-color: #fafafa;
     color: #000000 !important;
     border-color: #000000;
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }
+
 .action_tertiary_btn:active:not(:disabled) {
     background-color: #f0f0f0;
     transform: scale(0.98);
 }
+
 .action_tertiary_btn:disabled {
     background-color: #f0f0f0 !important;
     border-color: #e6e6e6 !important;
@@ -263,19 +279,23 @@ div {
     column-gap: 6px;
     box-shadow: none;
 }
+
 .action_dashed_btn:hover {
     background-color: rgba(0, 0, 0, 0.04);
 }
+
 .action_dashed_btn:focus {
     color: black;
     background-color: rgba(0, 0, 0, 0.04);
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
 }
+
 .action_dashed_btn:active {
     color: black;
     background-color: rgba(0, 0, 0, 0.04);
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
 }
+
 .action_dashed_btn:disabled {
     box-shadow: none;
     background-color: transparent;
@@ -285,6 +305,7 @@ div {
 .ballot_links {
     color: rgba(0, 0, 0, 0.7);
 }
+
 .ballot_links:hover {
     color: rgba(0, 0, 0, 0.9);
 }
@@ -300,6 +321,7 @@ div {
     background-color: rgba(236, 239, 241, 0.6);
     border: transparent;
 }
+
 .ballot_input:focus {
     background-color: rgba(236, 239, 241, 0.6);
     box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25);
@@ -307,6 +329,7 @@ div {
 
 /* Text truncate */
 .text_truncate_2 {
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -318,6 +341,7 @@ div {
     background-color: #000;
     border-color: #000;
 }
+
 .form-check-input:focus {
     border-color: #000;
     outline: 0;
@@ -579,13 +603,14 @@ div {
 
 /* === MOBILE RESPONSIVE === */
 @media (max-width: 768px) {
+
     /* Show dropdown buttons on mobile without hover */
     .table-actions-dropdown .dropdown-toggle,
     .card-actions-dropdown .dropdown-toggle {
         opacity: 1;
         transform: scale(1);
     }
-    
+
     /* Larger touch targets on mobile */
     .table-actions-dropdown .dropdown-toggle,
     .card-actions-dropdown .dropdown-toggle {
@@ -593,14 +618,14 @@ div {
         height: 36px;
         padding: 10px !important;
     }
-    
+
     /* Larger dropdown items for better touch */
     .table-actions-dropdown .dropdown-item,
     .card-actions-dropdown .dropdown-item {
         padding: 14px 16px;
         font-size: 16px;
     }
-    
+
     /* Improved mobile dropdown positioning */
     .card-actions-dropdown {
         top: 8px;
@@ -637,7 +662,7 @@ div {
     background: #eeeeee;
 }
 
-.block_heights_section > .block_height_label {
+.block_heights_section>.block_height_label {
     color: #666;
     font-weight: 600;
     font-size: 13px;
@@ -679,8 +704,8 @@ div {
         font-size: 14px !important;
     }
 
-    /* Hide New Poll button on mobile */
-    .action_secondary_btn {
+    /* Hide New Poll button on mobile - Scoped to Nav Actions */
+    .nav_actions .action_secondary_btn {
         display: none;
     }
 }
