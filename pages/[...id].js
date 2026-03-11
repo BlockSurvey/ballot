@@ -823,7 +823,7 @@ export default function Poll(props) {
             </Head>
 
             {/* Navigation */}
-            <DashboardNavBarComponent />
+            <DashboardNavBarComponent isPollPage={true} />
 
             {/* Main Poll Content */}
             <PollComponent

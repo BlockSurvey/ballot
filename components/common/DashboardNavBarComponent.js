@@ -8,7 +8,7 @@ import { getCurrentBlockHeights, getDomainNamesFromBlockchain } from "../../serv
 import ModernMyVotesModal from "./ModernMyVotesModal";
 import BurnAddressGeneratorModal from "./BurnAddressGeneratorModal";
 
-export function DashboardNavBarComponent() {
+export function DashboardNavBarComponent({ isPollPage = false }) {
     // Variables
     const [displayUsername, setDisplayUsername] = useState();
     const [isUserSignedIn, setIsUserSignedIn] = useState(false);
@@ -185,7 +185,7 @@ export function DashboardNavBarComponent() {
                                         </svg>
                                         Share feedback
                                     </Dropdown.Item>
-                                    <Dropdown.Item onClick={() => signOut()}>
+                                    <Dropdown.Item onClick={() => signOut(isPollPage ? window?.location?.href : undefined)}>
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
                                             <path fillRule="evenodd" clipRule="evenodd" d="M10 2.5a.5.5 0 00-.5-.5h-7a.5.5 0 00-.5.5v11a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V12a1 1 0 112 0v1.5A2.5 2.5 0 019.5 16h-7A2.5 2.5 0 010 13.5v-11A2.5 2.5 0 012.5 0h7A2.5 2.5 0 0112 2.5V4a1 1 0 11-2 0V2.5zM15.854 7.146a.5.5 0 010 .708l-3 3a.5.5 0 01-.708-.708L14.293 8H5a.5.5 0 010-1h9.293l-2.147-2.146a.5.5 0 01.708-.708l3 3z" fill="currentColor" />
                                         </svg>

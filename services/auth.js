@@ -84,12 +84,12 @@ export function switchAccount(redirectTo) {
 /**
  * Sign out
  */
-export function signOut() {
+export function signOut(redirectTo) {
   // Logout
   userSession.signUserOut();
 
-  // Redirect to dashboard
-  window.location.assign("/");
+  // If a redirect URL is provided, stay on that page; otherwise go to home
+  window.location.assign(redirectTo || "/");
 }
 
 /**

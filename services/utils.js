@@ -70,6 +70,11 @@ export function convertToDisplayDateFormat(date) {
     return new Date(date).toLocaleDateString('general', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', hour12: true, minute: 'numeric' })
 }
 
+function shortenStxAddress(address) {
+    if (!address || address.length <= 8) return address;
+    return address.substring(0, 4) + "..." + address.substring(address.length - 4);
+}
+
 // Fetch and store once
 var displayUsername;
 export async function getDomainNamesFromBlockchain() {
@@ -116,14 +121,16 @@ export async function getDomainNamesFromBlockchain() {
                 displayUsername = responseObject.names?.[0];
             }
         } else {
-            // Fallback to identity address
-            displayUsername = getUserData()?.identityAddress;
+            // Fallback to shortened STX address (e.g. SP2F...TQT9)
+            const stxAddr = getMyStxAddress();
+            displayUsername = shortenStxAddress(stxAddr);
         }
     } catch (error) {
         console.error("Error fetching domain names from blockchain:", error);
-        // Fallback to identity address on error
+        // Fallback to shortened STX address on error
         try {
-            displayUsername = getUserData()?.identityAddress || getMyStxAddress();
+            const stxAddr = getMyStxAddress();
+            displayUsername = shortenStxAddress(stxAddr);
         } catch (fallbackError) {
             console.error("Error getting fallback identity:", fallbackError);
             displayUsername = getMyStxAddress();
@@ -267,8 +274,11 @@ export function formatLocalDateTime(dateTimeStr) {
     const minuteFormatted = minutes < 10 ? '0' + minutes : minutes;
     const amPm = hours < 12 ? 'am' : 'pm';
 
-    // Construct the formatted string
-    return `${day} ${month} ${year}, ${hourFormatted}:${minuteFormatted} ${amPm}`;
+    // Get the user's timezone abbreviation (e.g., "EST", "PST", "IST")
+    const timeZone = date.toLocaleString('en-US', { timeZoneName: 'short' }).split(' ').pop();
+
+    // Construct the formatted string with timezone
+    return `${day} ${month} ${year}, ${hourFormatted}:${minuteFormatted} ${amPm} ${timeZone}`;
 }
 
 export const calculateDateByBlockHeight = (currentBlockHeight, targetBlockHeight) => {
