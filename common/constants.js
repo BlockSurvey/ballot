@@ -10,6 +10,7 @@ export const Constants = {
   // Stacks API URLs
   STACKS_MAINNET_API_URL: "https://api.mainnet.hiro.so",
   STACKS_TESTNET_API_URL: "https://api.testnet.hiro.so",
+  STACKS_QUICKNODE_API_URL: "https://fluent-shy-spree.stacks-mainnet.quiknode.pro/f706115c0c08193fe0e01710ba09e6e3a11b35f8",
 
   VOTING_SYSTEMS: [
     {

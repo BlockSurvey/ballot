@@ -383,9 +383,14 @@ export default function Poll(props) {
 
     const getSTXHolding = async () => {
         try {
-            const response = await fetch(`${getStacksAPIPrefix()}/extended/v1/address/${getMyStxAddress()}/stx` +
+            const isMainnet = Constants.STACKS_MAINNET_FLAG;
+            const baseUrl = isMainnet
+                ? Constants.STACKS_QUICKNODE_API_URL
+                : getStacksAPIPrefix();
+            const headers = isMainnet ? { "Accept": "application/json" } : getStacksAPIHeaders();
+            const response = await fetch(`${baseUrl}/extended/v1/address/${getMyStxAddress()}/stx` +
                 (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : ""),
-                { headers: getStacksAPIHeaders() });
+                { headers });
 
             if (!response.ok) {
                 console.error(`Failed to fetch STX holdings: ${response.status} ${response.statusText}`);
@@ -450,9 +455,14 @@ export default function Poll(props) {
 
     const fetchStxBalanceAtSnapshot = async (address, snapshotHeight) => {
         try {
-            const url = `${getStacksAPIPrefix()}/extended/v1/address/${address}/stx` +
+            const isMainnet = Constants.STACKS_MAINNET_FLAG;
+            const baseUrl = isMainnet
+                ? Constants.STACKS_QUICKNODE_API_URL
+                : getStacksAPIPrefix();
+            const url = `${baseUrl}/extended/v1/address/${address}/stx` +
                 (snapshotHeight ? `?until_block=${snapshotHeight}` : "");
-            const response = await fetch(url, { headers: getStacksAPIHeaders() });
+            const headers = isMainnet ? { "Accept": "application/json" } : getStacksAPIHeaders();
+            const response = await fetch(url, { headers });
 
             if (!response.ok) {
                 console.warn(`Failed to fetch STX balance for ${address}: ${response.status} ${response.statusText}`);
