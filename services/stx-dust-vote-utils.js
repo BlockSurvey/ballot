@@ -69,7 +69,7 @@ export const fetchStxBalanceAtSnapshot = async (address, snapshotHeight) => {
 
         if (!response.ok) {
             console.warn(`Failed to fetch STX balance for ${address}: ${response.status} ${response.statusText}`);
-            return { total: 0, locked: 0, unlocked: 0 };
+            return null;
         }
 
         const responseObject = await response.json();
@@ -85,7 +85,7 @@ export const fetchStxBalanceAtSnapshot = async (address, snapshotHeight) => {
         };
     } catch (error) {
         console.warn(`Error fetching STX balance for ${address}:`, error);
-        return { total: 0, locked: 0, unlocked: 0 };
+        return null;
     }
 };
 
@@ -119,13 +119,20 @@ export const processDustVotingBalancesWithCache = async (uniqueVoters, pollId, s
             balanceData = cachedBalances[voterAddress];
         } else {
             // Fetch from API
-            balanceData = await fetchStxBalanceAtSnapshot(voterAddress, snapshotHeight);
-            // Store for caching later
-            balancesToCache[voterAddress] = {
-                locked: balanceData.locked,
-                unlocked: balanceData.unlocked,
-                total: balanceData.total
-            };
+            const fetchedData = await fetchStxBalanceAtSnapshot(voterAddress, snapshotHeight);
+            if (fetchedData) {
+                // Only cache successful API responses
+                balanceData = fetchedData;
+                balancesToCache[voterAddress] = {
+                    locked: balanceData.locked,
+                    unlocked: balanceData.unlocked,
+                    total: balanceData.total
+                };
+            } else {
+                // API call failed - use zero fallback but do NOT cache it
+                console.warn(`  Skipping cache for ${voterAddress} due to API failure`);
+                balanceData = { total: 0, locked: 0, unlocked: 0 };
+            }
         }
 
         balanceResults.push({ voterAddress, balanceData });
