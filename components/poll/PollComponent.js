@@ -41,6 +41,7 @@ export default function PollComponent(props) {
         btcVotingResults,
         btcVotersList,
         btcVotingLoading,
+        recountLoading,
     } = props;
 
     const [txId, setTxId] = useState();
@@ -156,6 +157,7 @@ export default function PollComponent(props) {
                                     btcVotingResults={btcVotingResults}
                                     btcVotersList={btcVotersList}
                                     btcVotingLoading={btcVotingLoading}
+                                    recountLoading={recountLoading}
                                 />
                             </div>
 

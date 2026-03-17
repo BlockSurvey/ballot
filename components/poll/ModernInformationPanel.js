@@ -9,7 +9,7 @@ import {
 } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 
-export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes, dustVotingResults, dustVotersList, dustVotingLoading, btcVotingResults, btcVotersList, btcVotingLoading }) {
+export default function ModernInformationPanel({ pollObject, resultsByOption, currentBitcoinBlockHeight, totalVotes, totalUniqueVotes, dustVotingResults, dustVotersList, dustVotingLoading, btcVotingResults, btcVotersList, btcVotingLoading, recountLoading }) {
     const votingSystemInfo = useMemo(() => {
         return Constants.VOTING_SYSTEMS.find(system => system.id === pollObject?.votingSystem);
     }, [pollObject?.votingSystem]);
@@ -145,7 +145,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                 <div className={styles.info_card_header}>
                     <h3 className={styles.info_card_title}>
                         Poll Results
-                        {(dustVotingLoading || btcVotingLoading) && (
+                        {(dustVotingLoading || btcVotingLoading || recountLoading) && (
                             <span style={{
                                 marginLeft: '8px',
                                 fontSize: '0.625rem',
@@ -162,7 +162,7 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                     background: '#F59E0B',
                                     animation: 'pulse 1.5s ease-in-out infinite'
                                 }} />
-                                Processing {dustVotingLoading && btcVotingLoading ? 'STX & BTC' : dustVotingLoading ? 'STX' : 'BTC'} Dust Votes
+                                {recountLoading ? 'Recounting Votes...' : `Processing ${dustVotingLoading && btcVotingLoading ? 'STX & BTC' : dustVotingLoading ? 'STX' : 'BTC'} Dust Votes`}
                             </span>
                         )}
                     </h3>

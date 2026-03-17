@@ -58,6 +58,9 @@ export default function Poll(props) {
     // Dust transaction voting loading
     const [dustVotingLoading, setDustVotingLoading] = useState(false);
 
+    // Recount voting (for polls with wrong snapshot height on-chain)
+    const [recountLoading, setRecountLoading] = useState(false);
+
     // Helper function to strip HTML tags from text
     const stripHtmlTags = (html) => {
         if (!html) return "";
@@ -95,8 +98,14 @@ export default function Poll(props) {
             // Fetch token holdings
             fetchTokenHoldings(pollObject);
 
-            // Fetch results
-            getPollResults(pollObject);
+            // Check if recount is required (poll deployed with wrong snapshot height)
+            if (pollObject?.recountRequired) {
+                // Recount: fetch contract transactions and recalculate with correct snapshot height
+                getRecountedResultsForPoll(pollObject);
+            } else {
+                // Normal: fetch results from on-chain contract
+                getPollResults(pollObject);
+            }
 
             // Fetch result by user
             getResultByUser(pollObject);
@@ -498,6 +507,291 @@ export default function Poll(props) {
         return results;
     };
 
+    // Helper to extract values from Clarity list CV
+    const extractClarityListValues = (value) => {
+        if (Array.isArray(value)) {
+            return value.map(v => {
+                if (typeof v === 'object' && v !== null && 'value' in v) return v.value;
+                return v;
+            });
+        }
+        if (value && typeof value === 'object' && Array.isArray(value.value)) {
+            return value.value.map(v => {
+                if (typeof v === 'object' && v !== null && 'value' in v) return v.value;
+                return v;
+            });
+        }
+        return [];
+    };
+
+    // Fallback: parse Clarity repr string list like (list "opt1" "opt2")
+    const parseReprStringList = (repr) => {
+        if (!repr) return [];
+        return [...repr.matchAll(/"([^"]*)"/g)].map(m => m[1]);
+    };
+
+    // Fallback: parse Clarity repr uint list like (list u100 u200)
+    const parseReprUintList = (repr) => {
+        if (!repr) return [];
+        return [...repr.matchAll(/u(\d+)/g)].map(m => parseInt(m[1]));
+    };
+
+    // Fetch FT balance at snapshot height for recount
+    const fetchFtBalanceAtSnapshot = async (address, snapshotHeight, strategyContractName, strategyTokenName, strategyTokenDecimals) => {
+        try {
+            const url = `${getStacksAPIPrefix()}/extended/v1/address/${address}/balances` +
+                (snapshotHeight ? `?until_block=${snapshotHeight}` : "");
+            const response = await fetch(url, { headers: getStacksAPIHeaders() });
+            if (!response.ok) return 0;
+
+            const data = await response.json();
+            const tokenKey = `${strategyContractName}::${strategyTokenName}`;
+            const tokenBalance = data?.fungible_tokens?.[tokenKey]?.balance;
+
+            if (!tokenBalance || tokenBalance === "0") return 0;
+
+            let tokenDecimalsPowerOfTen = 1000000;
+            if (strategyTokenDecimals !== undefined && parseInt(strategyTokenDecimals) >= 0) {
+                tokenDecimalsPowerOfTen = Math.pow(10, parseInt(strategyTokenDecimals));
+            }
+
+            return Math.floor(parseInt(tokenBalance) / tokenDecimalsPowerOfTen);
+        } catch (error) {
+            console.warn(`Error fetching FT balance for ${address}:`, error);
+            return 0;
+        }
+    };
+
+    // Recount votes by fetching contract transactions and recalculating with correct snapshot height
+    const getRecountedResultsForPoll = async (pollObject) => {
+        setRecountLoading(true);
+        try {
+            const contractAddress = pollObject?.publishedInfo?.contractAddress;
+            const contractName = pollObject?.publishedInfo?.contractName;
+            const snapshotHeight = pollObject?.snapshotBlockHeight;
+            const contractId = `${contractAddress}.${contractName}`;
+
+            if (!contractAddress || !contractName) return;
+
+            console.log(`Recounting votes for contract ${contractId} at snapshot height ${snapshotHeight}...`);
+
+            // Step 1: Fetch all transactions for the contract
+            let allTransactions = [];
+            let offset = 0;
+            const limit = 50;
+            let hasMore = true;
+
+            while (hasMore) {
+                const txData = await fetchAllTransactionsForAddress(contractId, limit, offset);
+                if (txData.results) {
+                    allTransactions = [...allTransactions, ...txData.results];
+                }
+                hasMore = txData.results?.length === limit && allTransactions.length < txData.total;
+                offset += limit;
+                if (offset > 10000) break;
+            }
+
+            console.log(`  Found ${allTransactions.length} total transactions for contract`);
+
+            // Step 2: Filter for cast-my-vote calls (including failed transactions)
+            const voteTransactions = allTransactions.filter(tx =>
+                tx.tx_type === 'contract_call' &&
+                tx.contract_call?.function_name === 'cast-my-vote'
+            );
+
+            console.log(`  Found ${voteTransactions.length} vote transactions (success + failed)`);
+
+            if (voteTransactions.length === 0) {
+                setTotalVotes(0);
+                setTotalUniqueVotes(0);
+                setNoOfResultsLoaded(0);
+                return;
+            }
+
+            // Step 3: Parse vote data from each transaction's function arguments
+            const voterData = [];
+            for (const tx of voteTransactions) {
+                const voteArg = tx.contract_call?.function_args?.find(arg => arg.name === 'vote');
+                const volumeArg = tx.contract_call?.function_args?.find(arg => arg.name === 'volume');
+
+                let voteOptions = [];
+                let voteVolumes = [];
+
+                // Parse vote options (list of string-ascii option IDs)
+                if (voteArg?.hex) {
+                    try {
+                        const value = cvToValue(hexToCV(voteArg.hex));
+                        voteOptions = extractClarityListValues(value);
+                    } catch (e) {
+                        voteOptions = parseReprStringList(voteArg?.repr);
+                    }
+                }
+
+                // Parse vote volumes (list of uint)
+                if (volumeArg?.hex) {
+                    try {
+                        const value = cvToValue(hexToCV(volumeArg.hex));
+                        voteVolumes = extractClarityListValues(value).map(v => parseInt(v));
+                    } catch (e) {
+                        voteVolumes = parseReprUintList(volumeArg?.repr);
+                    }
+                }
+
+                if (voteOptions.length > 0) {
+                    voterData.push({
+                        address: tx.sender_address,
+                        voteOptions,
+                        voteVolumes,
+                        txId: tx.tx_id
+                    });
+                }
+            }
+
+            console.log(`  Parsed ${voterData.length} voter records`);
+
+            // Step 4: Fetch each voter's balance at the correct snapshot height
+            const uniqueAddresses = [...new Set(voterData.map(v => v.address))];
+            const pollIdForCache = pollObject?.id || contractId;
+            let balanceMap = {};
+
+            if (pollObject?.votingStrategyTemplate === 'stx' || !pollObject?.strategyContractName) {
+                // STX strategy - use existing dust voting cache mechanism
+                const balanceResults = await processDustVotingBalancesWithCache(
+                    uniqueAddresses, `${pollIdForCache}-recount`, snapshotHeight
+                );
+                for (const { voterAddress, balanceData } of balanceResults) {
+                    balanceMap[voterAddress] = {
+                        total: balanceData.total,
+                        locked: balanceData.locked,
+                        unlocked: balanceData.unlocked
+                    };
+                }
+            } else if (pollObject?.strategyContractName && pollObject?.strategyTokenName) {
+                // FT strategy - fetch token balances
+                for (const address of uniqueAddresses) {
+                    const balance = await fetchFtBalanceAtSnapshot(
+                        address, snapshotHeight,
+                        pollObject.strategyContractName,
+                        pollObject.strategyTokenName,
+                        pollObject.strategyTokenDecimals
+                    );
+                    balanceMap[address] = { total: balance, locked: 0, unlocked: balance };
+                }
+            }
+
+            console.log(`  Fetched balances for ${uniqueAddresses.length} unique voters`);
+
+            // Step 5: Recalculate results based on voting system
+            const recountedResults = {};
+            let recountedTotalVotes = 0;
+
+            // Initialize options
+            pollObject?.options?.forEach(option => {
+                recountedResults[option.id] = {
+                    total: 0,
+                    percentage: "0.00",
+                    lockedStx: "0",
+                    unlockedStx: "0"
+                };
+            });
+
+            // Build individual results for display
+            const recountedResultsByPosition = {};
+            let voteIndex = 0;
+
+            for (const voter of voterData) {
+                const balance = balanceMap[voter.address];
+                if (!balance || balance.total <= 0) continue;
+
+                const votingPower = balance.total;
+                let voterTotalVotes = 0;
+
+                if (pollObject?.votingSystem === 'fptp' || pollObject?.votingSystem === 'block') {
+                    // FPTP/Block: each selected option gets the full voting power
+                    voter.voteOptions.forEach(optionId => {
+                        if (recountedResults[optionId]) {
+                            recountedResults[optionId].total += votingPower;
+                            recountedResults[optionId].lockedStx = String(
+                                parseInt(recountedResults[optionId].lockedStx) + balance.locked
+                            );
+                            recountedResults[optionId].unlockedStx = String(
+                                parseInt(recountedResults[optionId].unlockedStx) + balance.unlocked
+                            );
+                        }
+                    });
+                    voterTotalVotes = votingPower;
+                    recountedTotalVotes += votingPower;
+                } else if (pollObject?.votingSystem === 'weighted') {
+                    // Weighted: use original volume distribution, scale if needed
+                    const totalVolume = voter.voteVolumes.reduce((a, b) => a + b, 0);
+                    if (totalVolume > 0) {
+                        const scale = votingPower >= totalVolume ? 1 : votingPower / totalVolume;
+                        voter.voteOptions.forEach((optionId, i) => {
+                            const votes = scale === 1 ? voter.voteVolumes[i] : Math.floor(voter.voteVolumes[i] * scale);
+                            if (recountedResults[optionId]) {
+                                recountedResults[optionId].total += votes;
+                            }
+                            voterTotalVotes += votes;
+                            recountedTotalVotes += votes;
+                        });
+                    }
+                } else if (pollObject?.votingSystem === 'quadratic') {
+                    // Quadratic: preserve volumes if within new voting power
+                    const quadraticCost = voter.voteVolumes.reduce((a, v) => a + v * v, 0);
+                    if (votingPower >= quadraticCost) {
+                        voter.voteOptions.forEach((optionId, i) => {
+                            if (recountedResults[optionId]) {
+                                recountedResults[optionId].total += voter.voteVolumes[i];
+                            }
+                            voterTotalVotes += voter.voteVolumes[i];
+                            recountedTotalVotes += voter.voteVolumes[i];
+                        });
+                    }
+                }
+
+                // Build position-based result for individual vote display
+                // Must match the flat format expected by ModernVotingActivity:
+                // { address, vote: {optionId: count}, votingPower, lockedStx, unlockedStx }
+                voteIndex++;
+                const voteObj = {};
+                voter.voteOptions.forEach((optionId, i) => {
+                    if (pollObject?.votingSystem === 'fptp' || pollObject?.votingSystem === 'block') {
+                        voteObj[optionId] = votingPower;
+                    } else {
+                        voteObj[optionId] = voter.voteVolumes[i] || 0;
+                    }
+                });
+                recountedResultsByPosition[voteIndex] = {
+                    address: voter.address,
+                    vote: voteObj,
+                    votingPower: votingPower,
+                    lockedStx: String(balance.locked || 0),
+                    unlockedStx: String(balance.unlocked || 0)
+                };
+            }
+
+            // Calculate percentages
+            for (const optionId in recountedResults) {
+                recountedResults[optionId].percentage = recountedTotalVotes > 0
+                    ? ((recountedResults[optionId].total / recountedTotalVotes) * 100).toFixed(2)
+                    : "0.00";
+            }
+
+            console.log(`  Recount complete: ${recountedTotalVotes} total votes from ${voterData.length} voters`);
+
+            // Step 6: Override the regular results with recounted values
+            setResultsByOption(recountedResults);
+            setTotalVotes(recountedTotalVotes);
+            setTotalUniqueVotes(voterData.length);
+            setResultsByPosition(recountedResultsByPosition);
+            setNoOfResultsLoaded(voterData.length);
+        } catch (error) {
+            console.error("Error recounting votes:", error);
+        } finally {
+            setRecountLoading(false);
+        }
+    };
+
     const getDustVotingResultsForPoll = async (pollObject) => {
         setDustVotingLoading(true);
         try {
@@ -867,6 +1161,7 @@ export default function Poll(props) {
                 btcVotingResults={btcVotingResults}
                 btcVotersList={btcVotersList}
                 btcVotingLoading={btcVotingLoading}
+                recountLoading={recountLoading}
             />
         </>
     );
