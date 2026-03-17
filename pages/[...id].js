@@ -647,10 +647,19 @@ export default function Poll(props) {
                 }
             }
 
-            console.log(`  Parsed ${voterData.length} voter records`);
+            console.log(`  Parsed ${voterData.length} voter records (before dedup)`);
+
+            // Deduplicate by wallet address - keep the latest transaction per address
+            const voterMap = new Map();
+            for (const voter of voterData) {
+                voterMap.set(voter.address, voter);
+            }
+            const uniqueVoterData = Array.from(voterMap.values());
+
+            console.log(`  Unique voters after dedup: ${uniqueVoterData.length}`);
 
             // Step 4: Fetch each voter's balance at the correct snapshot height
-            const uniqueAddresses = [...new Set(voterData.map(v => v.address))];
+            const uniqueAddresses = [...new Set(uniqueVoterData.map(v => v.address))];
             const pollIdForCache = pollObject?.id || contractId;
             let balanceMap = {};
 
@@ -699,7 +708,7 @@ export default function Poll(props) {
             const recountedResultsByPosition = {};
             let voteIndex = 0;
 
-            for (const voter of voterData) {
+            for (const voter of uniqueVoterData) {
                 const balance = balanceMap[voter.address];
                 if (!balance || balance.total <= 0) continue;
 
@@ -777,14 +786,14 @@ export default function Poll(props) {
                     : "0.00";
             }
 
-            console.log(`  Recount complete: ${recountedTotalVotes} total votes from ${voterData.length} voters`);
+            console.log(`  Recount complete: ${recountedTotalVotes} total votes from ${uniqueVoterData.length} voters`);
 
             // Step 6: Override the regular results with recounted values
             setResultsByOption(recountedResults);
             setTotalVotes(recountedTotalVotes);
-            setTotalUniqueVotes(voterData.length);
+            setTotalUniqueVotes(uniqueVoterData.length);
             setResultsByPosition(recountedResultsByPosition);
-            setNoOfResultsLoaded(voterData.length);
+            setNoOfResultsLoaded(uniqueVoterData.length);
         } catch (error) {
             console.error("Error recounting votes:", error);
         } finally {
