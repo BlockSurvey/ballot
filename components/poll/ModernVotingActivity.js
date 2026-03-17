@@ -10,7 +10,8 @@ export default function ModernVotingActivity({
     setResultsByPosition,
     totalUniqueVotes,
     noOfResultsLoaded,
-    setNoOfResultsLoaded
+    setNoOfResultsLoaded,
+    allRecountedResultsByPosition
 }) {
     const [isLoadingMore, setIsLoadingMore] = useState(false);
 
@@ -26,12 +27,31 @@ export default function ModernVotingActivity({
     };
 
     const loadMoreResults = async () => {
-        if (!pollObject?.publishedInfo?.contractAddress || !pollObject?.publishedInfo?.contractName) {
+        if (isLoadingMore) {
+            return; // Prevent multiple simultaneous loads
+        }
+
+        // Client-side pagination for recount polls
+        if (allRecountedResultsByPosition) {
+            setIsLoadingMore(true);
+            try {
+                const allKeys = Object.keys(allRecountedResultsByPosition);
+                const currentCount = Object.keys(resultsByPosition).length;
+                const nextCount = Math.min(currentCount + 10, allKeys.length);
+                const updatedResults = { ...resultsByPosition };
+                for (let i = currentCount; i < nextCount; i++) {
+                    updatedResults[allKeys[i]] = allRecountedResultsByPosition[allKeys[i]];
+                }
+                setResultsByPosition(updatedResults);
+                setNoOfResultsLoaded(nextCount);
+            } finally {
+                setIsLoadingMore(false);
+            }
             return;
         }
 
-        if (isLoadingMore) {
-            return; // Prevent multiple simultaneous loads
+        if (!pollObject?.publishedInfo?.contractAddress || !pollObject?.publishedInfo?.contractName) {
+            return;
         }
 
         setIsLoadingMore(true);

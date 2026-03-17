@@ -61,6 +61,9 @@ export default function Poll(props) {
     // Recount voting (for polls with wrong snapshot height on-chain)
     const [recountLoading, setRecountLoading] = useState(false);
 
+    // All recounted results (full dataset for client-side pagination)
+    const [allRecountedResultsByPosition, setAllRecountedResultsByPosition] = useState(null);
+
     // Helper function to strip HTML tags from text
     const stripHtmlTags = (html) => {
         if (!html) return "";
@@ -791,9 +794,21 @@ export default function Poll(props) {
             // Step 6: Override the regular results with recounted values
             setResultsByOption(recountedResults);
             setTotalVotes(recountedTotalVotes);
-            setTotalUniqueVotes(uniqueVoterData.length);
-            setResultsByPosition(recountedResultsByPosition);
-            setNoOfResultsLoaded(uniqueVoterData.length);
+            // Use actual count of voters with non-zero balance (some may be skipped)
+            setTotalUniqueVotes(Object.keys(recountedResultsByPosition).length);
+
+            // Store full recounted results for client-side pagination
+            setAllRecountedResultsByPosition(recountedResultsByPosition);
+
+            // Initially show only the first 10 results
+            const initialCount = Math.min(10, Object.keys(recountedResultsByPosition).length);
+            const initialResults = {};
+            const keys = Object.keys(recountedResultsByPosition);
+            for (let i = 0; i < initialCount; i++) {
+                initialResults[keys[i]] = recountedResultsByPosition[keys[i]];
+            }
+            setResultsByPosition(initialResults);
+            setNoOfResultsLoaded(initialCount);
         } catch (error) {
             console.error("Error recounting votes:", error);
         } finally {
@@ -1171,6 +1186,7 @@ export default function Poll(props) {
                 btcVotersList={btcVotersList}
                 btcVotingLoading={btcVotingLoading}
                 recountLoading={recountLoading}
+                allRecountedResultsByPosition={allRecountedResultsByPosition}
             />
         </>
     );

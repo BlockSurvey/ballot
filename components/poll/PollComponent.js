@@ -42,6 +42,7 @@ export default function PollComponent(props) {
         btcVotersList,
         btcVotingLoading,
         recountLoading,
+        allRecountedResultsByPosition,
     } = props;
 
     const [txId, setTxId] = useState();
@@ -170,6 +171,7 @@ export default function PollComponent(props) {
                                 totalUniqueVotes={totalUniqueVotes}
                                 noOfResultsLoaded={noOfResultsLoaded}
                                 setNoOfResultsLoaded={setNoOfResultsLoaded}
+                                allRecountedResultsByPosition={allRecountedResultsByPosition}
                             />
 
                             {/* STX Dust Transaction Activity - Loading State */}
