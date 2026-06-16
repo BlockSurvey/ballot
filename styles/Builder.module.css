@@ -10,18 +10,21 @@
     backdrop-filter: blur(10px);
     border-bottom: 1px solid var(--color-border-light);
     position: sticky;
-    top: 0;
-    z-index: 10;
+    /* Sit directly below the global dashboard nav (96px tall) so the
+       title + action buttons stay pinned and visible while scrolling. */
+    top: 96px;
+    z-index: 9;
 }
 
 .builder_header_content {
     max-width: 1200px;
     margin: 0 auto;
-    padding: var(--space-6);
+    padding: var(--space-3) var(--space-6);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 80px;
+    gap: var(--space-4);
+    min-height: 60px;
 }
 
 .builder_back_section {
@@ -31,20 +34,36 @@
 }
 
 .back_button {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    color: var(--color-tertiary);
+    color: var(--color-secondary);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 500;
-    transition: all 0.2s ease;
-    padding: var(--space-2) 0;
+    line-height: 1;
+    transition: all 0.18s ease;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-background);
 }
 
 .back_button:hover {
     color: var(--color-primary);
     text-decoration: none;
+    background: var(--color-surface);
+    border-color: var(--color-secondary);
+}
+
+.back_button:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
+}
+
+.back_button svg {
+    flex-shrink: 0;
 }
 
 .builder_title {
@@ -70,6 +89,43 @@
     font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+}
+
+/* Header action buttons (Preview / Save / Publish) */
+.header_actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-shrink: 0;
+}
+
+/* Compact overrides for the shared action button styles when used in the header */
+.header_actions .action_preview,
+.header_actions .action_save,
+.header_actions .action_publish {
+    width: auto;
+    font-size: 14px;
+    padding: var(--space-2) var(--space-4);
+    white-space: nowrap;
+}
+
+/* Inline error bar under the sticky header */
+.header_error {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-3) var(--space-6);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 13px;
+    color: #b91c1c;
+    background: rgba(185, 28, 28, 0.06);
+    border-top: 1px solid var(--color-border-light);
+}
+
+.header_error svg {
+    flex-shrink: 0;
+    color: #b91c1c;
 }
 
 .progress_section {
@@ -283,10 +339,10 @@
 .builder_main {
     max-width: 1200px;
     margin: 0 auto;
-    padding: var(--space-8) var(--space-6);
+    padding: var(--space-6);
     display: grid;
     grid-template-columns: 1fr 320px;
-    gap: var(--space-12);
+    gap: var(--space-8);
 }
 
 .builder_content {
@@ -296,7 +352,7 @@
 .builder_form {
     display: flex;
     flex-direction: column;
-    gap: var(--space-10);
+    gap: var(--space-6);
 }
 
 /* Form Sections */
@@ -372,6 +428,21 @@
     box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
 }
 
+/* Render the native <select> with a clear dropdown chevron (the shared
+   `background` shorthand above otherwise wipes the browser/Bootstrap arrow,
+   making it look like a plain text box). */
+.form_select {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    cursor: pointer;
+    padding-right: var(--space-10);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23666666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-4) center;
+    background-size: 16px;
+}
+
 .form_textarea {
     resize: vertical;
     min-height: 120px;
@@ -426,70 +497,91 @@
 /* Voting Systems Grid */
 .voting_systems_grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
 }
 
 .voting_system_card {
     position: relative;
-    padding: var(--space-5);
-    border: 2px solid var(--color-border-light);
+    padding: var(--space-4);
+    border: 1.5px solid var(--color-border-light);
     border-radius: var(--radius-lg);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease,
+        transform 0.18s ease, background 0.18s ease;
     background: var(--color-background);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
 }
 
 .voting_system_card:hover {
     border-color: var(--color-border);
     box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+}
+
+.voting_system_card:focus-visible {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.12);
 }
 
 .voting_system_card.selected {
     border-color: var(--color-primary);
     background: rgba(0, 0, 0, 0.02);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.voting_system_header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding-right: var(--space-6);
 }
 
 .voting_system_icon {
-    width: 48px;
-    height: 48px;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    margin-bottom: var(--space-4);
-    color: var(--color-tertiary);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-md);
+    color: var(--color-secondary);
+    transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
 .voting_system_card.selected .voting_system_icon {
     background: var(--color-primary);
-    color: white;
+    border-color: var(--color-primary);
+    color: #fff;
 }
 
-.voting_system_content h3 {
-    font-size: 16px;
+.voting_system_header h3 {
+    font-size: 15px;
     font-weight: 600;
     color: var(--color-primary);
-    margin: 0 0 var(--space-2) 0;
+    margin: 0;
     line-height: 1.3;
 }
 
 .voting_system_description {
-    font-size: 14px;
+    font-size: 13px;
     color: var(--color-tertiary);
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .selected_indicator {
     position: absolute;
     top: var(--space-3);
     right: var(--space-3);
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     background: var(--color-primary);
     color: white;
     border-radius: 50%;
@@ -803,7 +895,8 @@
 
 .sidebar_sticky {
     position: sticky;
-    top: 120px;
+    /* Clear the global nav (96px) + the sticky builder header below it. */
+    top: 168px;
     display: flex;
     flex-direction: column;
     gap: var(--space-6);
@@ -1029,6 +1122,15 @@
     line-height: 1.3;
 }
 
+/* Soft warning (e.g. likely Stacks-vs-Bitcoin block height mix-up) */
+.field_warning {
+    display: block;
+    font-size: 13px;
+    color: #b45309;
+    margin-top: var(--space-1);
+    line-height: 1.3;
+}
+
 /* Error state for form inputs */
 .form_input.error,
 .form_textarea.error,
@@ -1099,36 +1201,75 @@
         padding: var(--space-6) var(--space-4);
     }
 
+    /* Need Help? stays at the bottom (after the form) on smaller screens */
     .builder_sidebar {
-        order: -1;
+        order: 1;
     }
-    
+
     .sidebar_sticky {
         position: static;
-    }
-    
-    .actions_list {
-        flex-direction: row;
-        flex-wrap: wrap;
-    }
-    
-    .action_preview,
-    .action_save,
-    .action_publish {
-        flex: 1;
-        min-width: 120px;
     }
 }
 
 @media (max-width: 768px) {
+    /* Single-row compact menu bar: back + title on the left, icon buttons on the right */
     .builder_header_content {
-        padding: var(--space-4);
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--space-4);
+        padding: var(--space-2) var(--space-3);
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-2);
         min-height: auto;
     }
-    
+
+    .header_actions {
+        width: auto;
+        flex-shrink: 0;
+        gap: var(--space-2);
+    }
+
+    /* The global nav is 80px tall at this breakpoint. */
+    .builder_header {
+        top: 80px;
+    }
+
+    /* Icon-only square buttons, kept in a single row */
+    .header_actions .action_preview,
+    .header_actions .action_save,
+    .header_actions .action_publish {
+        flex: 0 0 auto;
+        width: 34px;
+        height: 34px;
+        min-width: 0;
+        padding: 0;
+        gap: 0;
+        justify-content: center;
+    }
+
+    .header_actions .action_preview span,
+    .header_actions .action_save span,
+    .header_actions .action_publish span {
+        display: none;
+    }
+
+    .header_actions .action_preview svg,
+    .header_actions .action_save svg,
+    .header_actions .action_publish svg {
+        width: 16px;
+        height: 16px;
+        flex-shrink: 0;
+    }
+
+    .header_actions .button_spinner {
+        width: 14px;
+        height: 14px;
+        margin: 0;
+    }
+
+    .header_error {
+        padding: var(--space-2) var(--space-3);
+        font-size: 12px;
+    }
+
     .progress_steps {
         gap: var(--space-1);
     }
@@ -1153,26 +1294,52 @@
     }
     
     .builder_back_section {
-        width: 100%;
-        flex-direction: column;
-        align-items: flex-start;
-        gap: var(--space-3);
+        flex: 1;
+        min-width: 0;
+        flex-direction: row;
+        align-items: center;
+        gap: var(--space-2);
     }
-    
+
     .builder_title {
-        width: 100%;
-        justify-content: space-between;
+        flex: 1;
+        min-width: 0;
+        gap: var(--space-2);
+        justify-content: flex-start;
     }
-    
+
     .builder_title h1 {
-        font-size: 20px;
+        flex: 1;
+        min-width: 0;
+        font-size: 15px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
-    
+
+    .poll_status {
+        padding: 2px var(--space-2);
+        font-size: 10px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .back_button {
+        font-size: 12px;
+        padding: var(--space-1) var(--space-2);
+        flex-shrink: 0;
+    }
+
+    .back_button svg {
+        width: 13px;
+        height: 9px;
+    }
+
     .progress_section {
         width: 100%;
         justify-content: flex-end;
     }
-    
+
     .builder_main {
         padding: var(--space-4);
     }
@@ -1237,14 +1404,31 @@
         grid-template-columns: 1fr;
     }
     
+    /* Compact card: drag + number + actions on the top row, input full-width below */
     .option_item {
-        flex-direction: column;
-        align-items: stretch;
+        flex-wrap: wrap;
+        align-items: center;
         gap: var(--space-2);
+        padding: var(--space-3);
+        border: 1px solid var(--color-border-light);
+        border-radius: var(--radius-md);
+        background: var(--color-surface);
     }
-    
+
+    .option_input_wrapper {
+        order: 2;
+        flex: 1 1 100%;
+        width: 100%;
+    }
+
+    .option_settings,
+    .option_delete {
+        order: 1;
+    }
+
+    /* Push the action buttons to the right of the top row */
     .option_number {
-        align-self: flex-start;
+        margin-right: auto;
     }
 }
 

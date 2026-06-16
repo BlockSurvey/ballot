@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
 
@@ -17,6 +17,37 @@ const RichTextEditor = ({
     disabled = false
 }) => {
     const quillRef = useRef(null);
+    const containerRef = useRef(null);
+
+    // Keep the formatting toolbar out of the keyboard tab order so that
+    // Tab from the previous field (e.g. the title) lands directly in the
+    // editable text area instead of cycling through every toolbar control.
+    // The editor mounts asynchronously (dynamic import), so we retry briefly.
+    useEffect(() => {
+        const root = containerRef.current;
+        if (!root) return undefined;
+
+        const demoteToolbar = () => {
+            const toolbar = root.querySelector('.ql-toolbar');
+            if (!toolbar) return false;
+            toolbar
+                .querySelectorAll('button, .ql-picker-label, [tabindex]')
+                .forEach((el) => el.setAttribute('tabindex', '-1'));
+            return true;
+        };
+
+        if (demoteToolbar()) return undefined;
+
+        const intervalId = setInterval(() => {
+            if (demoteToolbar()) clearInterval(intervalId);
+        }, 100);
+        const timeoutId = setTimeout(() => clearInterval(intervalId), 3000);
+
+        return () => {
+            clearInterval(intervalId);
+            clearTimeout(timeoutId);
+        };
+    }, []);
 
     // Quill modules configuration
     const modules = useMemo(() => ({
@@ -81,7 +112,7 @@ const RichTextEditor = ({
     };
 
     return (
-        <div className={`rich-text-editor ${className}`}>
+        <div className={`rich-text-editor ${className}`} ref={containerRef}>
             <style jsx global>{`
                 /* Rich text editor wrapper */
                 .rich-text-editor {

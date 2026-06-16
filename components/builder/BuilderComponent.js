@@ -514,7 +514,11 @@ export default function BuilderComponent(props) {
             hasErrors = true;
             if (!firstErrorField) firstErrorField = 'startAtBlock';
         } else if (pollObject?.startAtBlock < bitcoinHeight) {
-            errors.startAtBlock = `Start tenure block must be >= current block height (${bitcoinHeight})`;
+            errors.startAtBlock = `Start block must be >= current Bitcoin block height (${bitcoinHeight})`;
+            hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'startAtBlock';
+        } else if (looksLikeStacksBlockHeight(pollObject?.startAtBlock)) {
+            errors.startAtBlock = `This looks like a Stacks block height. Enter a Bitcoin block height (current: ${bitcoinHeight}).`;
             hasErrors = true;
             if (!firstErrorField) firstErrorField = 'startAtBlock';
         }
@@ -525,6 +529,10 @@ export default function BuilderComponent(props) {
             if (!firstErrorField) firstErrorField = 'endAtBlock';
         } else if (pollObject?.startAtBlock && pollObject?.endAtBlock <= pollObject?.startAtBlock) {
             errors.endAtBlock = "End tenure block must be greater than start tenure block";
+            hasErrors = true;
+            if (!firstErrorField) firstErrorField = 'endAtBlock';
+        } else if (looksLikeStacksBlockHeight(pollObject?.endAtBlock)) {
+            errors.endAtBlock = `This looks like a Stacks block height. Enter a Bitcoin block height (current: ${bitcoinHeight}).`;
             hasErrors = true;
             if (!firstErrorField) firstErrorField = 'endAtBlock';
         }
@@ -656,6 +664,20 @@ export default function BuilderComponent(props) {
         return new Date();
     }
 
+    // Voting periods are expressed in *Bitcoin* block heights, but the app also
+    // surfaces the (much larger) Stacks height in the nav, so users sometimes
+    // paste a Stacks height into these fields by mistake. Bitcoin advances only
+    // ~52,560 blocks/year, so a value more than ~2x the current Bitcoin height
+    // (≈18 years out) — or one close to the current Stacks height — is almost
+    // certainly a Stacks height. We flag that so they can correct it.
+    const looksLikeStacksBlockHeight = (blockHeight) => {
+        const value = parseInt(blockHeight);
+        if (!value || value <= 0 || !bitcoinHeight) return false;
+        const farBeyondBitcoin = value > bitcoinHeight * 2;
+        const nearStacksHeight = stacksHeight > 0 && value >= stacksHeight * 0.8;
+        return farBeyondBitcoin || nearStacksHeight;
+    };
+
     const publishPoll = async () => {
         // Start publishing
         setIsPublishing(true);
@@ -739,11 +761,11 @@ export default function BuilderComponent(props) {
                             <div className={styles.builder_header_content}>
                                 <div className={styles.builder_back_section}>
                                     <Link href="/all-polls">
-                                        <a className={styles.back_button}>
+                                        <a className={styles.back_button} aria-label="Back to all polls">
                                             <svg width="16" height="10" viewBox="0 0 16 10" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <path fillRule="evenodd" clipRule="evenodd" d="M5.42417 0.57573C5.65848 0.810044 5.65848 1.18994 5.42417 1.42426L2.44843 4.39999H14.9999C15.3313 4.39999 15.5999 4.66862 15.5999 4.99999C15.5999 5.33136 15.3313 5.59999 14.9999 5.59999H2.44843L5.42417 8.57573C5.65848 8.81005 5.65848 9.18994 5.42417 9.42426C5.18985 9.65857 4.80995 9.65857 4.57564 9.42426L0.575638 5.42426C0.341324 5.18994 0.341324 4.81004 0.575638 4.57573L4.57564 0.57573C4.80995 0.341415 5.18985 0.341415 5.42417 0.57573Z" fill="currentColor" />
                                             </svg>
-                                            Back
+                                            <span>Back</span>
                                         </a>
                                     </Link>
                                     <div className={styles.builder_title}>
@@ -755,7 +777,77 @@ export default function BuilderComponent(props) {
                                     </div>
                                 </div>
 
+                                <div className={styles.header_actions}>
+                                    {pollId !== "new" && (
+                                        <Button
+                                            className={styles.action_preview}
+                                            onClick={() => { handleShow() }}
+                                            disabled={isProcessing}
+                                            aria-label="Preview poll"
+                                            title="Preview poll"
+                                        >
+                                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                <path d="M1.25 10C1.25 10 4.375 3.75 10 3.75C15.625 3.75 18.75 10 18.75 10C18.75 10 15.625 16.25 10 16.25C4.375 16.25 1.25 10 1.25 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                            </svg>
+                                            <span>Preview</span>
+                                        </Button>
+                                    )}
+
+                                    <Button
+                                        className={`${styles.action_save} ${isSaving ? styles.loading : ''}`}
+                                        onClick={() => { savePollToGaia() }}
+                                        disabled={isProcessing || pollObject?.status !== "draft"}
+                                        aria-label="Save draft"
+                                        title="Save draft"
+                                    >
+                                        {isSaving ? (
+                                            <>
+                                                <div className={styles.button_spinner}></div>
+                                                <span>{saveProgress || 'Saving...'}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M15.625 5L7.5 13.125L4.375 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                <span>Save Draft</span>
+                                            </>
+                                        )}
+                                    </Button>
+
+                                    <Button
+                                        className={`${styles.action_publish} ${isPublishing ? styles.loading : ''}`}
+                                        onClick={() => { publishPoll() }}
+                                        disabled={isProcessing || pollObject?.status !== "draft"}
+                                        aria-label="Publish poll"
+                                        title="Publish poll"
+                                    >
+                                        {isPublishing ? (
+                                            <>
+                                                <div className={styles.button_spinner}></div>
+                                                <span>{publishProgress || 'Publishing...'}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M10 3.75V16.25M3.75 10L10 3.75L16.25 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                <span>Publish</span>
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
+
+                            {errorMessage && (
+                                <div className={styles.header_error}>
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zM8 4v4M8 12h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                    <span>{errorMessage}</span>
+                                </div>
+                            )}
                         </div>
 
                         {/* Main Content */}
@@ -816,73 +908,80 @@ export default function BuilderComponent(props) {
                                             <p>Choose how votes will be counted and weighted</p>
                                         </div>
                                         <div className={styles.section_content}>
-                                            <div className={styles.voting_systems_grid}>
-                                                {Constants.VOTING_SYSTEMS.map((option, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className={`${styles.voting_system_card} ${pollObject.votingSystem === option.id ? styles.selected : ''
-                                                            }`}
-                                                        onClick={() => handleChange({
-                                                            target: { name: 'votingSystem', value: option.id }
-                                                        })}
-                                                    >
-                                                        <div className={styles.voting_system_icon}>
-                                                            {/* Purposeful icons based on voting system functionality */}
-                                                            {option.id === 'fptp' && (
-                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                    <path d="M8 12l2 2 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                    <circle cx="7" cy="8" r="1.5" fill="currentColor" />
-                                                                    <circle cx="7" cy="16" r="1.5" fill="currentColor" />
-                                                                </svg>
-                                                            )}
-                                                            {option.id === 'block' && (
-                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <rect x="3" y="4" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                    <path d="M9 6h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                                                    <rect x="3" y="10" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="2" fill="currentColor" />
-                                                                    <path d="M9 12h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                                                    <rect x="3" y="16" width="4" height="4" rx="1" stroke="currentColor" strokeWidth="2" fill="currentColor" />
-                                                                    <path d="M9 18h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                                                </svg>
-                                                            )}
-                                                            {option.id === 'quadratic' && (
-                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <path d="M3 20V4M21 20V4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                                                    <path d="M3 20h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                                                    <path d="M6 17Q9 8 12 11T18 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                                                                    <circle cx="6" cy="17" r="2" fill="currentColor" />
-                                                                    <circle cx="18" cy="8" r="2" fill="currentColor" />
-                                                                </svg>
-                                                            )}
-                                                            {option.id === 'weighted' && (
-                                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <path d="M12 3v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                                                                    <path d="M12 9l-8 6v4h16v-4l-8-6z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
-                                                                    <ellipse cx="7" cy="16" rx="2" ry="1" fill="currentColor" />
-                                                                    <ellipse cx="17" cy="17" rx="2" ry="1" fill="currentColor" />
-                                                                    <circle cx="12" cy="6" r="2" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                </svg>
-                                                            )}
-                                                        </div>
-                                                        <div className={styles.voting_system_content}>
-                                                            <h3>{option.name}</h3>
+                                            <div className={styles.voting_systems_grid} role="radiogroup" aria-label="Voting system">
+                                                {Constants.VOTING_SYSTEMS.map((option, index) => {
+                                                    const isSelected = pollObject.votingSystem === option.id;
+                                                    const selectSystem = () => handleChange({
+                                                        target: { name: 'votingSystem', value: option.id }
+                                                    });
+                                                    return (
+                                                        <div
+                                                            key={index}
+                                                            role="radio"
+                                                            aria-checked={isSelected}
+                                                            tabIndex={0}
+                                                            className={`${styles.voting_system_card} ${isSelected ? styles.selected : ''}`}
+                                                            onClick={selectSystem}
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter' || e.key === ' ') {
+                                                                    e.preventDefault();
+                                                                    selectSystem();
+                                                                }
+                                                            }}
+                                                        >
+                                                            <div className={styles.voting_system_header}>
+                                                                <div className={styles.voting_system_icon}>
+                                                                    {/* Clean, uniform line icons matched to each system's meaning */}
+                                                                    {option.id === 'fptp' && (
+                                                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+                                                                            <path d="M8.25 12.25l2.5 2.5 5-5.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                        </svg>
+                                                                    )}
+                                                                    {option.id === 'block' && (
+                                                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path d="M3.5 6.5l1.5 1.5 2.5-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                            <path d="M3.5 12.5l1.5 1.5 2.5-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                            <path d="M3.5 18.5l1.5 1.5 2.5-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                            <path d="M11 6h9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                            <path d="M11 12h9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                            <path d="M11 18h9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                        </svg>
+                                                                    )}
+                                                                    {option.id === 'quadratic' && (
+                                                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path d="M4 4v16h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                            <path d="M5.5 19.5Q15 19.5 19.5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                                                                        </svg>
+                                                                    )}
+                                                                    {option.id === 'weighted' && (
+                                                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                            <path d="M12 4v15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                            <path d="M9 19.5h6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                            <path d="M5.5 7h13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                                                            <path d="M3 12.5l2.5-5 2.5 5a2.5 2.5 0 0 1-5 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                            <path d="M16 12.5l2.5-5 2.5 5a2.5 2.5 0 0 1-5 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                        </svg>
+                                                                    )}
+                                                                </div>
+                                                                <h3>{option.name}</h3>
+                                                            </div>
                                                             <p className={styles.voting_system_description}>
                                                                 {option.id === 'fptp' && 'Simple majority voting - one vote per voter'}
                                                                 {option.id === 'block' && 'Voters can select multiple options'}
                                                                 {option.id === 'quadratic' && 'Vote weight scales quadratically with tokens'}
                                                                 {option.id === 'weighted' && 'Vote weight scales linearly with tokens'}
                                                             </p>
+                                                            {isSelected && (
+                                                                <div className={styles.selected_indicator}>
+                                                                    <svg width="11" height="11" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                        <path d="M13.854 3.646a.5.5 0 0 1 0 .708L6.5 11.707 2.146 7.354a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" fill="currentColor" />
+                                                                    </svg>
+                                                                </div>
+                                                            )}
                                                         </div>
-                                                        {pollObject.votingSystem === option.id && (
-                                                            <div className={styles.selected_indicator}>
-                                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                    <path d="M13.854 3.646a.5.5 0 0 1 0 .708L6.5 11.707 2.146 7.354a.5.5 0 1 1 .708-.708L6.5 10.293l6.646-6.647a.5.5 0 0 1 .708 0z" fill="currentColor" />
-                                                                </svg>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                    );
+                                                })}
                                             </div>
 
                                             {(pollObject.votingSystem && Constants.VOTING_SYSTEM_DOCUMENTATION?.[pollObject.votingSystem]) &&
@@ -926,10 +1025,11 @@ export default function BuilderComponent(props) {
                                                                 className={`${styles.option_item} ${draggedIndex === index ? styles.dragging : ''
                                                                     }`}
                                                             >
-                                                                <div
-                                                                    className={styles.drag_handle}
-                                                                    title="Drag to reorder"
+                                                                <OverlayTrigger
+                                                                    placement="top"
+                                                                    overlay={<Tooltip>Drag to reorder</Tooltip>}
                                                                 >
+                                                                    <div className={styles.drag_handle}>
                                                                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
                                                                         <circle cx="2" cy="2" r="1" fill="currentColor" />
                                                                         <circle cx="6" cy="2" r="1" fill="currentColor" />
@@ -941,7 +1041,8 @@ export default function BuilderComponent(props) {
                                                                         <circle cx="6" cy="10" r="1" fill="currentColor" />
                                                                         <circle cx="10" cy="10" r="1" fill="currentColor" />
                                                                     </svg>
-                                                                </div>
+                                                                    </div>
+                                                                </OverlayTrigger>
                                                                 <div className={styles.option_number}>{index + 1}</div>
                                                                 <div className={styles.option_input_wrapper}>
                                                                     <Form.Control
@@ -1001,15 +1102,20 @@ export default function BuilderComponent(props) {
                                                                     </OverlayTrigger>
                                                                 )}
                                                                 {pollObject.options.length > 2 && (
-                                                                    <Button
-                                                                        className={styles.option_delete}
-                                                                        onClick={() => { deleteOption(index); }}
-                                                                        title="Delete option"
+                                                                    <OverlayTrigger
+                                                                        placement="top"
+                                                                        overlay={<Tooltip>Delete option</Tooltip>}
                                                                     >
-                                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                            <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                                        </svg>
-                                                                    </Button>
+                                                                        <Button
+                                                                            className={styles.option_delete}
+                                                                            onClick={() => { deleteOption(index); }}
+                                                                            aria-label="Delete option"
+                                                                        >
+                                                                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                <path d="M15 5L5 15M5 5L15 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                            </svg>
+                                                                        </Button>
+                                                                    </OverlayTrigger>
                                                                 )}
                                                             </div>
                                                         ))}
@@ -1048,6 +1154,7 @@ export default function BuilderComponent(props) {
                                                     <Form.Label className={styles.form_label}>Start Bitcoin Block Height *</Form.Label>
                                                     <Form.Control
                                                         type="number"
+                                                        onWheel={(e) => e.currentTarget.blur()}
                                                         name="startAtBlock"
                                                         value={pollObject.startAtBlock || ''}
                                                         placeholder={`e.g. ${bitcoinHeight + 10}`}
@@ -1060,6 +1167,10 @@ export default function BuilderComponent(props) {
                                                         <small className={styles.field_error}>
                                                             {fieldErrors.startAtBlock}
                                                         </small>
+                                                    ) : looksLikeStacksBlockHeight(pollObject.startAtBlock) ? (
+                                                        <small className={styles.field_warning}>
+                                                            This looks like a Stacks block height. Enter a Bitcoin block height (current: {bitcoinHeight}).
+                                                        </small>
                                                     ) : (
                                                         <small className={styles.field_hint}>
                                                             Must be {bitcoinHeight} or higher
@@ -1071,6 +1182,7 @@ export default function BuilderComponent(props) {
                                                     <Form.Label className={styles.form_label}>End Bitcoin Block Height *</Form.Label>
                                                     <Form.Control
                                                         type="number"
+                                                        onWheel={(e) => e.currentTarget.blur()}
                                                         name="endAtBlock"
                                                         value={pollObject.endAtBlock || ''}
                                                         placeholder={`e.g. ${bitcoinHeight + 100}`}
@@ -1082,6 +1194,10 @@ export default function BuilderComponent(props) {
                                                     {fieldErrors.endAtBlock ? (
                                                         <small className={styles.field_error}>
                                                             {fieldErrors.endAtBlock}
+                                                        </small>
+                                                    ) : looksLikeStacksBlockHeight(pollObject.endAtBlock) ? (
+                                                        <small className={styles.field_warning}>
+                                                            This looks like a Stacks block height. Enter a Bitcoin block height (current: {bitcoinHeight}).
                                                         </small>
                                                     ) : (
                                                         <small className={styles.field_hint}>
@@ -1174,17 +1290,17 @@ export default function BuilderComponent(props) {
                                                                 <div className={styles.token_type_icon}>
                                                                     {option.id === 'ft' && (
                                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                            <circle cx="8" cy="8" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                            <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                            <circle cx="16" cy="16" r="4" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                            <path d="M8 8l8 8" stroke="currentColor" strokeWidth="1" strokeDasharray="2,2" />
+                                                                            <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" />
+                                                                            <path d="M18.09 10.37A6 6 0 1 1 10.34 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                            <path d="M7 6h1v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                            <path d="m16.71 13.88.7.71-2.82 2.82" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                                         </svg>
                                                                     )}
                                                                     {option.id === 'nft' && (
                                                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                            <path d="M12 2L16 8L22 9L17 14L18 20L12 17L6 20L7 14L2 9L8 8L12 2Z" stroke="currentColor" strokeWidth="2" fill="none" />
-                                                                            <circle cx="12" cy="10" r="2" fill="currentColor" />
-                                                                            <path d="M10 13l2-1 2 1v2l-2 1-2-1v-2z" fill="currentColor" />
+                                                                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
+                                                                            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
+                                                                            <path d="M21 15l-4.5-4.5L6 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                                                         </svg>
                                                                     )}
                                                                     {option.id === 'stx' && (
@@ -1290,6 +1406,7 @@ export default function BuilderComponent(props) {
                                                                         <Form.Label className={styles.form_label}>Token Decimals</Form.Label>
                                                                         <Form.Control
                                                                             type="number"
+                                                                            onWheel={(e) => e.currentTarget.blur()}
                                                                             name="strategyTokenDecimals"
                                                                             value={pollObject.strategyTokenDecimals || ''}
                                                                             onChange={handleChange}
@@ -1330,6 +1447,7 @@ export default function BuilderComponent(props) {
                                                             </Form.Label>
                                                             <Form.Control
                                                                 type="number"
+                                                                onWheel={(e) => e.currentTarget.blur()}
                                                                 name="snapshotBlockHeight"
                                                                 value={pollObject.snapshotBlockHeight || ''}
                                                                 onChange={handleChange}
@@ -1356,81 +1474,9 @@ export default function BuilderComponent(props) {
                                 </div>
                             </div>
 
-                            {/* Right Column - Actions Sidebar */}
+                            {/* Right Column - Help Sidebar */}
                             <div className={styles.builder_sidebar}>
                                 <div className={styles.sidebar_sticky}>
-                                    <div className={styles.actions_card}>
-                                        <div className={styles.actions_header}>
-                                            <h3>Actions</h3>
-                                            <p>Save, preview, or publish your poll</p>
-                                        </div>
-
-                                        <div className={styles.actions_list}>
-                                            {pollId !== "new" && (
-                                                <Button
-                                                    className={styles.action_preview}
-                                                    onClick={() => { handleShow() }}
-                                                    disabled={isProcessing}
-                                                >
-                                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path d="M1.25 10C1.25 10 4.375 3.75 10 3.75C15.625 3.75 18.75 10 18.75 10C18.75 10 15.625 16.25 10 16.25C4.375 16.25 1.25 10 1.25 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                    </svg>
-                                                    Preview Poll
-                                                </Button>
-                                            )}
-
-                                            <Button
-                                                className={`${styles.action_save} ${isSaving ? styles.loading : ''}`}
-                                                onClick={() => { savePollToGaia() }}
-                                                disabled={isProcessing || pollObject?.status !== "draft"}
-                                            >
-                                                {isSaving ? (
-                                                    <>
-                                                        <div className={styles.button_spinner}></div>
-                                                        {saveProgress || 'Saving...'}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M15.625 5L7.5 13.125L4.375 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                        Save Draft
-                                                    </>
-                                                )}
-                                            </Button>
-
-                                            <Button
-                                                className={`${styles.action_publish} ${isPublishing ? styles.loading : ''}`}
-                                                onClick={() => { publishPoll() }}
-                                                disabled={isProcessing || pollObject?.status !== "draft"}
-                                            >
-                                                {isPublishing ? (
-                                                    <>
-                                                        <div className={styles.button_spinner}></div>
-                                                        {publishProgress || 'Publishing...'}
-                                                    </>
-                                                ) : (
-                                                    <>
-                                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path d="M10 3.75V16.25M3.75 10L10 3.75L16.25 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                        </svg>
-                                                        Publish Poll
-                                                    </>
-                                                )}
-                                            </Button>
-                                        </div>
-
-                                        {errorMessage && (
-                                            <div className={styles.error_message}>
-                                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zM8 4v4M8 12h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                                <span>{errorMessage}</span>
-                                            </div>
-                                        )}
-                                    </div>
-
                                     <div className={styles.help_card}>
                                         <div className={styles.help_content}>
                                             <h4>Need Help?</h4>
