@@ -178,12 +178,16 @@ export default function ModernVotingInterface({
 
     // Block height is the source of truth: a poll is closed once the current
     // Bitcoin height passes its end block, regardless of the tentative end date.
+    // In preview, always render the poll as if it were live so the full voting
+    // UI (dust toggle, options, vote button) is shown regardless of block height.
     const isPollClosed = () => {
+        if (isPreview) return false;
         return !!currentBitcoinBlockHeight && currentBitcoinBlockHeight > pollObject?.endAtBlock;
     };
 
     // Not started yet: current height is still below the start block.
     const isPollNotStarted = () => {
+        if (isPreview) return false;
         return !!currentBitcoinBlockHeight && currentBitcoinBlockHeight < pollObject?.startAtBlock;
     };
 

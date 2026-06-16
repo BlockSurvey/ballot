@@ -69,13 +69,32 @@ export default function BuilderComponent(props) {
     const [stacksHeight, setStacksHeight] = useState(0);
     const [bitcoinHeight, setBitcoinHeight] = useState(0);
 
+    // Gaia address of the current user (used to build the shareable preview link)
+    const [gaiaAddress, setGaiaAddress] = useState("");
+
     // Drag and drop state
     const [draggedIndex, setDraggedIndex] = useState(null);
 
     // On page load
     useEffect(() => {
         getCurrentBlockHeight();
+        getGaiaAddressFromPublicKey()
+            .then((addr) => setGaiaAddress(addr || ""))
+            .catch(() => { });
     }, []);
+
+    // Shareable, unlisted preview link for the current draft
+    const previewUrl = (gaiaAddress && pollObject?.id && typeof window !== "undefined")
+        ? `${window.location.origin}/p/${pollObject.id}/${gaiaAddress}`
+        : "";
+
+    // Save the draft (unencrypted) then open the preview so the link is current
+    const handlePreviewOpen = () => {
+        if (pollObject?.id && pollObject?.status === "draft") {
+            savePollToGaia(false);
+        }
+        handleShow();
+    };
 
     // Functions
     useEffect(() => {
@@ -356,7 +375,10 @@ export default function BuilderComponent(props) {
         }
     };
 
-    const savePollToGaia = (encrypt = true) => {
+    // Drafts are stored UNENCRYPTED so they can be opened via a shareable
+    // preview link (/p/{id}/{gaiaAddress}) without the owner's keys. The poll id
+    // is a UUID, so the link is effectively unlisted.
+    const savePollToGaia = (encrypt = false) => {
         if (pollObject?.id) {
             // Start saving
             setIsSaving(true);
@@ -782,21 +804,25 @@ export default function BuilderComponent(props) {
                                 </div>
 
                                 <div className={styles.header_actions}>
-                                    {pollId !== "new" && (
-                                        <Button
-                                            className={styles.action_preview}
-                                            onClick={() => { handleShow() }}
-                                            disabled={isProcessing}
-                                            aria-label="Preview poll"
-                                            title="Preview poll"
-                                        >
-                                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path d="M1.25 10C1.25 10 4.375 3.75 10 3.75C15.625 3.75 18.75 10 18.75 10C18.75 10 15.625 16.25 10 16.25C4.375 16.25 1.25 10 1.25 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                                <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                            <span>Preview</span>
-                                        </Button>
-                                    )}
+                                    <OverlayTrigger
+                                        placement="bottom"
+                                        overlay={<Tooltip>{pollId === "new" ? "Save the draft to enable preview" : "Preview poll"}</Tooltip>}
+                                    >
+                                        <span className={styles.preview_btn_wrap}>
+                                            <Button
+                                                className={styles.action_preview}
+                                                onClick={() => { handlePreviewOpen() }}
+                                                disabled={pollId === "new" || isProcessing}
+                                                aria-label="Preview poll"
+                                            >
+                                                <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M1.25 10C1.25 10 4.375 3.75 10 3.75C15.625 3.75 18.75 10 18.75 10C18.75 10 15.625 16.25 10 16.25C4.375 16.25 1.25 10 1.25 10Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                    <path d="M10 12.5C11.3807 12.5 12.5 11.3807 12.5 10C12.5 8.61929 11.3807 7.5 10 7.5C8.61929 7.5 7.5 8.61929 7.5 10C7.5 11.3807 8.61929 12.5 10 12.5Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                <span>Preview</span>
+                                            </Button>
+                                        </span>
+                                    </OverlayTrigger>
 
                                     <Button
                                         className={`${styles.action_save} ${isSaving ? styles.loading : ''}`}
@@ -1504,6 +1530,7 @@ export default function BuilderComponent(props) {
                             pollObject={pollObject}
                             show={show}
                             handleClose={handleClose}
+                            previewUrl={previewUrl}
                             currentBitcoinBlockHeight={bitcoinHeight}
                             currentStacksBlockHeight={stacksHeight}
                         />

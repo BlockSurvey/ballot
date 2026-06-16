@@ -31,6 +31,8 @@
     display: flex;
     align-items: center;
     gap: var(--space-6);
+    flex: 1;
+    min-width: 0;
 }
 
 .back_button {
@@ -70,6 +72,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    min-width: 0;
 }
 
 .builder_title h1 {
@@ -78,6 +81,15 @@
     color: var(--color-primary);
     margin: 0;
     line-height: 1.2;
+    flex: 1;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.builder_title .poll_status {
+    flex-shrink: 0;
 }
 
 .poll_status {
@@ -97,6 +109,15 @@
     align-items: center;
     gap: var(--space-2);
     flex-shrink: 0;
+}
+
+/* Wrapper lets the tooltip show even when the Preview button is disabled */
+.preview_btn_wrap {
+    display: inline-flex;
+}
+
+.preview_btn_wrap .action_preview:disabled {
+    pointer-events: none;
 }
 
 /* Compact overrides for the shared action button styles when used in the header */

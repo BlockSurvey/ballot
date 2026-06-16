@@ -8,6 +8,11 @@ export default function Builder() {
     const router = useRouter();
     const pathParams = router.query.id;
 
+    // Key the builder by route so navigating between polls (or to a brand-new
+    // poll) remounts it with a clean state instead of keeping the previous
+    // poll's title/description/options.
+    const builderKey = Array.isArray(pathParams) ? pathParams.join("/") : (pathParams || "new");
+
     // Return
     return (
         <>
@@ -19,7 +24,7 @@ export default function Builder() {
                 <Row>
                     <Col md={12}>
                         {/* Body */}
-                        <BuilderComponent pathParams={pathParams} />
+                        <BuilderComponent key={builderKey} pathParams={pathParams} />
                     </Col>
                 </Row>
             </Container>

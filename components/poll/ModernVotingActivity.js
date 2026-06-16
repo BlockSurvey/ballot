@@ -5,6 +5,7 @@ import styles from "../../styles/Poll.module.css";
 
 export default function ModernVotingActivity({
     pollObject,
+    isPreview,
     currentBitcoinBlockHeight,
     optionsMap,
     resultsByPosition,
@@ -126,7 +127,8 @@ export default function ModernVotingActivity({
 
                 {/* Activity Rows */}
                 <div>
-                    {totalUniqueVotes >= 0 ? (
+                    {/* In preview there is no data to load — show the empty state, never the spinner */}
+                    {(totalUniqueVotes >= 0 || isPreview) ? (
                         totalUniqueVotes > 0 ? (
                             Object.keys(resultsByPosition)
                                 .sort((a, b) => parseInt(b) - parseInt(a)) // Sort by position descending (newest first)

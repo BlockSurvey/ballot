@@ -145,6 +145,8 @@ const RichTextEditor = ({
                 /* Editor styles */
                 .rich-text-editor .ql-editor {
                     min-height: 120px;
+                    max-height: 320px;
+                    overflow-y: auto;
                     padding: var(--space-3, 12px) var(--space-4, 16px);
                     color: var(--color-primary, #1f2937);
                     transition: all 0.2s ease;
