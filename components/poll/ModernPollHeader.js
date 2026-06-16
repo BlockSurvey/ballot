@@ -9,14 +9,15 @@ import {
     openTwitterUrl,
     openWhatsappUrl,
     formatLocalDateTime,
-    convertToDisplayDateFormat
+    convertToDisplayDateFormat,
+    truncateMiddle
 } from "../../services/utils";
 import QRCodePopup from "./QRCodePopup";
 import RichTextDisplay from "../common/RichTextDisplay";
 import styles from "../../styles/Poll.module.css";
 
 export default function ModernPollHeader({ pollObject, publicUrl, txStatus, currentBitcoinBlockHeight }) {
-    const [copyText, setCopyText] = useState("Copy");
+    const [copyText, setCopyText] = useState("Copy poll link");
     const [showQRCodePopup, setShowQRCodePopup] = useState(false);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [shouldShowToggle, setShouldShowToggle] = useState(false);
@@ -36,9 +37,9 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
 
     const copyToClipBoard = () => {
         if (pollObject?.id && publicUrl) {
-            setCopyText("Copied");
+            setCopyText("Link copied!");
             navigator.clipboard.writeText(publicUrl);
-            setTimeout(() => setCopyText("Copy"), 2000);
+            setTimeout(() => setCopyText("Copy poll link"), 2000);
         }
     };
 
@@ -112,12 +113,12 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
                                     <div className={styles.creator_address_line}>
                                         {pollObject?.userStxAddress && (
                                             <a
-                                                className="ballot_link"
+                                                className={`ballot_link ${styles.address_chip}`}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 href={formStacksExplorerUrl(pollObject.userStxAddress, 'address')}
                                             >
-                                                {pollObject.userStxAddress.substring(0, 10)}...
+                                                {truncateMiddle(pollObject.userStxAddress, 5, 5)}
                                                 <svg
                                                     width="12"
                                                     height="12"
@@ -167,9 +168,9 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
                                 <button
                                     className={styles.action_button}
                                     onClick={copyToClipBoard}
-                                    onMouseEnter={() => setCopyText("Copy")}
+                                    onMouseEnter={() => setCopyText("Copy poll link")}
                                     disabled={!publicUrl}
-                                    aria-label="Copy link"
+                                    aria-label="Copy poll link"
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
@@ -181,7 +182,7 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
                             {/* QR Code */}
                             <OverlayTrigger
                                 placement="top"
-                                overlay={<Tooltip>QR Code</Tooltip>}
+                                overlay={<Tooltip>Show QR code</Tooltip>}
                             >
                                 <button
                                     className={styles.action_button}
@@ -190,23 +191,25 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
                                     aria-label="Show QR code"
                                 >
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <rect x="3" y="3" width="7" height="7" />
-                                        <rect x="14" y="3" width="7" height="7" />
-                                        <rect x="3" y="14" width="7" height="7" />
-                                        <rect x="14" y="14" width="2" height="2" />
-                                        <rect x="19" y="14" width="2" height="2" />
-                                        <rect x="14" y="19" width="2" height="2" />
-                                        <rect x="19" y="19" width="2" height="2" />
+                                        <rect x="3" y="3" width="6" height="6" rx="1.5" />
+                                        <rect x="15" y="3" width="6" height="6" rx="1.5" />
+                                        <rect x="3" y="15" width="6" height="6" rx="1.5" />
+                                        <path d="M15 15h2v2" />
+                                        <path d="M21 15v.01" />
+                                        <path d="M15 21h.01" />
+                                        <path d="M21 19v2" />
                                     </svg>
                                 </button>
                             </OverlayTrigger>
 
+                            <span className={styles.meta_divider} aria-hidden="true" />
+
                             {/* Share Dropdown */}
                             <Dropdown>
-                                <Dropdown.Toggle className={styles.action_button} variant="light" aria-label="Share options">
+                                <Dropdown.Toggle className={`${styles.action_button} ${styles.share_toggle}`} variant="light" aria-label="Share options">
                                     <OverlayTrigger
                                         placement="top"
-                                        overlay={<Tooltip>Share</Tooltip>}
+                                        overlay={<Tooltip>Share on social media</Tooltip>}
                                     >
                                         <div>
                                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -220,7 +223,7 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
                                     </OverlayTrigger>
                                 </Dropdown.Toggle>
 
-                                <Dropdown.Menu align="end">
+                                <Dropdown.Menu align="end" className={styles.share_menu}>
                                     <Dropdown.Item onClick={() => openTwitterUrl(publicUrl, pollObject?.title)}>
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: '8px' }}>
                                             <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />

@@ -5,6 +5,7 @@ import styles from "../../styles/Poll.module.css";
 
 export default function ModernVotingActivity({
     pollObject,
+    currentBitcoinBlockHeight,
     optionsMap,
     resultsByPosition,
     setResultsByPosition,
@@ -94,7 +95,9 @@ export default function ModernVotingActivity({
         <div className={`${styles.card} ${styles.fade_in}`}>
             <div className={styles.card_header}>
                 <h2 className={styles.section_title}>
-                    Voting Activity
+                    {currentBitcoinBlockHeight && pollObject?.endAtBlock && currentBitcoinBlockHeight > pollObject.endAtBlock
+                        ? 'Final Results'
+                        : 'Voting Activity'}
                     {totalUniqueVotes >= 0 && (
                         <span className={styles.section_title_count}>
                             ({totalUniqueVotes} {totalUniqueVotes === 1 ? 'voter' : 'voters'})

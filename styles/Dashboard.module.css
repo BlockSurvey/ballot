@@ -1189,55 +1189,101 @@
 
 /* Responsive Table */
 @media (max-width: 768px) {
+    /* Hide the quick-stats summary on mobile */
+    .quick_stats {
+        display: none;
+    }
+
+    /* Convert the polls table into stacked, readable cards */
     .polls_table_container {
-        margin: var(--space-6) -20px 0;
-        border-radius: 0;
-        border-left: none;
-        border-right: none;
+        margin: var(--space-5) 0 0;
+        border: none;
+        background: transparent;
+        overflow: visible;
+        box-shadow: none;
     }
-    
-    .table_header th {
-        padding: 12px 16px;
-        font-size: 12px;
+
+    .polls_table {
+        display: block;
+        width: 100%;
     }
-    
+
+    .table_header {
+        display: none;
+    }
+
+    .table_body {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+    }
+
+    .table_row {
+        display: block;
+        position: relative;
+        background: var(--color-background);
+        border: 1px solid var(--color-border-light);
+        border-radius: var(--radius-lg);
+        padding: var(--space-4);
+    }
+
+    .table_row:last-child {
+        border-bottom: 1px solid var(--color-border-light);
+    }
+
     .table_cell_title,
     .table_cell_status,
     .table_cell_date,
     .table_cell_actions {
-        padding: 16px;
+        display: block;
+        padding: 0;
+        border: none;
+        width: auto;
     }
-    
+
+    /* Title block — leave room on the right for the actions button */
+    .table_cell_title {
+        margin-bottom: var(--space-3);
+        padding-right: 44px;
+    }
+
     .table_poll_title {
-        font-size: 15px;
+        font-size: 1rem;
     }
-    
+
     .table_poll_description {
         font-size: 13px;
     }
-    
+
+    /* Status pill + date sit together on a meta line below the title */
+    .table_cell_status {
+        display: inline-flex;
+        vertical-align: middle;
+        margin-right: var(--space-3);
+    }
+
+    .table_cell_date {
+        display: inline-flex;
+        vertical-align: middle;
+    }
+
     .table_date_content {
         font-size: 13px;
+        white-space: nowrap;
     }
-    
-    .table_header_cell_title {
-        width: 40%;
-        min-width: 200px;
+
+    /* Actions pinned to the card's top-right corner */
+    .table_cell_actions {
+        position: absolute;
+        top: var(--space-3);
+        right: var(--space-3);
+        width: auto;
     }
-    
-    .table_header_cell_status {
-        width: 20%;
-        min-width: 80px;
-    }
-    
-    .table_header_cell_date {
-        width: 25%;
-        min-width: 120px;
-    }
-    
-    .table_header_cell_actions {
-        width: 15%;
-        min-width: 60px;
+
+    /* The empty-state row should still span the full card */
+    .table_no_results {
+        display: block;
+        padding: var(--space-6) var(--space-4);
     }
 }
 
@@ -2123,6 +2169,110 @@
     letter-spacing: -0.025em;
 }
 
+/* Quick Stats Row */
+.quick_stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+}
+
+.stat_card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    background: var(--color-background);
+    border: 1px solid var(--color-border-light);
+    border-radius: var(--radius-lg);
+    transition: border-color 0.15s ease;
+}
+
+.stat_card:hover {
+    border-color: var(--color-border);
+}
+
+.stat_icon {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-md);
+    background: var(--color-surface);
+    color: var(--color-tertiary);
+}
+
+.stat_icon_total {
+    background: rgba(0, 0, 0, 0.05);
+    color: var(--color-primary);
+}
+
+.stat_icon_active {
+    background: #ecfdf5;
+    color: #059669;
+}
+
+.stat_icon_upcoming {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.stat_icon_closed {
+    background: var(--color-surface);
+    color: var(--color-tertiary);
+}
+
+.stat_icon_draft {
+    background: #fffbeb;
+    color: #b45309;
+}
+
+.stat_body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+
+.stat_value {
+    font-size: 1.375rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--color-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+.stat_label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--color-tertiary);
+    white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+    .quick_stats {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .quick_stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-2);
+    }
+
+    .stat_icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .stat_value {
+        font-size: 1.25rem;
+    }
+}
+
 /* World-Class Toolbar */
 .toolbar {
     display: flex;
@@ -2712,7 +2862,29 @@
         max-width: none;
     }
 
+    /* Keep Status + Sort usable on mobile, each on its own full-width row */
     .toolbar_section_right {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: var(--space-3);
+    }
+
+    .toolbar_section_right .filter_wrapper {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .toolbar_section_right .filter_select_standalone {
+        flex: 1;
+        min-width: 0;
+        text-align: right;
+    }
+
+    /* The grid/list view toggle is redundant on mobile (both render as cards) */
+    .toolbar_divider,
+    .view_toggle {
         display: none;
     }
 

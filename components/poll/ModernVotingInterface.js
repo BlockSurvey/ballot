@@ -176,6 +176,25 @@ export default function ModernVotingInterface({
             currentBitcoinBlockHeight <= pollObject?.endAtBlock;
     };
 
+    // Block height is the source of truth: a poll is closed once the current
+    // Bitcoin height passes its end block, regardless of the tentative end date.
+    const isPollClosed = () => {
+        return !!currentBitcoinBlockHeight && currentBitcoinBlockHeight > pollObject?.endAtBlock;
+    };
+
+    // Not started yet: current height is still below the start block.
+    const isPollNotStarted = () => {
+        return !!currentBitcoinBlockHeight && currentBitcoinBlockHeight < pollObject?.startAtBlock;
+    };
+
+    // Title that reflects the poll's lifecycle state.
+    const getVotingSectionTitle = () => {
+        if (alreadyVoted) return "Your Vote";
+        if (isPollClosed()) return "Voting Closed";
+        if (isPollNotStarted()) return "Voting Opens Soon";
+        return "Cast Your Vote";
+    };
+
     const getPollStatusMessage = () => {
         if (!currentBitcoinBlockHeight) return "";
 
@@ -256,7 +275,7 @@ export default function ModernVotingInterface({
                     )}
 
                     <h2 className={styles.section_title}>
-                        {alreadyVoted ? 'Your Vote' : 'Cast Your Vote'}
+                        {getVotingSectionTitle()}
                         {/* Countdown Timer - Show for active polls regardless of voting status */}
                         {isPollActive() && (
                             <CountdownTimer
@@ -266,6 +285,64 @@ export default function ModernVotingInterface({
                             />
                         )}
                     </h2>
+
+                    {/* Poll Closed Banner - block height is the source of truth */}
+                    {isPollClosed() && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: 'var(--space-3)',
+                            padding: 'var(--space-4)',
+                            marginBottom: 'var(--space-4)',
+                            background: 'linear-gradient(135deg, #1f2937 0%, #111827 100%)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'white',
+                            boxShadow: '0 4px 6px -1px rgba(17, 24, 39, 0.3)',
+                            position: 'relative',
+                            zIndex: 2
+                        }}>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, marginTop: '1px' }}>
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                            <div>
+                                <div style={{ fontWeight: '700', fontSize: '1rem' }}>Poll Closed</div>
+                                <div style={{ fontSize: '0.85rem', opacity: 0.85, marginTop: '2px' }}>
+                                    Voting ended at block {formatNumber(pollObject?.endAtBlock)}. This poll is no longer accepting votes.
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Not Started Banner - poll opens at the start block */}
+                    {isPollNotStarted() && (
+                        <div style={{
+                            padding: 'var(--space-4)',
+                            marginBottom: 'var(--space-4)',
+                            background: 'var(--color-surface)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'var(--color-primary)',
+                            position: 'relative',
+                            zIndex: 2
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-2)' }}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                    <circle cx="12" cy="12" r="9" />
+                                    <path d="M12 7v5l3 2" />
+                                </svg>
+                                <span style={{ fontWeight: '700', fontSize: '1rem' }}>Voting hasn’t started yet</span>
+                                <CountdownTimer
+                                    endAtBlock={pollObject?.startAtBlock}
+                                    currentBitcoinBlockHeight={currentBitcoinBlockHeight}
+                                    showTimer={true}
+                                />
+                            </div>
+                            <div style={{ fontSize: '0.85rem', color: 'var(--color-tertiary)', marginTop: 'var(--space-1)', paddingLeft: 'calc(22px + var(--space-2))' }}>
+                                Voting opens at block {formatNumber(pollObject?.startAtBlock)}. Check back once it’s reached.
+                            </div>
+                        </div>
+                    )}
 
                     {/* Already Voted Banner */}
                     {alreadyVoted && (
@@ -441,8 +518,8 @@ export default function ModernVotingInterface({
                         </div>
                     )}
 
-                    {/* Dust Voting Toggle */}
-                    {hasDustOptions() && !alreadyVoted && pollObject?.votingSystem === 'fptp' && (
+                    {/* Dust Voting Toggle - only while the poll is open for voting */}
+                    {hasDustOptions() && !alreadyVoted && !isPollClosed() && !isPollNotStarted() && pollObject?.votingSystem === 'fptp' && (
                         <div style={{
                             background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.05) 100%)',
                             border: '1px solid rgba(245, 158, 11, 0.2)',
@@ -646,13 +723,8 @@ export default function ModernVotingInterface({
                         </div>
                     )}
 
-                    {!alreadyVoted && !isPollActive() && getPollStatusMessage() && (
-                        <div className={styles.warning_message}>
-                            <strong>Poll Status:</strong> {getPollStatusMessage()}
-                        </div>
-                    )}
-
-                    {/* Vote Button */}
+                    {/* Vote Button - only while the poll is open and not yet voted */}
+                    {!isPollClosed() && !isPollNotStarted() && !alreadyVoted && (
                     <div style={{ marginTop: "var(--space-6)" }}>
                         {isUserSignedIn ? (
                             <Button
@@ -691,6 +763,7 @@ export default function ModernVotingInterface({
                             </Button>
                         )}
                     </div>
+                    )}
                 </div>
             </div>
 

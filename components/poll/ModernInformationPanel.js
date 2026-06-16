@@ -125,17 +125,23 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                     {/* Block Heights */}
                     <div className={styles.info_item}>
                         <span className={styles.info_label}>Start Block</span>
-                        <span className={styles.info_value}>{pollObject?.startAtBlock}</span>
+                        <span className={`${styles.info_value} ${styles.info_value_mono}`}>
+                            {formatNumber(pollObject?.startAtBlock)}
+                        </span>
                     </div>
 
                     <div className={styles.info_item}>
                         <span className={styles.info_label}>End Block</span>
-                        <span className={styles.info_value}>{pollObject?.endAtBlock}</span>
+                        <span className={`${styles.info_value} ${styles.info_value_mono}`}>
+                            {formatNumber(pollObject?.endAtBlock)}
+                        </span>
                     </div>
 
                     <div className={styles.info_item}>
                         <span className={styles.info_label}>Current Block</span>
-                        <span className={styles.info_value}>{currentBitcoinBlockHeight}</span>
+                        <span className={`${styles.info_value} ${styles.info_value_mono}`}>
+                            {formatNumber(currentBitcoinBlockHeight)}
+                        </span>
                     </div>
                 </div>
             </div>
@@ -145,6 +151,33 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                 <div className={styles.info_card_header}>
                     <h3 className={styles.info_card_title}>
                         Poll Results
+                        {(() => {
+                            const h = currentBitcoinBlockHeight;
+                            if (!h || !pollObject?.endAtBlock) return null;
+                            let label, bg;
+                            if (pollObject?.startAtBlock && h < pollObject.startAtBlock) {
+                                label = 'Not started'; bg = 'var(--color-tertiary)';
+                            } else if (h > pollObject.endAtBlock) {
+                                label = 'Final'; bg = '#111827';
+                            } else {
+                                label = 'Live'; bg = '#10B981';
+                            }
+                            return (
+                                <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    padding: '2px 8px',
+                                    fontSize: '0.625rem',
+                                    fontWeight: '700',
+                                    letterSpacing: '0.04em',
+                                    textTransform: 'uppercase',
+                                    lineHeight: 1.4,
+                                    color: '#fff',
+                                    background: bg,
+                                    borderRadius: '999px'
+                                }}>{label}</span>
+                            );
+                        })()}
                         {(dustVotingLoading || btcVotingLoading || recountLoading) && (
                             <span style={{
                                 marginLeft: '8px',
@@ -168,6 +201,22 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                     </h3>
                 </div>
                 <div className={styles.info_card_content}>
+                    {/* Before the poll opens, clarify there are no votes *yet* (vs. none ever) */}
+                    {currentBitcoinBlockHeight && pollObject?.startAtBlock && currentBitcoinBlockHeight < pollObject.startAtBlock && (
+                        <div style={{
+                            padding: 'var(--space-3)',
+                            marginBottom: 'var(--space-4)',
+                            background: 'var(--color-surface)',
+                            border: '1px solid var(--color-border)',
+                            borderRadius: 'var(--radius-md)',
+                            fontSize: '0.8125rem',
+                            color: 'var(--color-tertiary)',
+                            lineHeight: 1.4
+                        }}>
+                            Voting hasn’t started yet — live results will appear once the poll opens at block {formatNumber(pollObject?.startAtBlock)}.
+                        </div>
+                    )}
+
                     {/* Results Summary */}
                     <div className={styles.results_summary} style={{ marginBottom: 'var(--space-4)' }}>
                         <div className={styles.results_stat}>

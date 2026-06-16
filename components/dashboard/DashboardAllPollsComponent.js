@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
-import { getFileFromGaia, getGaiaAddressFromPublicKey } from "../../services/auth.js";
-import { convertToDisplayDateFormat } from "../../services/utils";
+import { getFileFromGaia, getGaiaAddressFromPublicKey, putFileToGaia } from "../../services/auth.js";
+import { convertToDisplayDateFormat, getCurrentBlockHeights, getPollLifecycleStatus } from "../../services/utils";
 import styles from "../../styles/Dashboard.module.css";
 import ArchiveConfirmationModal from "../common/ArchiveConfirmationModal";
 import EditDescriptionModal from "../common/EditDescriptionModal";
@@ -166,6 +166,7 @@ export default function DashboardAllPollsComponent() {
     const [allPolls, setAllPolls] = useState();
     const [isDeleting, setIsDeleting] = useState(false);
     const [gaiaAddress, setGaiaAddress] = useState();
+    const [currentBitcoinBlockHeight, setCurrentBitcoinBlockHeight] = useState(0);
     const [searchQuery, setSearchQuery] = useState(savedPreferences?.searchQuery || "");
     const [statusFilter, setStatusFilter] = useState(savedPreferences?.statusFilter || "all");
     const [sortBy, setSortBy] = useState(savedPreferences?.sortBy || "date");
@@ -185,10 +186,20 @@ export default function DashboardAllPollsComponent() {
     useEffect(() => {
         getGaiaAddress();
 
+        // Current Bitcoin height drives height-based lifecycle status for the list
+        getCurrentBlockHeights()
+            .then((heights) => setCurrentBitcoinBlockHeight(heights?.bitcoinHeight || 0))
+            .catch((error) => console.error("Error fetching block heights:", error));
+
         getFileFromGaia("pollIndex.json", {}).then(
             (response) => {
                 if (response) {
-                    setAllPolls(JSON.parse(response));
+                    const parsed = JSON.parse(response);
+                    setAllPolls(parsed);
+                    // One-time backfill: legacy index entries have no block heights.
+                    // Fetch each missing poll's full JSON, copy its heights into the
+                    // index, and persist — so the list can use height-based status.
+                    backfillBlockHeights(parsed);
                 }
             },
             (error) => {
@@ -201,6 +212,49 @@ export default function DashboardAllPollsComponent() {
                 }
             });
     }, []);
+
+    // Backfill block heights into legacy pollIndex entries that predate them.
+    async function backfillBlockHeights(pollIndex) {
+        if (!pollIndex?.ref) return;
+
+        const missing = Object.values(pollIndex.ref).filter(
+            (poll) => poll && poll.id && (poll.endAtBlock === undefined || poll.endAtBlock === null)
+        );
+        if (missing.length === 0) return;
+
+        let changed = false;
+        await Promise.all(
+            missing.map(async (entry) => {
+                try {
+                    const raw = await getFileFromGaia(entry.id + ".json", {});
+                    if (!raw) return;
+                    const fullPoll = JSON.parse(raw);
+                    if (fullPoll?.endAtBlock) {
+                        pollIndex.ref[entry.id].endAtBlock = fullPoll.endAtBlock;
+                        if (fullPoll?.startAtBlock) {
+                            pollIndex.ref[entry.id].startAtBlock = fullPoll.startAtBlock;
+                        }
+                        changed = true;
+                    }
+                } catch (error) {
+                    // Missing/unreadable poll file — leave it on the date fallback
+                    if (!(error && error.code === "does_not_exist")) {
+                        console.error("Backfill: failed for poll", entry.id, error);
+                    }
+                }
+            })
+        );
+
+        if (changed) {
+            // Refresh the UI with the enriched index, then persist it once
+            setAllPolls({ ...pollIndex });
+            try {
+                await putFileToGaia("pollIndex.json", JSON.stringify(pollIndex), {});
+            } catch (error) {
+                console.error("Backfill: failed to persist pollIndex.json", error);
+            }
+        }
+    }
 
     // Save preferences to localStorage whenever they change
     useEffect(() => {
@@ -246,11 +300,26 @@ export default function DashboardAllPollsComponent() {
     }
 
     function getPollStatus(poll) {
+        // Keep the dedicated "archived" bucket for filtering; otherwise use the
+        // shared height-based lifecycle status (with date fallback for legacy polls).
         if (poll?.archived === true) return "archived";
-        if (poll?.status === "draft") return "draft";
-        if (poll?.endAt && new Date(poll?.endAt) < new Date()) return "closed";
-        if (poll?.startAt && new Date(poll?.startAt) > new Date()) return "not_started";
-        return "active";
+        return getPollLifecycleStatus(poll, currentBitcoinBlockHeight);
+    }
+
+    // Quick at-a-glance counts for the dashboard summary row.
+    function getPollStats() {
+        const ids = allPolls?.list || [];
+        const stats = { total: ids.length, active: 0, upcoming: 0, closed: 0, draft: 0 };
+        ids.forEach((id) => {
+            const poll = allPolls?.ref?.[id];
+            if (!poll) return;
+            const status = getPollStatus(poll);
+            if (status === "active") stats.active += 1;
+            else if (status === "not_started") stats.upcoming += 1;
+            else if (status === "draft") stats.draft += 1;
+            else stats.closed += 1; // closed + archived
+        });
+        return stats;
     }
 
     function sortPolls(pollIds) {
@@ -343,16 +412,15 @@ export default function DashboardAllPollsComponent() {
 
     function renderPollTableRow(pollIndexObject) {
         const getStatusConfig = (poll) => {
-            if (poll?.status === "draft") {
-                return { type: "draft", label: "Draft" };
-            }
-            if (poll?.endAt && new Date(poll?.endAt) < new Date()) {
-                return { type: "closed", label: "Closed" };
-            }
-            if (poll?.startAt && new Date(poll?.startAt) > new Date()) {
-                return { type: "not_started", label: "Not Started" };
-            }
-            return { type: "active", label: "Active" };
+            // Height-based lifecycle status (with date fallback for legacy polls)
+            const type = getPollLifecycleStatus(poll, currentBitcoinBlockHeight);
+            const labels = {
+                draft: "Draft",
+                closed: "Closed",
+                not_started: "Not Started",
+                active: "Active"
+            };
+            return { type, label: labels[type] || "Active" };
         };
 
         const statusConfig = getStatusConfig(pollIndexObject);
@@ -420,16 +488,15 @@ export default function DashboardAllPollsComponent() {
 
     function renderPollCard(pollIndexObject) {
         const getStatusConfig = (poll) => {
-            if (poll?.status === "draft") {
-                return { type: "draft", label: "Draft" };
-            }
-            if (poll?.endAt && new Date(poll?.endAt) < new Date()) {
-                return { type: "closed", label: "Closed" };
-            }
-            if (poll?.startAt && new Date(poll?.startAt) > new Date()) {
-                return { type: "not_started", label: "Not Started" };
-            }
-            return { type: "active", label: "Active" };
+            // Height-based lifecycle status (with date fallback for legacy polls)
+            const type = getPollLifecycleStatus(poll, currentBitcoinBlockHeight);
+            const labels = {
+                draft: "Draft",
+                closed: "Closed",
+                not_started: "Not Started",
+                active: "Active"
+            };
+            return { type, label: labels[type] || "Active" };
         };
 
         const statusConfig = getStatusConfig(pollIndexObject);
@@ -497,6 +564,65 @@ export default function DashboardAllPollsComponent() {
                             <div className={styles.page_header}>
                                 <h1 className={styles.page_title}>All Polls</h1>
                             </div>
+
+                            {/* Quick Stats */}
+                            {(() => {
+                                const stats = getPollStats();
+                                const STAT_ICONS = {
+                                    total: (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" />
+                                            <path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" />
+                                            <path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65" />
+                                        </svg>
+                                    ),
+                                    active: (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                                        </svg>
+                                    ),
+                                    upcoming: (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <circle cx="12" cy="12" r="9" />
+                                            <polyline points="12 7 12 12 15 14" />
+                                        </svg>
+                                    ),
+                                    closed: (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="3" y="11" width="18" height="11" rx="2" />
+                                            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                        </svg>
+                                    ),
+                                    draft: (
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="M12 20h9" />
+                                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                        </svg>
+                                    ),
+                                };
+                                const items = [
+                                    { key: "total", label: "Total Polls", value: stats.total },
+                                    { key: "active", label: "Active", value: stats.active },
+                                    { key: "upcoming", label: "Upcoming", value: stats.upcoming },
+                                    { key: "closed", label: "Closed", value: stats.closed },
+                                    { key: "draft", label: "Drafts", value: stats.draft },
+                                ];
+                                return (
+                                    <div className={styles.quick_stats}>
+                                        {items.map((item) => (
+                                            <div key={item.key} className={styles.stat_card}>
+                                                <span className={`${styles.stat_icon} ${styles[`stat_icon_${item.key}`]}`}>
+                                                    {STAT_ICONS[item.key]}
+                                                </span>
+                                                <span className={styles.stat_body}>
+                                                    <span className={styles.stat_value}>{item.value}</span>
+                                                    <span className={styles.stat_label}>{item.label}</span>
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
 
                             {/* World-Class Toolbar */}
                             <div className={styles.toolbar}>

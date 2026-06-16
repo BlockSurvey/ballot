@@ -10,7 +10,7 @@ import { getIndividualResultByStartAndEndPosition } from "../components/poll/Pol
 import { getMyStxAddress, getStacksAPIHeaders, getStacksAPIPrefix, userSession } from "../services/auth";
 import { checkUserBtcVotingStatus, processBtcVotesForPoll } from "../services/btc-vote-utils";
 import { processDustVotingBalancesWithCache } from "../services/stx-dust-vote-utils";
-import { getCurrentBlockHeights } from "../services/utils";
+import { getCurrentBlockHeights, getEffectivePollEndDate, calculateDateFromBitcoinBlockHeight } from "../services/utils";
 
 export default function Poll(props) {
     // Variables
@@ -1239,6 +1239,32 @@ export async function getServerSideProps(context) {
     } catch (error) {
         console.error("Error fetching current block heights:", error);
         // Default values already set
+    }
+
+    // Block height is the source of truth: override the tentative end date with
+    // one derived from the current height vs the end block, so the displayed end
+    // date and the open/closed state stay correct even when the chain runs fast
+    // or slow. Also stamp an explicit closed flag for consumers.
+    if (pollObject && pollObject.endAtBlock && currentBitcoinBlockHeight) {
+        try {
+            const effectiveEndDate = getEffectivePollEndDate(pollObject, currentBitcoinBlockHeight);
+            if (effectiveEndDate) {
+                pollObject.endAtDateUTC = effectiveEndDate.toISOString();
+                pollObject.endAtDate = effectiveEndDate.toISOString();
+            }
+            // Keep the start date on the same block-derived basis as the end date,
+            // otherwise a closed poll can show a future start with a past end.
+            if (pollObject.startAtBlock) {
+                const effectiveStartDate = calculateDateFromBitcoinBlockHeight(currentBitcoinBlockHeight, pollObject.startAtBlock);
+                if (effectiveStartDate) {
+                    pollObject.startAtDateUTC = effectiveStartDate.toISOString();
+                    pollObject.startAtDate = effectiveStartDate.toISOString();
+                }
+            }
+            pollObject.isClosedByHeight = currentBitcoinBlockHeight > pollObject.endAtBlock;
+        } catch (error) {
+            console.error("Error computing effective poll end date:", error);
+        }
     }
 
     // Pass data to the page via props

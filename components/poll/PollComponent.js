@@ -165,6 +165,7 @@ export default function PollComponent(props) {
                             {/* Modern Voting Activity */}
                             <ModernVotingActivity
                                 pollObject={pollObject}
+                                currentBitcoinBlockHeight={currentBitcoinBlockHeight}
                                 optionsMap={optionsMap}
                                 resultsByPosition={resultsByPosition}
                                 setResultsByPosition={setResultsByPosition}

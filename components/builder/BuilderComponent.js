@@ -419,6 +419,10 @@ export default function BuilderComponent(props) {
                 "status": pollObject.status,
                 "startAt": pollObject.startAtDate,
                 "endAt": pollObject.endAtDate,
+                // Block heights are the source of truth for lifecycle status on the
+                // dashboard list (dates are only tentative and drift as the chain moves).
+                "startAtBlock": pollObject.startAtBlock,
+                "endAtBlock": pollObject.endAtBlock,
                 "publishedInfo": pollObject?.publishedInfo
             };
 

@@ -75,6 +75,16 @@ function shortenStxAddress(address) {
     return address.substring(0, 4) + "..." + address.substring(address.length - 4);
 }
 
+// Truncate the middle of a long string (address, contract id, etc.), keeping a
+// few leading and trailing characters with an ellipsis in between.
+// e.g. truncateMiddle("ST2FYE64JK...TQT9", 6, 4) => "ST2FYE…ТQT9"
+export const truncateMiddle = (value, front = 6, back = 4) => {
+    if (!value) return "";
+    const str = String(value);
+    if (str.length <= front + back + 1) return str;
+    return `${str.slice(0, front)}…${str.slice(-back)}`;
+};
+
 // Fetch and store once
 var displayUsername;
 export async function getDomainNamesFromBlockchain() {
@@ -305,6 +315,48 @@ export const calculateDateFromBitcoinBlockHeight = (currentBitcoinBlockHeight, t
 
     // Calculate the date based on the difference (can be positive for future or negative for past)
     const calculatedDate = new Date(new Date().getTime() + (minutes * 60 * 1000));
-    
+
     return calculatedDate;
 }
+
+// Block height is the source of truth for a poll's lifecycle. The end date
+// stored at creation is only tentative — the chain can run faster or slower —
+// so we always derive the effective end date from the current height vs the
+// end block. Returns a PAST date once the end block is reached, a FUTURE date
+// otherwise. Falls back to stored dates only when height is unavailable.
+export const getEffectivePollEndDate = (pollObject, currentBitcoinBlockHeight) => {
+    if (pollObject?.endAtBlock && currentBitcoinBlockHeight) {
+        return calculateDateFromBitcoinBlockHeight(currentBitcoinBlockHeight, pollObject.endAtBlock);
+    }
+    if (pollObject?.endAtDateUTC) return new Date(pollObject.endAtDateUTC);
+    if (pollObject?.endAtDate) return new Date(pollObject.endAtDate);
+    return null;
+};
+
+// A poll is closed once the current Bitcoin block height passes its end block.
+export const isPollClosedByHeight = (pollObject, currentBitcoinBlockHeight) => {
+    if (!currentBitcoinBlockHeight || !pollObject?.endAtBlock) return false;
+    return currentBitcoinBlockHeight > pollObject.endAtBlock;
+};
+
+// Shared lifecycle status for a poll, returning one of:
+// "draft" | "closed" | "not_started" | "active".
+// Block height is the source of truth; we fall back to the stored (tentative)
+// dates only for legacy index entries that predate block heights being stored.
+export const getPollLifecycleStatus = (poll, currentBitcoinBlockHeight) => {
+    if (poll?.status === "draft") return "draft";
+    if (poll?.status === "closed" || poll?.archived === true) return "closed";
+
+    // Height-based (authoritative) when both the end block and current height are known
+    if (currentBitcoinBlockHeight && poll?.endAtBlock) {
+        if (currentBitcoinBlockHeight > poll.endAtBlock) return "closed";
+        if (poll?.startAtBlock && currentBitcoinBlockHeight < poll.startAtBlock) return "not_started";
+        return "active";
+    }
+
+    // Fallback for legacy entries without block heights: tentative dates
+    const now = new Date();
+    if (poll?.endAt && new Date(poll.endAt) < now) return "closed";
+    if (poll?.startAt && new Date(poll.startAt) > now) return "not_started";
+    return "active";
+};
