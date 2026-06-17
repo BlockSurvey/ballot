@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Modal, Button } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import { getApiKey, getFileFromGaia, putFileToGaia } from "../../services/auth";
+import styles from "../../styles/ArchiveConfirmationModal.module.css";
 
 export default function ArchiveConfirmationModal({ show, onHide, poll, onArchiveSuccess }) {
     const [isArchiving, setIsArchiving] = useState(false);
@@ -56,54 +57,68 @@ export default function ArchiveConfirmationModal({ show, onHide, poll, onArchive
         }
     };
 
+    const noteItems = [
+        "Automatically closed to new votes",
+        "Hidden from the main dashboard",
+        "Still accessible via direct link",
+    ];
+
     return (
-        <Modal show={show} onHide={onHide} centered size="sm">
-            <Modal.Header closeButton>
-                <Modal.Title>Archive Poll</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-                <p>
-                    Are you sure you want to archive the poll "{poll?.title || 'Untitled Poll'}"?
+        <Modal show={show} onHide={onHide} centered contentClassName={styles.content}>
+            <div className={styles.body}>
+                <button className={styles.close} onClick={onHide} aria-label="Close" disabled={isArchiving}>
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <line x1="18" y1="6" x2="6" y2="18" />
+                        <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                </button>
+
+                <div className={styles.header}>
+                    <div className={styles.icon_badge}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="3" y="4" width="18" height="4" rx="1" />
+                            <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+                            <line x1="10" y1="12" x2="14" y2="12" />
+                        </svg>
+                    </div>
+                    <h3 className={styles.title}>Archive poll</h3>
+                </div>
+
+                <p className={styles.question}>
+                    Are you sure you want to archive{" "}
+                    <span className={styles.poll_name}>&ldquo;{poll?.title || "Untitled Poll"}&rdquo;</span>?
                 </p>
-                <div style={{ 
-                    background: "#f8f9fa", 
-                    padding: "12px", 
-                    borderRadius: "6px", 
-                    marginTop: "12px",
-                    fontSize: "14px",
-                    color: "#6c757d"
-                }}>
-                    <strong>Note:</strong> Archived polls will be:
-                    <ul style={{ margin: "8px 0 0 0", paddingLeft: "20px" }}>
-                        <li>Automatically closed to new votes</li>
-                        <li>Hidden from the main dashboard</li>
-                        <li>Still accessible via direct link</li>
+
+                <div className={styles.note}>
+                    <div className={styles.note_label}>What happens next</div>
+                    <ul className={styles.note_list}>
+                        {noteItems.map((item) => (
+                            <li key={item}>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                {item}
+                            </li>
+                        ))}
                     </ul>
                 </div>
-            </Modal.Body>
-            <Modal.Footer>
-                <Button 
-                    variant="secondary" 
-                    onClick={onHide}
-                    disabled={isArchiving}
-                >
-                    Cancel
-                </Button>
-                <Button 
-                    variant="danger" 
-                    onClick={handleArchive}
-                    disabled={isArchiving}
-                >
-                    {isArchiving ? (
-                        <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Archiving...
-                        </>
-                    ) : (
-                        "Archive Poll"
-                    )}
-                </Button>
-            </Modal.Footer>
+
+                <div className={styles.footer}>
+                    <button className={styles.btn_cancel} onClick={onHide} disabled={isArchiving}>
+                        Cancel
+                    </button>
+                    <button className={styles.btn_danger} onClick={handleArchive} disabled={isArchiving}>
+                        {isArchiving ? (
+                            <>
+                                <span className={styles.spinner} role="status" aria-hidden="true"></span>
+                                Archiving…
+                            </>
+                        ) : (
+                            "Archive Poll"
+                        )}
+                    </button>
+                </div>
+            </div>
         </Modal>
     );
 }

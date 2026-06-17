@@ -5,7 +5,7 @@ import { getFileFromGaia, getGaiaAddressFromPublicKey, putFileToGaia } from "../
 import { convertToDisplayDateFormat, getCurrentBlockHeights, getPollLifecycleStatus } from "../../services/utils";
 import styles from "../../styles/Dashboard.module.css";
 import ArchiveConfirmationModal from "../common/ArchiveConfirmationModal";
-import EditDescriptionModal from "../common/EditDescriptionModal";
+import EditPollModal from "../common/EditPollModal";
 
 // Modern Action Dropdown Component
 function ModernActionDropdown({ poll, onEditDescription, onArchive, onEditPoll, isTableView = false }) {
@@ -110,7 +110,7 @@ function ModernActionDropdown({ poll, onEditDescription, onArchive, onEditPoll, 
                                     <path d="M483.876,20.791c-14.72-14.72-38.669-14.714-53.377,0L221.352,229.944c-0.28,0.28-3.434,3.559-4.251,5.396l-28.963,65.069 c-2.057,4.619-1.056,10.027,2.521,13.6c2.337,2.336,5.461,3.576,8.639,3.576c1.675,0,3.362-0.346,4.96-1.057l65.07-28.963 c1.83-0.815,5.114-3.97,5.396-4.25L483.876,74.169c7.131-7.131,11.06-16.61,11.06-26.692 C494.936,37.396,491.007,27.915,483.876,20.791z M466.61,56.897L257.457,266.05c-0.035,0.036-0.055,0.078-0.089,0.107 l-33.989,15.131L238.51,247.3c0.03-0.036,0.071-0.055,0.107-0.09L447.765,38.058c5.038-5.039,13.819-5.033,18.846,0.005 c2.518,2.51,3.905,5.855,3.905,9.414C470.516,51.036,469.127,54.38,466.61,56.897z" fill="currentColor" />
                                 </g>
                             </svg>
-                            Edit Description
+                            Edit Poll
                         </button>
 
                         <hr className={styles.modern_dropdown_divider} />
@@ -355,14 +355,20 @@ export default function DashboardAllPollsComponent() {
         setSelectedPoll(null);
     }
 
-    function handleDescriptionUpdated(pollId, newDescription, updatedAt) {
+    function handlePollUpdated(pollId, updatedPoll) {
         if (allPolls?.ref && allPolls.ref[pollId]) {
-            // Update the poll in the state
+            // Merge the edited fields back into the list state
             const updatedRef = { ...allPolls.ref };
             updatedRef[pollId] = {
                 ...updatedRef[pollId],
-                description: newDescription,
-                updatedAt: updatedAt
+                title: updatedPoll?.title ?? updatedRef[pollId].title,
+                description: updatedPoll?.description ?? updatedRef[pollId].description,
+                startAtBlock: updatedPoll?.startAtBlock ?? updatedRef[pollId].startAtBlock,
+                endAtBlock: updatedPoll?.endAtBlock ?? updatedRef[pollId].endAtBlock,
+                snapshotBlockHeight: updatedPoll?.snapshotBlockHeight ?? updatedRef[pollId].snapshotBlockHeight,
+                startAt: updatedPoll?.startAtDate ?? updatedRef[pollId].startAt,
+                endAt: updatedPoll?.endAtDate ?? updatedRef[pollId].endAt,
+                updatedAt: new Date().toISOString()
             };
 
             setAllPolls({
@@ -883,12 +889,13 @@ export default function DashboardAllPollsComponent() {
                 )}
             </div>
 
-            {/* Edit Description Modal */}
-            <EditDescriptionModal
+            {/* Edit Poll Modal */}
+            <EditPollModal
                 show={showEditModal}
                 onHide={handleCloseEditModal}
                 poll={selectedPoll}
-                onDescriptionUpdated={handleDescriptionUpdated}
+                currentBitcoinBlockHeight={currentBitcoinBlockHeight}
+                onUpdated={handlePollUpdated}
             />
 
             {/* Archive Confirmation Modal */}

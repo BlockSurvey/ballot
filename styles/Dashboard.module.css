@@ -339,88 +339,58 @@
     justify-content: center;
     width: 32px;
     height: 32px;
-    background: rgba(255, 255, 255, 0.95);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 8px;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    color: #6b7280;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.2s ease;
+    color: var(--color-tertiary);
     opacity: 0;
-    transform: scale(0.95) translateZ(0);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    position: relative;
-    overflow: hidden;
-}
-
-/* Subtle shine effect */
-.modern_three_dot_button::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.4),
-        transparent
-    );
-    transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.modern_three_dot_button:hover::before {
-    left: 100%;
 }
 
 .modern_three_dot_button:hover {
-    background: white;
-    border-color: rgba(0, 0, 0, 0.12);
-    transform: scale(1.02) translateZ(0);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
-    color: #374151;
+    background: var(--color-surface);
+    border-color: var(--color-secondary);
+    color: var(--color-primary);
 }
 
-.modern_three_dot_button:focus {
+.modern_three_dot_button:focus-visible {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 4px 16px rgba(0, 0, 0, 0.12);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-border);
 }
 
-.modern_three_dot_button:active {
-    transform: scale(0.98) translateZ(0);
-    transition: transform 0.1s ease;
+/* Open state — keep the trigger looking active while the menu is shown */
+.dropdown_open .modern_three_dot_button {
+    opacity: 1;
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
-/* Show button on hover with smooth animation */
+/* Show button on row/card hover */
 .poll_card:hover .modern_three_dot_button,
 .table_row:hover .modern_three_dot_button {
     opacity: 1;
-    transform: scale(1) translateZ(0);
 }
 
 /* World-Class Dropdown Menu */
 .modern_dropdown_menu {
     position: absolute;
-    top: calc(100% + 8px);
+    top: calc(100% + var(--space-2));
     right: 0;
     min-width: 200px;
-    background: rgba(255, 255, 255, 0.98);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(0, 0, 0, 0.08);
-    border-radius: 12px;
-    box-shadow: 
-        0 20px 25px -5px rgba(0, 0, 0, 0.1),
-        0 10px 10px -5px rgba(0, 0, 0, 0.04),
-        0 0 0 1px rgba(0, 0, 0, 0.05);
-    padding: 8px 0;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: var(--space-1);
     z-index: 9999;
     transform-origin: top right;
     opacity: 0;
     visibility: hidden;
-    transform: scale(0.95) translateY(-8px) translateZ(0);
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transform: scale(0.96) translateY(-6px) translateZ(0);
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
     will-change: transform, opacity;
     isolation: isolate;
 }
@@ -435,92 +405,60 @@
 .modern_dropdown_item {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 18px;
+    gap: var(--space-3);
+    padding: var(--space-3);
     font-size: 14px;
     font-weight: 500;
-    color: #374151;
+    color: var(--color-secondary);
     background: none;
     border: none;
     width: 100%;
     text-align: left;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 8px;
-    margin: 2px 8px;
-    position: relative;
-    overflow: hidden;
-}
-
-.modern_dropdown_item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px;
-    background: #3b82f6;
-    transform: scaleY(0);
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 0 3px 3px 0;
+    border-radius: var(--radius-md);
+    transition: background 0.15s ease, color 0.15s ease;
 }
 
 .modern_dropdown_item:hover {
-    background: #f8fafc;
-    color: #111827;
-    transform: translateX(4px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    background: var(--color-surface);
+    color: var(--color-primary);
 }
 
-.modern_dropdown_item:hover::before {
-    transform: scaleY(1);
-}
-
-.modern_dropdown_item:focus {
+.modern_dropdown_item:focus-visible {
     outline: none;
-    background: #f1f5f9;
-    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
-}
-
-.modern_dropdown_item:active {
-    transform: translateX(2px) scale(0.98);
+    background: var(--color-surface);
+    box-shadow: 0 0 0 2px var(--color-border);
 }
 
 .modern_dropdown_item svg {
     width: 16px;
     height: 16px;
-    opacity: 0.8;
-    transition: opacity 0.15s ease;
+    color: var(--color-tertiary);
+    transition: color 0.15s ease;
     flex-shrink: 0;
 }
 
 .modern_dropdown_item:hover svg {
-    opacity: 1;
+    color: var(--color-primary);
 }
 
-/* Danger Item Styling */
-.modern_dropdown_item.item_danger {
-    color: #dc2626;
-}
-
-.modern_dropdown_item.item_danger::before {
-    background: #dc2626;
-}
-
-.modern_dropdown_item.item_danger:hover {
-    background: #fef2f2;
-    color: #b91c1c;
-}
-
+/* Danger Item Styling — the one semantic color in a monochrome menu */
+.modern_dropdown_item.item_danger,
 .modern_dropdown_item.item_danger svg {
     color: #dc2626;
+}
+
+.modern_dropdown_item.item_danger:hover,
+.modern_dropdown_item.item_danger:hover svg {
+    background: #fef2f2;
+    color: #b91c1c;
 }
 
 /* Dropdown Divider */
 .modern_dropdown_divider {
     height: 1px;
-    background: rgba(0, 0, 0, 0.06);
-    margin: 6px 0;
+    background: var(--color-border-light);
+    margin: var(--space-1) var(--space-2);
     border: none;
 }
 
@@ -546,8 +484,8 @@
 }
 
 .table_modern_three_dot_button:hover {
-    background: #f3f4f6;
-    border-color: rgba(0, 0, 0, 0.08);
+    background: var(--color-surface);
+    border-color: var(--color-border);
 }
 
 .table_row:hover .table_modern_three_dot_button {
@@ -583,7 +521,6 @@
     
     .modern_dropdown_menu {
         min-width: 160px;
-        backdrop-filter: blur(16px);
     }
     
     .modern_dropdown_item {

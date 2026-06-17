@@ -458,8 +458,13 @@ export default function ModernInformationPanel({ pollObject, resultsByOption, cu
                                 const totalLockedStx = regularLockedStx + dustLockedStx + btcLockedStx;
                                 const totalUnlockedStx = regularUnlockedStx + dustUnlockedStx + btcUnlockedStx;
 
-                                // Total votes should be the sum of locked + unlocked to ensure consistency
-                                const totalVotes = totalLockedStx + totalUnlockedStx;
+                                // Votes = locked + unlocked when the breakdown is tracked; otherwise
+                                // fall back to the raw on-chain vote count (snapshot-oracle polls that
+                                // don't split locked/unlocked still record the correct total per option).
+                                const lockedPlusUnlocked = totalLockedStx + totalUnlockedStx;
+                                const totalVotes = lockedPlusUnlocked > 0
+                                    ? lockedPlusUnlocked
+                                    : (parseInt(regularResult.total) || 0);
 
                                 return {
                                     id: option.id,

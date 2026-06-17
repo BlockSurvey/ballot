@@ -445,6 +445,13 @@ export default function BuilderComponent(props) {
                 // dashboard list (dates are only tentative and drift as the chain moves).
                 "startAtBlock": pollObject.startAtBlock,
                 "endAtBlock": pollObject.endAtBlock,
+                "snapshotBlockHeight": pollObject.snapshotBlockHeight,
+                // Token-gating context (lets the dashboard Edit decide whether a
+                // snapshot height field is relevant) + on-chain edit capability flag.
+                "votingStrategyFlag": pollObject.votingStrategyFlag,
+                "strategyTokenType": pollObject.strategyTokenType,
+                "votingStrategyTemplate": pollObject.votingStrategyTemplate,
+                "supportsConfigUpdate": pollObject.supportsConfigUpdate === true,
                 "publishedInfo": pollObject?.publishedInfo
             };
 
@@ -723,6 +730,20 @@ export default function BuilderComponent(props) {
             return;
         }
 
+        // Guard: a token-gated poll with a snapshot block REQUIRES the snapshot
+        // signer key, otherwise the contract would silently fall back to
+        // current-balance gating (no real snapshot). Block instead of misleading.
+        const wantsSnapshot = pollObject?.votingStrategyFlag
+            && pollObject?.strategyTokenType === "ft"
+            && (parseInt(pollObject?.snapshotBlockHeight) || 0) > 0;
+        if (wantsSnapshot && !Constants.SNAPSHOT_SIGNER_PUBKEY) {
+            setErrorMessage("Snapshot signer is not configured. Set NEXT_PUBLIC_SNAPSHOT_SIGNER_PUBKEY (and restart the app), or remove the snapshot block height to use current balance.");
+            setIsPublishing(false);
+            setIsProcessing(false);
+            setPublishProgress('');
+            return;
+        }
+
         setPublishProgress('Preparing contract...');
 
 
@@ -758,6 +779,19 @@ export default function BuilderComponent(props) {
             setPublishProgress('Contract deployed! Saving poll...');
             // Update the contract deployed information
             pollObject.publishedInfo["txId"] = data?.txId;
+
+            // This contract is deployed with the owner-only `update-config`
+            // function, so the voting window + snapshot height can be edited
+            // on-chain later. Flag it so the dashboard's Edit knows which
+            // fields it can offer.
+            pollObject["supportsConfigUpdate"] = true;
+
+            // If a snapshot block + signer key are configured, this contract gates
+            // voting power via an off-chain signed snapshot weight (post at-block).
+            pollObject["usesSnapshotOracle"] = !!(
+                (parseInt(pollObject?.snapshotBlockHeight) || 0) > 0 &&
+                Constants.SNAPSHOT_SIGNER_PUBKEY
+            );
 
             // Update the status
             pollObject["status"] = "live";

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "react-bootstrap";
-import { authenticate, userSession } from "../../services/auth";
+import { authenticate, userSession, getMyStxAddress } from "../../services/auth";
 import { castMyVoteContractCall } from "../../services/contract";
 import { formatNumber } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
@@ -127,6 +127,31 @@ export default function ModernVotingInterface({
         }
     };
 
+    // For snapshot polls, fetch the server-signed voting power (balance at the
+    // snapshot block) which the contract verifies on-chain (replaces at-block).
+    const fetchSnapshotSignature = async () => {
+        try {
+            const voterAddress = getMyStxAddress();
+            const parts = (typeof window !== "undefined" ? window.location.pathname : "")
+                .split("/").filter(Boolean);
+            const gaiaAddress = parts[1];
+            if (!voterAddress || !gaiaAddress) return null;
+
+            const resp = await fetch("/api/snapshot/sign", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ pollId: pollObject?.id, gaiaAddress, voterAddress })
+            });
+            if (!resp.ok) return null;
+            const data = await resp.json();
+            if (data?.locked === undefined || data?.unlocked === undefined || !data?.signature) return null;
+            return { locked: data.locked, unlocked: data.unlocked, signature: data.signature };
+        } catch (error) {
+            console.error("Snapshot signature fetch failed:", error);
+            return null;
+        }
+    };
+
     const handleRegularVote = async () => {
         if (!validateVote()) return;
 
@@ -136,6 +161,21 @@ export default function ModernVotingInterface({
         try {
             const contractAddress = pollObject?.publishedInfo?.contractAddress;
             const contractName = pollObject?.publishedInfo?.contractName;
+
+            let snapshotLocked;
+            let snapshotUnlocked;
+            let snapshotSignatureHex;
+            if (pollObject?.usesSnapshotOracle) {
+                const signed = await fetchSnapshotSignature();
+                if (!signed) {
+                    setErrorMessage("Could not verify your snapshot voting power. Please try again.");
+                    setIsProcessing(false);
+                    return;
+                }
+                snapshotLocked = signed.locked;
+                snapshotUnlocked = signed.unlocked;
+                snapshotSignatureHex = signed.signature;
+            }
 
             await castMyVoteContractCall(
                 contractAddress,
@@ -148,7 +188,10 @@ export default function ModernVotingInterface({
                         onVoteSuccess(data, selectedOptions);
                     }
                     setIsProcessing(false);
-                }
+                },
+                snapshotLocked,
+                snapshotUnlocked,
+                snapshotSignatureHex
             );
         } catch (error) {
             setErrorMessage("Failed to cast vote. Please try again.");

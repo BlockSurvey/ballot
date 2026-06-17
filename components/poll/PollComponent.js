@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
 import { getFileFromGaia, getMyStxAddress, putFileToGaia, userSession } from "../../services/auth";
-import { formStacksExplorerUrl, formatNumber } from "../../services/utils";
+import { formStacksExplorerUrl, formatNumber, truncateMiddle } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
+import successStyles from "../../styles/VoteSuccessModal.module.css";
 import ModernInformationPanel from "./ModernInformationPanel";
 import ModernPollHeader from "./ModernPollHeader";
 import ModernVotingActivity from "./ModernVotingActivity";
@@ -50,6 +51,17 @@ export default function PollComponent(props) {
     const [voteObject, setVoteObject] = useState({});
     const [showAllDustVotes, setShowAllDustVotes] = useState(false);
     const [showAllBtcVotes, setShowAllBtcVotes] = useState(false);
+    const [txCopied, setTxCopied] = useState(false);
+
+    const handleCopyTxId = async () => {
+        try {
+            await navigator.clipboard.writeText(txId);
+            setTxCopied(true);
+            setTimeout(() => setTxCopied(false), 2000);
+        } catch (e) {
+            // clipboard unavailable — silently ignore
+        }
+    };
 
     const INITIAL_DISPLAY_COUNT = 10;
 
@@ -627,97 +639,73 @@ export default function PollComponent(props) {
             </div>
 
             {/* Success Modal */}
-            <Modal show={show} onHide={handleClose} centered>
-                <Modal.Header closeButton style={{ border: 'none', paddingBottom: 0 }}>
-                    <Modal.Title style={{
-                        fontSize: '1.25rem',
-                        fontWeight: '600',
-                        color: 'var(--color-primary)'
-                    }}>
-                        Vote Submitted Successfully!
-                        <span style={{ fontSize: '1.5rem', marginLeft: '8px' }}>🎉</span>
-                    </Modal.Title>
-                </Modal.Header>
-                <Modal.Body style={{ padding: '0 24px 24px', fontSize: '1rem', lineHeight: '1.6' }}>
-                    <div style={{ marginBottom: '16px', color: 'var(--color-secondary)' }}>
-                        Your vote has been successfully recorded on the Stacks blockchain.
+            <Modal show={show} onHide={handleClose} centered contentClassName={successStyles.content}>
+                <div className={successStyles.body}>
+                    <button className={successStyles.close} onClick={handleClose} aria-label="Close">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+
+                    <div className={successStyles.badge}>
+                        <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path className={successStyles.check_path} d="M5 13l4 4L19 7" />
+                        </svg>
                     </div>
-                    <div style={{ marginTop: '20px' }}>
+
+                    <h3 className={successStyles.title}>Vote submitted</h3>
+                    <p className={successStyles.subtitle}>
+                        Your vote is now permanently recorded on the Stacks blockchain.
+                    </p>
+
+                    <div className={successStyles.tx_row}>
+                        <div className={successStyles.tx_meta}>
+                            <div className={successStyles.tx_label}>Transaction ID</div>
+                            <div className={successStyles.tx_value}>{truncateMiddle(txId, 10, 8)}</div>
+                        </div>
+                        <button
+                            className={`${successStyles.copy} ${txCopied ? successStyles.copied : ''}`}
+                            onClick={handleCopyTxId}
+                        >
+                            {txCopied ? (
+                                <>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M20 6L9 17l-5-5" />
+                                    </svg>
+                                    Copied
+                                </>
+                            ) : (
+                                <>
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                    </svg>
+                                    Copy
+                                </>
+                            )}
+                        </button>
+                    </div>
+
+                    <div className={successStyles.actions}>
                         <a
-                            style={{
-                                display: 'block',
-                                width: '100%',
-                                padding: '14px 20px',
-                                background: '#000000',
-                                color: '#ffffff',
-                                textDecoration: 'none',
-                                borderRadius: 'var(--radius-md)',
-                                border: '1px solid #000000',
-                                fontSize: '15px',
-                                fontWeight: '500',
-                                textAlign: 'center',
-                                transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                cursor: 'pointer'
-                            }}
+                            className={successStyles.primary}
                             href={formStacksExplorerUrl(txId)}
                             target="_blank"
                             rel="noreferrer"
-                            onMouseEnter={(e) => {
-                                e.currentTarget.style.background = '#333333';
-                                e.currentTarget.style.borderColor = '#333333';
-                                e.currentTarget.style.transform = 'translateY(-1px)';
-                                e.currentTarget.style.boxShadow = '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)';
-                            }}
-                            onMouseLeave={(e) => {
-                                e.currentTarget.style.background = '#000000';
-                                e.currentTarget.style.borderColor = '#000000';
-                                e.currentTarget.style.transform = 'translateY(0)';
-                                e.currentTarget.style.boxShadow = 'none';
-                            }}
                         >
-                            <span style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                gap: '8px'
-                            }}>
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                                    <polyline points="15 3 21 3 21 9" />
-                                    <line x1="10" y1="14" x2="21" y2="3" />
-                                </svg>
-                                View Transaction on Explorer
-                            </span>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                            </svg>
+                            View on Explorer
                         </a>
-                        <div style={{
-                            marginTop: '12px',
-                            padding: '12px',
-                            background: 'var(--color-surface)',
-                            borderRadius: 'var(--radius-md)',
-                            border: '1px solid var(--color-border)'
-                        }}>
-                            <div style={{
-                                fontSize: '0.75rem',
-                                color: 'var(--color-tertiary)',
-                                marginBottom: '6px',
-                                fontWeight: '500',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px'
-                            }}>
-                                Transaction ID
-                            </div>
-                            <div style={{
-                                fontFamily: 'monospace',
-                                fontSize: '0.75rem',
-                                color: 'var(--color-secondary)',
-                                wordBreak: 'break-all',
-                                lineHeight: '1.4'
-                            }}>
-                                {txId}
-                            </div>
-                        </div>
+                        <button className={successStyles.secondary} onClick={handleClose}>
+                            Done
+                        </button>
                     </div>
-                </Modal.Body>
+                </div>
             </Modal>
         </>
     );

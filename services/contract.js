@@ -59,6 +59,9 @@ function getContract(pollObject) {
     let stxBalanceWithLockedAndUnlockedLetVariable = "";
     let registerStxWithLockedAndUnlockedFunction = "";
     let registerStxWithLockedAndUnlockedWithUserFunction = ", locked-stx: u0, unlocked-stx: u0";
+    // Off-chain snapshot (oracle-signed weight) extras — empty unless a snapshot is used
+    let snapshotConstants = "";
+    let snapshotVoteArgs = "";
 
     // Strategy
     if (pollObject?.votingStrategyFlag && pollObject?.strategyTokenType) {
@@ -72,18 +75,54 @@ function getContract(pollObject) {
                 votingPowerVariable = `(voting-power (get-voting-power-by-nft-holdings token-ids))`;
             }
         } else {
-            // Fungible tokens
-            if (pollObject?.votingStrategyTemplate == "stx") {
-                strategyFunction = getStrategyFunctionForStxHolders(pollObject?.snapshotBlockHeight || 0);
-                votingPowerVariable = `(voting-power (get-voting-power-by-stx-holdings))`;
+            // Fungible tokens (STX or other FT)
+            const snapshotHeight = parseInt(pollObject?.snapshotBlockHeight) || 0;
+            // Use the off-chain signed-snapshot strategy when a snapshot block is set
+            // AND a signer public key is configured. Otherwise fall back to current balance.
+            const useSnapshotOracle = snapshotHeight > 0 && Constants.SNAPSHOT_SIGNER_PUBKEY;
 
-                // Get the stx balance with locked and unlocked
-                stxBalanceWithLockedAndUnlockedFunction = getStxBalanceWithLockedAndUnlockedFunction(pollObject?.snapshotBlockHeight || 0);
-                stxBalanceWithLockedAndUnlockedLetVariable = getStxBalanceWithLockedAndUnlockedLetVariable(pollObject?.snapshotBlockHeight || 0);
-                registerStxWithLockedAndUnlockedFunction = getRegisterStxWithLockedAndUnlockedFunction(pollObject?.snapshotBlockHeight || 0);
-                registerStxWithLockedAndUnlockedWithUserFunction = getRegisterStxWithLockedAndUnlockedWithUserFunction(pollObject?.snapshotBlockHeight || 0);
+            if (useSnapshotOracle) {
+                // Voting power = locked + unlocked balance at the snapshot block,
+                // computed off-chain and signed by Ballot's signer, verified on-chain
+                // (post at-block removal). Locked/unlocked are stored per option so the
+                // results UI can show the breakdown.
+                strategyFunction = getSnapshotOracleStrategyFunction();
+                votingPowerVariable = `(voting-power (get-voting-power-by-snapshot snapshot-locked snapshot-unlocked snapshot-sig))`;
+                snapshotVoteArgs = ` (snapshot-locked uint) (snapshot-unlocked uint) (snapshot-sig (buff 65))`;
+                snapshotConstants = `
+    ;; Off-chain snapshot: signer public key + this poll's id (replay binding)
+    (define-constant SNAPSHOT-SIGNER 0x${Constants.SNAPSHOT_SIGNER_PUBKEY})
+    (define-constant POLL-ID 0x${Buffer.from(String(pollObject?.id || "")).toString("hex")})
+    (define-data-var temp-locked-stx uint u0)
+    (define-data-var temp-unlocked-stx uint u0)`;
+                // Per-option locked/unlocked accumulation (reuses the locked/unlocked slots)
+                stxBalanceWithLockedAndUnlockedFunction = `
+    (define-private (register-snapshot-locked-unlocked (option-id (string-ascii 36)) (volume uint))
+        (match (map-get? results {id: option-id})
+            result (begin
+                (if (> volume u0)
+                    (map-set results {id: option-id} (merge result {
+                        locked-stx: (+ (var-get temp-locked-stx) (get locked-stx result)),
+                        unlocked-stx: (+ (var-get temp-unlocked-stx) (get unlocked-stx result))
+                    }))
+                    true
+                )
+                true
+            )
+            true
+        )
+    )`;
+                stxBalanceWithLockedAndUnlockedLetVariable = `(stash-locked (var-set temp-locked-stx snapshot-locked))
+                (stash-unlocked (var-set temp-unlocked-stx snapshot-unlocked))`;
+                registerStxWithLockedAndUnlockedFunction = `
+            ;; Register the snapshot locked/unlocked per voted option
+            (map register-snapshot-locked-unlocked vote volume-by-voting-power)`;
+                registerStxWithLockedAndUnlockedWithUserFunction = `, locked-stx: snapshot-locked, unlocked-stx: snapshot-unlocked`;
+            } else if (pollObject?.votingStrategyTemplate == "stx") {
+                strategyFunction = getStrategyFunctionForStxHolders(snapshotHeight);
+                votingPowerVariable = `(voting-power (get-voting-power-by-stx-holdings))`;
             } else if (pollObject?.strategyContractName) {
-                strategyFunction = getStrategyFunctionForFT(pollObject?.strategyContractName, pollObject?.snapshotBlockHeight || 0);
+                strategyFunction = getStrategyFunctionForFT(pollObject?.strategyContractName, snapshotHeight);
                 votingPowerVariable = `(voting-power (get-voting-power-by-ft-holdings))`;
             }
         }
@@ -164,6 +203,7 @@ function getContract(pollObject) {
         "votingSystem": pollObject?.votingSystem,
         "startAtBlock": pollObject?.startAtBlock,
         "endAtBlock": pollObject?.endAtBlock,
+        "snapshotBlockHeight": pollObject?.snapshotBlockHeight || 0,
         optionIds,
         optionResults,
         strategyFunction,
@@ -174,7 +214,9 @@ function getContract(pollObject) {
         stxBalanceWithLockedAndUnlockedFunction,
         stxBalanceWithLockedAndUnlockedLetVariable,
         registerStxWithLockedAndUnlockedFunction,
-        registerStxWithLockedAndUnlockedWithUserFunction
+        registerStxWithLockedAndUnlockedWithUserFunction,
+        snapshotConstants,
+        snapshotVoteArgs
     }
 
     for (let key in placeholder) {
@@ -210,7 +252,10 @@ function getRawContract() {
     (define-constant ERR-ALREADY-VOTED (err u1003))
     (define-constant ERR-FAILED-STRATEGY (err u1004))
     (define-constant ERR-NOT-VOTED (err u1005))
-    
+    (define-constant ERR-NOT-OWNER (err u1006))
+    (define-constant ERR-INVALID-RANGE (err u1007))
+    &{snapshotConstants}
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; data maps and vars
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -219,6 +264,7 @@ function getRawContract() {
     (define-data-var voting-system (string-ascii 512) "")
     (define-data-var start uint u0)
     (define-data-var end uint u0)
+    (define-data-var snapshot uint u0)
     (define-map token-ids-map {token-id: uint} {user: principal, vote-id: uint})
     (define-map btc-holder-map {domain: (buff 20), namespace: (buff 48)} {user: principal, vote-id: uint})
     (define-map results {id: (string-ascii 36)} {count: uint, name: (string-utf8 256), locked-stx: uint, unlocked-stx: uint} )
@@ -309,7 +355,7 @@ function getRawContract() {
     ;; public functions for all
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     (define-public (cast-my-vote (vote (list &{noOfOptions} (string-ascii 36))) (volume (list &{noOfOptions} uint))
-        (bns (string-ascii 256)) (domain (buff 20)) (namespace (buff 48)) (token-ids (list 60000 uint))
+        (bns (string-ascii 256)) (domain (buff 20)) (namespace (buff 48)) (token-ids (list 60000 uint))&{snapshotVoteArgs}
         )
         (let
             (
@@ -368,7 +414,31 @@ function getRawContract() {
     (define-read-only (get-result-by-user (user principal))
         (ok (map-get? users {id: user}))
     )
-    
+
+    (define-read-only (get-config)
+        (ok {
+            start: (var-get start),
+            end: (var-get end),
+            snapshot: (var-get snapshot),
+            owner: CONTRACT-OWNER
+        })
+    )
+
+    ;; Owner-only: update the voting window (start/end) and the token-gating
+    ;; snapshot height. Can only be done by the deployer, before the poll ends,
+    ;; and the window must be valid (end after start).
+    (define-public (update-config (new-start uint) (new-end uint) (new-snapshot uint))
+        (begin
+            (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-OWNER)
+            (asserts! (<= burn-block-height (var-get end)) ERR-ENDED)
+            (asserts! (> new-end new-start) ERR-INVALID-RANGE)
+            (var-set start new-start)
+            (var-set end new-end)
+            (var-set snapshot new-snapshot)
+            (ok {start: new-start, end: new-end, snapshot: new-snapshot})
+        )
+    )
+
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
     ;; Default assignments
     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -378,6 +448,7 @@ function getRawContract() {
     (var-set options (list &{optionIds}))
     (var-set start u&{startAtBlock})
     (var-set end u&{endAtBlock})
+    (var-set snapshot u&{snapshotBlockHeight})
     &{optionResults}`;
 }
 
@@ -434,26 +505,9 @@ function getStrategyFunctionForNFT(strategyContractName) {
 }
 
 function getStrategyFunctionForStxHolders(snapshotBlockHeight) {
-    if (snapshotBlockHeight > 0) {
-        return `
-        (define-private (get-voting-power-by-stx-holdings)
-            (at-block (unwrap-panic (get-stacks-block-info? id-header-hash u${snapshotBlockHeight}))
-                (let
-                    (
-                        (acct (stx-account tx-sender))
-                        (locked (get locked acct))
-                        (unlocked (get unlocked acct))
-                        (stx-balance (+ (get unlocked acct) (get locked acct)))
-                    )
-                    (if (> stx-balance u0)
-                        (/ stx-balance u1000000)
-                        stx-balance
-                    )
-                )
-            )
-        )`;
-    }
-
+    // NOTE: `at-block` was removed in Epoch 3.4 / Clarity 5 (SIP-042), so
+    // historical balance snapshots can no longer be read on-chain. Token gating
+    // now uses the voter's CURRENT balance at the time they cast their vote.
     return `
     (define-private (get-voting-power-by-stx-holdings)
         (let
@@ -467,33 +521,13 @@ function getStrategyFunctionForStxHolders(snapshotBlockHeight) {
                 (/ stx-balance u1000000)
                 stx-balance
             )
-        )    
+        )
     )`;
 }
 
 function getStrategyFunctionForFT(strategyContractName, snapshotBlockHeight) {
-    if (snapshotBlockHeight > 0) {
-        return `
-        (define-private (get-voting-power-by-ft-holdings)
-            (at-block (unwrap-panic (get-stacks-block-info? id-header-hash u${snapshotBlockHeight}))
-                (let
-                    (
-                        (ft-balance (unwrap-panic (contract-call? '${strategyContractName} get-balance tx-sender)))
-                        (ft-decimals (unwrap-panic (contract-call? '${strategyContractName} get-decimals)))
-                    )
-
-                    (if (> ft-balance u0)
-                        (if (> ft-decimals u0)
-                            (/ ft-balance (pow u10 ft-decimals))
-                            ft-balance
-                        )
-                        ft-balance
-                    )
-                )
-            )
-        )`;
-    }
-
+    // `at-block` removed in Epoch 3.4 / Clarity 5 (SIP-042) — use the voter's
+    // CURRENT token balance at vote time instead of a historical snapshot.
     return `
     (define-private (get-voting-power-by-ft-holdings)
         (let
@@ -513,26 +547,42 @@ function getStrategyFunctionForFT(strategyContractName, snapshotBlockHeight) {
     )`;
 }
 
+function getSnapshotOracleStrategyFunction() {
+    // The voter's snapshot-block locked/unlocked balance is computed off-chain and
+    // signed by Ballot's snapshot signer. We verify that signature here, binding it
+    // to this poll (POLL-ID) and this voter (tx-sender) so it can't be forged or
+    // replayed. Voting power = locked + unlocked. Replaces at-block historical reads
+    // (removed in Epoch 3.4 / SIP-042).
+    return `
+    (define-private (get-voting-power-by-snapshot (claimed-locked uint) (claimed-unlocked uint) (sig (buff 65)))
+        (if (secp256k1-verify
+                (sha256 (unwrap-panic (to-consensus-buff? {locked: claimed-locked, poll: POLL-ID, unlocked: claimed-unlocked, voter: tx-sender})))
+                sig
+                SNAPSHOT-SIGNER)
+            (+ claimed-locked claimed-unlocked)
+            u0
+        )
+    )`;
+}
+
 function getStxBalanceWithLockedAndUnlockedFunction(snapshotBlockHeight) {
     if (snapshotBlockHeight > 0) {
         return `
         (define-private (get-stx-balance-with-locked-and-unlocked)
-            (at-block (unwrap-panic (get-stacks-block-info? id-header-hash u${snapshotBlockHeight}))
-                (let
-                    (
-                        (account (stx-account tx-sender))
-                        (locked-stx (get locked account))
-                        (unlocked-stx (get unlocked account))
-                        (total-stx (+ locked-stx unlocked-stx))
-                    )
-    
-                    ;; Return the stx balance with locked and unlocked
-                    {
-                        locked-stx: (if (> locked-stx u0) (/ locked-stx u1000000) locked-stx), 
-                        unlocked-stx: (if (> unlocked-stx u0) (/ unlocked-stx u1000000) unlocked-stx), 
-                        total-stx: (if (> total-stx u0) (/ total-stx u1000000) total-stx)
-                    }
+            (let
+                (
+                    (account (stx-account tx-sender))
+                    (locked-stx (get locked account))
+                    (unlocked-stx (get unlocked account))
+                    (total-stx (+ locked-stx unlocked-stx))
                 )
+
+                ;; Return the current stx balance with locked and unlocked
+                {
+                    locked-stx: (if (> locked-stx u0) (/ locked-stx u1000000) locked-stx),
+                    unlocked-stx: (if (> unlocked-stx u0) (/ unlocked-stx u1000000) unlocked-stx),
+                    total-stx: (if (> total-stx u0) (/ total-stx u1000000) total-stx)
+                }
             )
         )
     
@@ -584,7 +634,7 @@ function getRegisterStxWithLockedAndUnlockedWithUserFunction(snapshotBlockHeight
     return `, locked-stx: u0, unlocked-stx: u0`;
 }
 
-export async function castMyVoteContractCall(contractAddress, contractName, voteObj, dns, tokenIdsArray, callbackFunction) {
+export async function castMyVoteContractCall(contractAddress, contractName, voteObj, dns, tokenIdsArray, callbackFunction, snapshotLocked, snapshotUnlocked, snapshotSignatureHex) {
     // Parse vote
     let voteStringAsciiArray = [], volumeUIntArray = [];
     for (let key in voteObj) {
@@ -615,6 +665,13 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
         listCV(tokenIdsUintArray)
     ];
 
+    // Snapshot polls take three extra args: signed locked + unlocked + signature
+    if (snapshotSignatureHex && snapshotLocked !== undefined && snapshotLocked !== null) {
+        functionArgs.push(uintCV(snapshotLocked));
+        functionArgs.push(uintCV(snapshotUnlocked));
+        functionArgs.push(bufferCV(Buffer.from(snapshotSignatureHex, "hex")));
+    }
+
     // Contract function details to be called
     const options = {
         contractAddress: contractAddress,
@@ -632,5 +689,35 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
     };
 
     // Call contract function
+    await openContractCall(options);
+}
+
+/**
+ * Owner-only update of the on-chain voting window (start/end) and the
+ * token-gating snapshot height. Calls the deployed poll contract's
+ * `update-config` function; only the contract deployer can succeed.
+ */
+export async function updatePollConfigContractCall(contractAddress, contractName, newStart, newEnd, newSnapshot, callbackFunction, onCancelFunction) {
+    const functionArgs = [
+        uintCV(parseInt(newStart) || 0),
+        uintCV(parseInt(newEnd) || 0),
+        uintCV(parseInt(newSnapshot) || 0)
+    ];
+
+    const options = {
+        contractAddress: contractAddress,
+        contractName: contractName,
+        functionName: "update-config",
+        functionArgs: functionArgs,
+        postConditions: [],
+        network: getNetworkType(),
+        appDetails: {
+            name: "Ballot",
+            icon: window.location.origin + "/images/logo/ballot.png",
+        },
+        onFinish: callbackFunction,
+        onCancel: onCancelFunction || cancelCallbackFunction
+    };
+
     await openContractCall(options);
 }

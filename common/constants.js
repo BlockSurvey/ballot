@@ -2,6 +2,12 @@ export const Constants = {
   // Stacks mainnet network flag
   STACKS_MAINNET_FLAG: process.env.NEXT_PUBLIC_STACKS_MAINNET_FLAG === "false" ? false : true,
 
+  // Compressed secp256k1 public key (hex, no 0x) of Ballot's snapshot signer.
+  // The matching private key lives ONLY on the server (SNAPSHOT_SIGNER_PRIVATE_KEY)
+  // and is used to sign a voter's snapshot voting power. Embedded into snapshot
+  // poll contracts so they can verify signed weights on-chain (post-at-block).
+  SNAPSHOT_SIGNER_PUBKEY: process.env.NEXT_PUBLIC_SNAPSHOT_SIGNER_PUBKEY || "",
+
   // Stacks API key
   STACKS_API_KEY: "264eb1871647f27be1845426028e4768",
 

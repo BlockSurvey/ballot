@@ -11,6 +11,8 @@
 (define-constant ERR-ALREADY-VOTED (err u1003))
 (define-constant ERR-FAILED-STRATEGY (err u1004))
 (define-constant ERR-NOT-VOTED (err u1005))
+(define-constant ERR-NOT-OWNER (err u1006))
+(define-constant ERR-INVALID-RANGE (err u1007))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; data maps and vars
@@ -20,6 +22,7 @@
 (define-data-var voting-system (string-ascii 512) "")
 (define-data-var start uint u0)
 (define-data-var end uint u0)
+(define-data-var snapshot uint u0)
 (define-map token-ids-map {token-id: uint} {user: principal, vote-id: uint})
 (define-map btc-holder-map {domain: (buff 20), namespace: (buff 48)} {user: principal, vote-id: uint})
 (define-map results {id: (string-ascii 36)} {count: uint, name: (string-utf8 256)} )
@@ -254,6 +257,30 @@
     (ok (map-get? users {id: user}))
 )
 
+(define-read-only (get-config)
+    (ok {
+        start: (var-get start),
+        end: (var-get end),
+        snapshot: (var-get snapshot),
+        owner: CONTRACT-OWNER
+    })
+)
+
+;; Owner-only: update the voting window (start/end) and the token-gating
+;; snapshot height. Can only be done by the deployer, before the poll ends,
+;; and the window must be valid (end after start).
+(define-public (update-config (new-start uint) (new-end uint) (new-snapshot uint))
+    (begin
+        (asserts! (is-eq tx-sender CONTRACT-OWNER) ERR-NOT-OWNER)
+        (asserts! (<= tenure-height (var-get end)) ERR-ENDED)
+        (asserts! (> new-end new-start) ERR-INVALID-RANGE)
+        (var-set start new-start)
+        (var-set end new-end)
+        (var-set snapshot new-snapshot)
+        (ok {start: new-start, end: new-end, snapshot: new-snapshot})
+    )
+)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Default assignments
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -263,5 +290,6 @@
 (var-set options (list "option1" "option2"))
 (var-set start u1)
 (var-set end u1)
+(var-set snapshot u0)
 (map-set results {id: "option1"} {count: u0, name: u"Yes"})
 (map-set results {id: "option2"} {count: u0, name: u"No"})
