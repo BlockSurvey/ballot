@@ -1,0 +1,41 @@
+/* Bottom-center toast — monochrome, token-driven. */
+
+.wrap {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    transform: translateX(-50%);
+    z-index: 11000;
+    pointer-events: none;
+}
+
+.toast {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-5);
+    background: var(--color-primary);
+    color: var(--color-background);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    animation: toast_in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.icon {
+    width: 16px;
+    height: 16px;
+    color: var(--color-background);
+    flex-shrink: 0;
+}
+
+@keyframes toast_in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toast { animation: none; }
+}

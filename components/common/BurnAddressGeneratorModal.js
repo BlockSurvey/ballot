@@ -3,6 +3,8 @@ import { Modal } from "react-bootstrap";
 import { c32address } from "c32check";
 import bs58check from "bs58check";
 import { putFileToGaia, getFileFromGaia } from "../../services/auth";
+import IconTooltip from "./IconTooltip";
+import ModalCloseButton from "./ModalCloseButton";
 import styles from "../../styles/Dashboard.module.css";
 
 const VERSION_SP_MAINNET = 22;
@@ -181,11 +183,7 @@ export default function BurnAddressGeneratorModal({ show, onHide }) {
                             Generate deterministic burn addresses for on-chain voting
                         </p>
                     </div>
-                    <button className={styles.minimal_close_btn} onClick={onHide} aria-label="Close">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                        </svg>
-                    </button>
+                    <ModalCloseButton onClick={onHide} />
                 </div>
 
                 {/* Generator Input */}
@@ -279,21 +277,32 @@ export default function BurnAddressGeneratorModal({ show, onHide }) {
                                                 </div>
                                             </div>
                                             <div className={styles.burn_card_actions_row}>
-                                                <button
-                                                    className={styles.burn_delete_btn}
-                                                    onClick={(e) => { e.stopPropagation(); handleDelete(index); }}
-                                                    title="Delete"
-                                                >
-                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-                                                    </svg>
-                                                </button>
-                                                <svg
-                                                    width="20" height="20" viewBox="0 0 24 24" fill="currentColor"
-                                                    className={`${styles.burn_chevron} ${isExpanded ? styles.burn_chevron_open : ''}`}
-                                                >
-                                                    <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
-                                                </svg>
+                                                <IconTooltip label="Delete">
+                                                    <button
+                                                        className={styles.burn_delete_btn}
+                                                        onClick={(e) => { e.stopPropagation(); handleDelete(index); }}
+                                                        aria-label="Delete"
+                                                    >
+                                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                                            <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                                                        </svg>
+                                                    </button>
+                                                </IconTooltip>
+                                                <IconTooltip label={isExpanded ? "Collapse" : "Expand"}>
+                                                    <button
+                                                        type="button"
+                                                        className={styles.burn_chevron_btn}
+                                                        onClick={(e) => { e.stopPropagation(); setExpandedIndex(isExpanded ? null : index); }}
+                                                        aria-label={isExpanded ? "Collapse" : "Expand"}
+                                                    >
+                                                        <svg
+                                                            width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                                                            className={`${styles.burn_chevron} ${isExpanded ? styles.burn_chevron_open : ''}`}
+                                                        >
+                                                            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/>
+                                                        </svg>
+                                                    </button>
+                                                </IconTooltip>
                                             </div>
                                         </div>
 
@@ -361,22 +370,24 @@ function AddressRow({ label, address, fieldKey, copiedField, onCopy }) {
         <div className={styles.burn_address_row}>
             <span className={styles.burn_address_type}>{label}</span>
             <code className={styles.burn_address_value}>{address}</code>
-            <button
-                className={`${styles.burn_copy_btn} ${isCopied ? styles.burn_copy_btn_copied : ''}`}
-                onClick={() => onCopy(address, fieldKey)}
-                title={isCopied ? "Copied!" : "Copy address"}
-            >
-                {isCopied ? (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M20 6L9 17l-5-5"/>
-                    </svg>
-                ) : (
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
-                    </svg>
-                )}
-            </button>
+            <IconTooltip label={isCopied ? "Copied!" : "Copy address"}>
+                <button
+                    className={`${styles.burn_copy_btn} ${isCopied ? styles.burn_copy_btn_copied : ''}`}
+                    onClick={() => onCopy(address, fieldKey)}
+                    aria-label="Copy address"
+                >
+                    {isCopied ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M20 6L9 17l-5-5"/>
+                        </svg>
+                    ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+                        </svg>
+                    )}
+                </button>
+            </IconTooltip>
         </div>
     );
 }

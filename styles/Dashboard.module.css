@@ -3076,29 +3076,38 @@
 .burn_card_actions_row {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: var(--space-2);
 }
 
-.burn_delete_btn {
-    background: none;
-    border: none;
-    padding: 6px;
-    cursor: pointer;
-    color: #9ca3af;
-    border-radius: 6px;
+/* Clean bordered icon buttons (uniform with the rest of the product) */
+.burn_delete_btn,
+.burn_chevron_btn {
+    width: 30px;
+    height: 30px;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-tertiary);
+    cursor: pointer;
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+
+.burn_chevron_btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 .burn_delete_btn:hover {
+    border-color: #dc2626;
     color: #dc2626;
     background: #fef2f2;
 }
 
 .burn_chevron {
-    color: #9ca3af;
     transition: transform 0.2s ease;
 }
 
@@ -3179,29 +3188,30 @@
 }
 
 .burn_copy_btn {
-    background: none;
-    border: 1px solid #e5e7eb;
-    padding: 6px;
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
     cursor: pointer;
-    color: #6b7280;
-    border-radius: 6px;
+    color: var(--color-tertiary);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.15s ease;
+    transition: border-color 0.15s ease, color 0.15s ease;
     flex-shrink: 0;
 }
 
 .burn_copy_btn:hover {
-    background: #f3f4f6;
-    color: #111827;
-    border-color: #d1d5db;
+    color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
-.burn_copy_btn_copied {
-    color: #059669;
-    border-color: #a7f3d0;
-    background: #ecfdf5;
+.burn_copy_btn_copied,
+.burn_copy_btn_copied:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
 }
 
 /* Responsive */

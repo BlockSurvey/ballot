@@ -12,6 +12,7 @@ import styles from "../../styles/Builder.module.css";
 import PreviewComponent from "./Preview.component";
 import RichTextEditor, { stripHtmlTags, isEditorEmpty } from "../common/RichTextEditor";
 import DustTransactionModal from "./DustTransactionModal";
+import Toast from "../common/Toast";
 
 export default function BuilderComponent(props) {
     // Variables
@@ -31,6 +32,7 @@ export default function BuilderComponent(props) {
     // Processing flags
     const [isProcessing, setIsProcessing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [toastMessage, setToastMessage] = useState("");
     const [isPublishing, setIsPublishing] = useState(false);
 
     // Progress messages
@@ -470,6 +472,11 @@ export default function BuilderComponent(props) {
                 setIsProcessing(false);
                 setIsSaving(false);
                 setIsPublishing(false);
+
+                // Confirm the draft save to the user (not on publish, which redirects).
+                if (pollObject?.status === "draft") {
+                    setToastMessage("Draft saved");
+                }
 
                 // Clear progress messages after a brief delay
                 setTimeout(() => {
@@ -1575,6 +1582,12 @@ export default function BuilderComponent(props) {
                             onHide={handleDustModalClose}
                             option={selectedOption}
                             onSave={handleDustTransactionSave}
+                        />
+
+                        <Toast
+                            show={!!toastMessage}
+                            message={toastMessage}
+                            onClose={() => setToastMessage("")}
                         />
                     </div>
                 </>

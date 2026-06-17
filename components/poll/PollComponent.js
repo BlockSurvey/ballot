@@ -4,6 +4,7 @@ import { getFileFromGaia, getMyStxAddress, putFileToGaia, userSession } from "..
 import { formStacksExplorerUrl, formatNumber, truncateMiddle } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 import successStyles from "../../styles/VoteSuccessModal.module.css";
+import ModalCloseButton from "../common/ModalCloseButton";
 import ModernInformationPanel from "./ModernInformationPanel";
 import ModernPollHeader from "./ModernPollHeader";
 import ModernVotingActivity from "./ModernVotingActivity";
@@ -641,12 +642,7 @@ export default function PollComponent(props) {
             {/* Success Modal */}
             <Modal show={show} onHide={handleClose} centered contentClassName={successStyles.content}>
                 <div className={successStyles.body}>
-                    <button className={successStyles.close} onClick={handleClose} aria-label="Close">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                            <line x1="18" y1="6" x2="6" y2="18" />
-                            <line x1="6" y1="6" x2="18" y2="18" />
-                        </svg>
-                    </button>
+                    <ModalCloseButton onClick={handleClose} />
 
                     <div className={successStyles.badge}>
                         <svg viewBox="0 0 24 24" fill="none" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

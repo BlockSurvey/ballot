@@ -3,6 +3,7 @@ import { getNonce } from '@stacks/transactions';
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import { getMyStxAddress, getNetworkType } from '../../services/auth';
+import ModalCloseButton from './ModalCloseButton';
 import styles from '../../styles/Builder.module.css';
 
 export default function SendTxModal({
@@ -202,7 +203,8 @@ export default function SendTxModal({
 
     return (
         <Modal show={show} onHide={handleClose} centered size="md" className={styles.dust_modal}>
-            <Modal.Header closeButton className={styles.modal_header}>
+            <ModalCloseButton onClick={handleClose} />
+            <Modal.Header className={styles.modal_header}>
                 <Modal.Title className={styles.modal_title}>
                     <div>
                         <h4>Send Dust Transactions</h4>

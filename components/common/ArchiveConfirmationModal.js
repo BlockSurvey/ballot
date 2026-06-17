@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Modal } from "react-bootstrap";
 import { getApiKey, getFileFromGaia, putFileToGaia } from "../../services/auth";
+import ModalCloseButton from "./ModalCloseButton";
 import styles from "../../styles/ArchiveConfirmationModal.module.css";
 
 export default function ArchiveConfirmationModal({ show, onHide, poll, onArchiveSuccess }) {
@@ -66,12 +67,7 @@ export default function ArchiveConfirmationModal({ show, onHide, poll, onArchive
     return (
         <Modal show={show} onHide={onHide} centered contentClassName={styles.content}>
             <div className={styles.body}>
-                <button className={styles.close} onClick={onHide} aria-label="Close" disabled={isArchiving}>
-                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                        <line x1="18" y1="6" x2="6" y2="18" />
-                        <line x1="6" y1="6" x2="18" y2="18" />
-                    </svg>
-                </button>
+                <ModalCloseButton onClick={onHide} disabled={isArchiving} />
 
                 <div className={styles.header}>
                     <div className={styles.icon_badge}>

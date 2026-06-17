@@ -1,5 +1,68 @@
 @import url("bootstrap/dist/css/bootstrap.min.css");
 
+/* Uniform modal close button (used via <ModalCloseButton>) — quiet ghost ×,
+   absolutely anchored to the top-right of the modal content. */
+.ballot_modal_close {
+    position: absolute;
+    top: var(--space-4);
+    right: var(--space-4);
+    z-index: 5;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: var(--color-quaternary);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: color 0.15s ease, background 0.15s ease;
+}
+
+.ballot_modal_close:hover {
+    color: var(--color-primary);
+    background: var(--color-surface);
+}
+
+.ballot_modal_close:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Clean monochrome tooltip for icon buttons (used via <IconTooltip>) */
+.ballot_tooltip .tooltip-inner {
+    background-color: var(--color-primary);
+    color: var(--color-background);
+    font-size: 0.72rem;
+    font-weight: 500;
+    line-height: 1.3;
+    padding: 5px 9px;
+    border-radius: var(--radius-sm);
+    max-width: 240px;
+    box-shadow: var(--shadow-md);
+}
+
+.ballot_tooltip.bs-tooltip-top .tooltip-arrow::before,
+.ballot_tooltip.bs-tooltip-auto[data-popper-placement^="top"] .tooltip-arrow::before {
+    border-top-color: var(--color-primary);
+}
+
+.ballot_tooltip.bs-tooltip-bottom .tooltip-arrow::before,
+.ballot_tooltip.bs-tooltip-auto[data-popper-placement^="bottom"] .tooltip-arrow::before {
+    border-bottom-color: var(--color-primary);
+}
+
+.ballot_tooltip.bs-tooltip-start .tooltip-arrow::before,
+.ballot_tooltip.bs-tooltip-auto[data-popper-placement^="left"] .tooltip-arrow::before {
+    border-left-color: var(--color-primary);
+}
+
+.ballot_tooltip.bs-tooltip-end .tooltip-arrow::before,
+.ballot_tooltip.bs-tooltip-auto[data-popper-placement^="right"] .tooltip-arrow::before {
+    border-right-color: var(--color-primary);
+}
+
 /* Global font family */
 body,
 h1,

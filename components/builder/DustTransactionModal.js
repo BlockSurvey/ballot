@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Form } from 'react-bootstrap';
+import ModalCloseButton from '../common/ModalCloseButton';
 import styles from '../../styles/Builder.module.css';
 
 export default function DustTransactionModal({
@@ -126,7 +127,8 @@ export default function DustTransactionModal({
 
     return (
         <Modal show={show} onHide={handleClose} centered size="md" className={styles.dust_modal}>
-            <Modal.Header closeButton className={styles.modal_header}>
+            <ModalCloseButton onClick={handleClose} />
+            <Modal.Header className={styles.modal_header}>
                 <Modal.Title className={styles.modal_title}>
                     <div>
                         <h4>Dust Transaction Settings</h4>
