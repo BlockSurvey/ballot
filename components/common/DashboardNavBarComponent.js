@@ -7,6 +7,7 @@ import { authenticate, signOut, switchAccount, userSession } from "../../service
 import { getCurrentBlockHeights, getDomainNamesFromBlockchain } from "../../services/utils";
 import ModernMyVotesModal from "./ModernMyVotesModal";
 import BurnAddressGeneratorModal from "./BurnAddressGeneratorModal";
+import ProfileModal from "./ProfileModal";
 
 export function DashboardNavBarComponent({ isPollPage = false }) {
     // Variables
@@ -23,6 +24,9 @@ export function DashboardNavBarComponent({ isPollPage = false }) {
 
     // Burn address generator popup
     const [showBurnAddressPopup, setShowBurnAddressPopup] = useState(false);
+
+    // Profile popup
+    const [showProfilePopup, setShowProfilePopup] = useState(false);
 
     // Feedback hidden button
     const feedbackButton = useRef(null);
@@ -149,6 +153,13 @@ export function DashboardNavBarComponent({ isPollPage = false }) {
                                         New Poll
                                     </Dropdown.Item>
                                     <Dropdown.Divider />
+                                    <Dropdown.Item onClick={() => setShowProfilePopup(true)}>
+                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
+                                            <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                            <path d="M4 16.5a6 6 0 0 1 12 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                                        </svg>
+                                        Profile
+                                    </Dropdown.Item>
                                     <Dropdown.Item onClick={handleShowMyVotesPopup}>
                                         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
                                             <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h11A1.5 1.5 0 0 1 17 4.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 15.5v-11z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
@@ -226,6 +237,13 @@ export function DashboardNavBarComponent({ isPollPage = false }) {
             <BurnAddressGeneratorModal
                 show={showBurnAddressPopup}
                 onHide={() => setShowBurnAddressPopup(false)}
+            />
+
+            {/* Profile popup */}
+            <ProfileModal
+                show={showProfilePopup}
+                onHide={() => setShowProfilePopup(false)}
+                displayUsername={displayUsername}
             />
         </>
     );
