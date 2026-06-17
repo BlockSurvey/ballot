@@ -48,6 +48,29 @@ export async function getKV(key) {
   return await res.text();
 }
 
+// Like getKV, but returns null for a missing key (404) instead of throwing.
+// Use when "not found" is a normal, expected outcome (e.g. membership checks).
+export async function getKVOrNull(key) {
+  const url = `${BASE_URL}/values/${encodeURIComponent(key)}`;
+
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${API_TOKEN}`,
+    },
+  });
+
+  if (res.status === 404) {
+    return null;
+  }
+
+  if (!res.ok) {
+    const error = await res.text();
+    throw new Error(`Failed to read KV: ${error}`);
+  }
+
+  return await res.text();
+}
+
 export async function deleteKV(key) {
   const url = `${BASE_URL}/values/${encodeURIComponent(key)}`;
 

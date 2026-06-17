@@ -15,13 +15,30 @@ import {
 import QRCodePopup from "./QRCodePopup";
 import RichTextDisplay from "../common/RichTextDisplay";
 import styles from "../../styles/Poll.module.css";
+import verifiedStyles from "../../styles/VerifiedCreator.module.css";
+import { isVerifiedMember } from "../../services/members";
 
 export default function ModernPollHeader({ pollObject, publicUrl, txStatus, currentBitcoinBlockHeight }) {
     const [copyText, setCopyText] = useState("Copy poll link");
     const [showQRCodePopup, setShowQRCodePopup] = useState(false);
     const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
     const [shouldShowToggle, setShouldShowToggle] = useState(false);
+    const [verifiedCreator, setVerifiedCreator] = useState({ verified: false });
     const descriptionRef = useRef(null);
+
+    // Verify whether the poll creator is a trusted/authorized member.
+    useEffect(() => {
+        let active = true;
+        const address = pollObject?.userStxAddress;
+        if (!address) {
+            setVerifiedCreator({ verified: false });
+            return;
+        }
+        isVerifiedMember(address).then((result) => {
+            if (active) setVerifiedCreator(result);
+        });
+        return () => { active = false; };
+    }, [pollObject?.userStxAddress]);
 
     // Check if description exceeds 5 lines
     useEffect(() => {
@@ -98,6 +115,26 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
         <>
             <div className={`${styles.poll_header} ${styles.fade_in}`}>
                 <div className={styles.card_content}>
+                    {/* Verified creator trust banner */}
+                    {verifiedCreator?.verified && (
+                        <div className={verifiedStyles.banner} role="note" aria-label="Verified creator">
+                            <span className={verifiedStyles.banner_icon}>
+                                <svg viewBox="0 0 24 24" fill="none">
+                                    <path className={verifiedStyles.seal_bg} d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
+                                    <path className={verifiedStyles.seal_check} d="m9 12 2 2 4-4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                            </span>
+                            <div className={verifiedStyles.banner_text}>
+                                <span className={verifiedStyles.banner_title}>Verified creator</span>
+                                <span className={verifiedStyles.banner_subtitle}>
+                                    {verifiedCreator.label
+                                        ? `Created by ${verifiedCreator.label}`
+                                        : "Created by the Stacks Foundation"}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Poll Title */}
                     <h1 className={styles.poll_title}>{pollObject?.title}</h1>
 
@@ -135,6 +172,15 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
                                                     />
                                                 </svg>
                                             </a>
+                                        )}
+                                        {verifiedCreator?.verified && (
+                                            <span className={verifiedStyles.badge} title={verifiedCreator.label || "Verified Stacks community member"}>
+                                                <svg viewBox="0 0 24 24" fill="none">
+                                                    <path className={verifiedStyles.seal_bg} d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
+                                                    <path className={verifiedStyles.seal_check} d="m9 12 2 2 4-4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                                </svg>
+                                                Verified
+                                            </span>
                                         )}
                                     </div>
                                     <div className={styles.creator_meta_line}>

@@ -173,11 +173,12 @@
     width: 40px;
     height: 40px;
     border-radius: 8px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: var(--color-tertiary);
     font-size: 0.875rem;
     font-weight: 700;
     flex-shrink: 0;
@@ -192,6 +193,7 @@
 .creator_address_line {
     display: flex;
     align-items: center;
+    gap: var(--space-3);
 }
 
 .creator_address_line a {

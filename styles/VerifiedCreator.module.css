@@ -1,0 +1,92 @@
+/* Verified-creator trust banner + creator badge.
+   Monochrome, restrained, token-driven. No hover lifts, no heavy fills. */
+
+/* ── Trust banner (near the poll title) — slim single row ── */
+.banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    margin-bottom: var(--space-5);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    animation: verified_in 0.25s ease both;
+}
+
+.banner_icon {
+    flex-shrink: 0;
+    display: flex;
+}
+
+.banner_icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Filled verified seal — dark badge, light check */
+.seal_bg {
+    fill: var(--color-primary);
+}
+
+.seal_check {
+    stroke: var(--color-background);
+}
+
+.banner_text {
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px var(--space-2);
+}
+
+.banner_title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    letter-spacing: -0.01em;
+}
+
+.banner_subtitle {
+    font-size: 0.825rem;
+    line-height: 1.4;
+    color: var(--color-tertiary);
+}
+
+/* ── Inline "Verified" badge (on the creator chip line) — light, outlined ── */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    background: var(--color-background);
+    color: var(--color-secondary);
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.5;
+    white-space: nowrap;
+}
+
+.badge svg {
+    width: 14px;
+    height: 14px;
+}
+
+@keyframes verified_in {
+    from { opacity: 0; transform: translateY(-3px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 480px) {
+    .banner {
+        gap: var(--space-2);
+        padding: var(--space-2) var(--space-3);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .banner { animation: none; }
+}
