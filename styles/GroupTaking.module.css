@@ -1,0 +1,156 @@
+/* Grouped-poll wizard host. Leaves room at the bottom for the sticky progress bar. */
+
+.wrap {
+    min-height: 100vh;
+    padding-bottom: 116px; /* room for the fixed dark progress toolbar */
+}
+
+/* Slim top row — carries only the Skip control (no on-screen group title) */
+.topBar {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-6) 0 var(--space-6);
+    display: flex;
+    justify-content: flex-end;
+}
+
+.skip {
+    background: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 7px 14px;
+    font-size: 13px;
+    color: var(--color-tertiary);
+    cursor: pointer;
+    transition: border-color 0.2s ease, color 0.2s ease;
+    white-space: nowrap;
+}
+
+.skip:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.emptyState {
+    max-width: 600px;
+    margin: var(--space-8) auto;
+    text-align: center;
+    color: var(--color-tertiary);
+    font-size: 15px;
+}
+
+/* Closed-poll banner shown above the read-only poll */
+.closedBanner {
+    max-width: 1200px;
+    margin: var(--space-5) auto 0 auto;
+    padding: var(--space-3) var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-secondary);
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.closedBanner strong {
+    color: var(--color-primary);
+    font-weight: 600;
+}
+
+.closedDot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-quaternary);
+}
+
+/* The active poll slides in */
+.slide {
+    animation: fadeIn 0.25s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Finish screen */
+.finishBox {
+    max-width: 560px;
+    margin: var(--space-8) auto;
+    text-align: center;
+    padding: var(--space-8) var(--space-6);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    background: var(--color-surface);
+}
+
+.finishBadge {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto var(--space-4) auto;
+    border-radius: 50%;
+    background: var(--color-primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.finishTitle {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-primary);
+    margin: 0 0 var(--space-2) 0;
+}
+
+.finishText {
+    color: var(--color-tertiary);
+    margin: 0 0 var(--space-5) 0;
+    line-height: 1.5;
+}
+
+.finishPrimary,
+.finishGhost {
+    border-radius: var(--radius-md);
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.finishPrimary {
+    background: var(--color-primary);
+    border: 1px solid var(--color-primary);
+    color: #fff;
+}
+
+.finishGhost {
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    color: var(--color-primary);
+}
+
+.finishGhost:hover {
+    border-color: var(--color-primary);
+}
+
+@media (max-width: 600px) {
+    .topBar {
+        padding: var(--space-3) var(--space-4) 0 var(--space-4);
+    }
+
+    .closedBanner {
+        margin-left: var(--space-4);
+        margin-right: var(--space-4);
+        margin-top: var(--space-4);
+    }
+
+    .wrap {
+        padding-bottom: 96px;
+    }
+}

@@ -1,0 +1,287 @@
+/* Sticky dark progress toolbar for grouped-poll taking.
+   Numbered stepper, green voted accent. Softer slate than pure navy so it reads
+   as a toolbar without being too heavy. */
+
+.bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    background: #313847;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 -6px 22px rgba(0, 0, 0, 0.14);
+}
+
+.inner {
+    max-width: 1320px;
+    margin: 0 auto;
+    padding: 10px var(--space-6) calc(10px + env(safe-area-inset-bottom, 0px)) var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+/* ---- Left: status + voted count ---- */
+.status {
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: #9aa1b4;
+    margin-bottom: 3px;
+    white-space: nowrap;
+}
+
+.count {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.countTotal {
+    color: #ffffff;
+}
+
+.countSep {
+    color: #646b80;
+}
+
+.countVoted {
+    color: #5bd98c;
+}
+
+/* ---- Center: horizontal stepper ---- */
+.stepper {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    padding: 2px 0;
+}
+
+.stepper::-webkit-scrollbar {
+    display: none;
+}
+
+.stepGroup {
+    display: flex;
+    align-items: flex-start;
+    flex: 0 0 auto;
+}
+
+.connector {
+    width: 34px;
+    height: 2px;
+    margin-top: 15px; /* center on 32px circle */
+    background: #4d5468;
+    border-radius: 2px;
+    flex: 0 0 auto;
+}
+
+.connectorDone {
+    background: #5bd98c;
+}
+
+.nodeCol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+    width: 64px;
+}
+
+.node {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #434c61;
+    color: #b7bdce;
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nodeTodo {
+    background: #434c61;
+    color: #b7bdce;
+}
+
+.nodeActive {
+    background: #ffffff;
+    color: #313847;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.12);
+}
+
+.nodeDone {
+    background: #4fd389;
+    color: #0e1218;
+}
+
+.nodeClosed {
+    background: #3a4252;
+    color: #aab1c4;
+    border: 1.5px dashed #6f7790;
+}
+
+.nodeSkipped {
+    background: #3a4252;
+    color: #aab1c4;
+}
+
+.node:focus-visible {
+    outline: 2px solid #5bd98c;
+    outline-offset: 3px;
+}
+
+.glyph {
+    width: 14px;
+    height: 14px;
+    display: block;
+}
+
+.nodeLabel {
+    margin-top: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #9aa1b4;
+    max-width: 64px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nodeLabelActive {
+    color: #ffffff;
+}
+
+/* ---- Right: progress + next ---- */
+.right {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.progressBlock {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.progressTrack {
+    width: 110px;
+    height: 4px;
+    border-radius: 999px;
+    background: #4d5468;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    border-radius: 999px;
+    background: #5bd98c;
+    transition: width 0.3s ease;
+}
+
+.progressText {
+    font-size: 11px;
+    color: #9aa1b4;
+    white-space: nowrap;
+}
+
+.nextBtn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    min-width: 120px; /* fixed so Next vote → Finish doesn't shift layout */
+    height: 38px;
+    padding: 0 18px;
+    border-radius: 11px;
+    border: none;
+    background: #515b76;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease;
+}
+
+.nextBtn:hover {
+    background: #5c6688;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 1024px) {
+    .progressBlock {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .inner {
+        padding: var(--space-3) var(--space-4) calc(var(--space-3) + env(safe-area-inset-bottom, 0px)) var(--space-4);
+        gap: var(--space-3);
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+
+    .status {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+
+    /* Hide the numbered stepper on mobile — the "x of y voted" text carries
+       progress and the bar stays a single compact row. */
+    .stepper {
+        display: none;
+    }
+
+    .eyebrow {
+        font-size: 10px;
+        margin-bottom: 2px;
+    }
+
+    .count {
+        font-size: 13px;
+    }
+
+    .connector {
+        width: 24px;
+        margin-top: 14px;
+    }
+
+    .node {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .nextBtn {
+        height: 36px;
+        min-width: 104px;
+        padding: 0 14px;
+        font-size: 13px;
+    }
+}

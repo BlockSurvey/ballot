@@ -3,11 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
-import { authenticate, signOut, switchAccount, userSession } from "../../services/auth";
+import { authenticate, getMyStxAddress, signOut, switchAccount, userSession } from "../../services/auth";
 import { getCurrentBlockHeights, getDomainNamesFromBlockchain } from "../../services/utils";
 import ModernMyVotesModal from "./ModernMyVotesModal";
 import BurnAddressGeneratorModal from "./BurnAddressGeneratorModal";
 import ProfileModal from "./ProfileModal";
+import GroupsModal from "../group/GroupsModal";
 
 export function DashboardNavBarComponent({ isPollPage = false }) {
     // Variables
@@ -28,6 +29,13 @@ export function DashboardNavBarComponent({ isPollPage = false }) {
     // Profile popup
     const [showProfilePopup, setShowProfilePopup] = useState(false);
 
+    // Grouped polls manager
+    const [showGroupsModal, setShowGroupsModal] = useState(false);
+
+    // Connected account (for the profile menu header)
+    const [stxAddress, setStxAddress] = useState("");
+    const [addressCopied, setAddressCopied] = useState(false);
+
     // Feedback hidden button
     const feedbackButton = useRef(null);
 
@@ -38,8 +46,21 @@ export function DashboardNavBarComponent({ isPollPage = false }) {
 
         if (userSession && userSession.isUserSignedIn()) {
             setIsUserSignedIn(true)
+            try { setStxAddress(getMyStxAddress()); } catch (e) { /* not available */ }
         }
     }, []);
+
+    const truncateAddress = (addr) => (addr ? `${addr.slice(0, 5)}…${addr.slice(-4)}` : "");
+
+    const copyAddress = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            await navigator.clipboard.writeText(stxAddress);
+            setAddressCopied(true);
+            setTimeout(() => setAddressCopied(false), 1800);
+        } catch (err) { /* clipboard unavailable */ }
+    };
 
     const getDisplayUsername = async () => {
         const _username = await getDomainNamesFromBlockchain();
@@ -81,24 +102,25 @@ export function DashboardNavBarComponent({ isPollPage = false }) {
                     {isUserSignedIn ? (
                         <div className="nav_actions">
                             {/* Block Heights Section */}
-                            <div className="block_heights_section">
+                            <div className="block_heights_section" title="Current block heights">
                                 <span className="block_height_label">Block Height</span>
-                                <div className="block_height_item">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 20 20">
-                                        <path fill="#101010" d="M15.549 8.62826c.22-1.47106-.9-2.26187-2.4315-2.78942l.4968-1.99275-1.213-.3023-.4837 1.94023c-.3189-.07946-.6464-.15442-.9718-.2287l.4871-1.95302L10.2206 3l-.49716 1.99205c-.26395-.06011-.52306-.11953-.77458-.18206l.00139-.00622-1.67282-.4177-.32268 1.29556s.89998.20626.88097.21904c.49128.12265.58007.44774.56521.70547l-.5659 2.27018c.03386.00863.07774.02107.12611.04042-.04042-.01002-.08361-.02108-.12818-.03179l-.79323 3.18015c-.06012.1493-.21247.3731-.55588.2882.01209.0176-.88167-.2201-.88167-.2201L5 13.5217l1.57851.3935c.29366.0736.58144.1506.86474.2232l-.50198 2.0155 1.21161.3023.49715-1.9941c.33097.0898.65227.1727.96666.2508l-.49542 1.9848L10.3343 17l.5019-2.0117c2.0684.3914 3.6238.2335 4.2785-1.6373.5276-1.5063-.0263-2.3752-1.1145-2.9418.7925-.1827 1.3895-.70407 1.5488-1.78094Zm-2.7715 3.88634c-.3748 1.5063-2.91103.692-3.73328.4878l.66609-2.6702c.82229.2052 3.45899.6115 3.06719 2.1824Zm.3752-3.90811c-.342 1.37019-2.4529.67404-3.1377.50337l.6039-2.42183c.6848.17067 2.89.4892 2.5338 1.91846Z" />
+                                <span className="block_height_item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 20 20">
+                                        <path fill="currentColor" d="M15.549 8.62826c.22-1.47106-.9-2.26187-2.4315-2.78942l.4968-1.99275-1.213-.3023-.4837 1.94023c-.3189-.07946-.6464-.15442-.9718-.2287l.4871-1.95302L10.2206 3l-.49716 1.99205c-.26395-.06011-.52306-.11953-.77458-.18206l.00139-.00622-1.67282-.4177-.32268 1.29556s.89998.20626.88097.21904c.49128.12265.58007.44774.56521.70547l-.5659 2.27018c.03386.00863.07774.02107.12611.04042-.04042-.01002-.08361-.02108-.12818-.03179l-.79323 3.18015c-.06012.1493-.21247.3731-.55588.2882.01209.0176-.88167-.2201-.88167-.2201L5 13.5217l1.57851.3935c.29366.0736.58144.1506.86474.2232l-.50198 2.0155 1.21161.3023.49715-1.9941c.33097.0898.65227.1727.96666.2508l-.49542 1.9848L10.3343 17l.5019-2.0117c2.0684.3914 3.6238.2335 4.2785-1.6373.5276-1.5063-.0263-2.3752-1.1145-2.9418.7925-.1827 1.3895-.70407 1.5488-1.78094Zm-2.7715 3.88634c-.3748 1.5063-2.91103.692-3.73328.4878l.66609-2.6702c.82229.2052 3.45899.6115 3.06719 2.1824Zm.3752-3.90811c-.342 1.37019-2.4529.67404-3.1377.50337l.6039-2.42183c.6848.17067 2.89.4892 2.5338 1.91846Z" />
                                     </svg>
                                     <span className="block_height_value">
                                         {bitcoinHeight ? bitcoinHeight.toLocaleString() : '...'}
                                     </span>
-                                </div>
-                                <div className="block_height_item">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 20 20">
-                                        <path fill="#101010" d="m14.8897 16.0001-2.546-3.8575H16v-1.4554H4v1.4571h3.65512l-2.54485 3.8558h1.8986L10 11.4681l2.9911 4.532h1.8986ZM16 9.27468V7.80464h-3.582L14.929 4h-1.8986L9.99997 8.59149 6.96957 4H5.07099l2.51428 3.80805H4v1.46663h12Z" />
+                                </span>
+                                <span className="block_height_divider" />
+                                <span className="block_height_item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 20 20">
+                                        <path fill="currentColor" d="m14.8897 16.0001-2.546-3.8575H16v-1.4554H4v1.4571h3.65512l-2.54485 3.8558h1.8986L10 11.4681l2.9911 4.532h1.8986ZM16 9.27468V7.80464h-3.582L14.929 4h-1.8986L9.99997 8.59149 6.96957 4H5.07099l2.51428 3.80805H4v1.46663h12Z" />
                                     </svg>
                                     <span className="block_height_value">
                                         {stacksHeight ? stacksHeight.toLocaleString() : '...'}
                                     </span>
-                                </div>
+                                </span>
                             </div>
 
                             <Link href="/builder/new">
@@ -146,60 +168,93 @@ export function DashboardNavBarComponent({ isPollPage = false }) {
                                     id="dropdown-menu-align-end"
                                     className="user-dropdown"
                                 >
-                                    <Dropdown.Item href="/builder/new">
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path d="M10 4.375V15.625M4.375 10H15.625" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                                        </svg>
-                                        New Poll
-                                    </Dropdown.Item>
-                                    <Dropdown.Divider />
+                                    {/* Account header */}
+                                    <div className="um_account">
+                                        <div className="um_avatar">{displayUsername ? displayUsername.charAt(0).toUpperCase() : '?'}</div>
+                                        <div className="um_account_info">
+                                            <div className="um_name">{displayUsername || 'Loading…'}</div>
+                                            {stxAddress ? (
+                                                <button type="button" className="um_address" onClick={copyAddress} title="Copy address">
+                                                    <span>{truncateAddress(stxAddress)}</span>
+                                                    {addressCopied ? (
+                                                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.5l3 3 6-6.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                                                    ) : (
+                                                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5.5" y="5.5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.3" /><path d="M3.5 10.5h-.5A1.5 1.5 0 0 1 1.5 9V3A1.5 1.5 0 0 1 3 1.5h6A1.5 1.5 0 0 1 10.5 3v.5" stroke="currentColor" strokeWidth="1.3" /></svg>
+                                                    )}
+                                                </button>
+                                            ) : null}
+                                        </div>
+                                    </div>
+
                                     <Dropdown.Item onClick={() => setShowProfilePopup(true)}>
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" strokeWidth="1.5" fill="none" />
-                                            <path d="M4 16.5a6 6 0 0 1 12 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                                        </svg>
+                                        <span className="um_icon">
+                                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                                <path d="M10 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                                                <path d="M4 16.5a6 6 0 0 1 12 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
+                                            </svg>
+                                        </span>
                                         Profile
                                     </Dropdown.Item>
                                     <Dropdown.Item onClick={handleShowMyVotesPopup}>
-                                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h11A1.5 1.5 0 0 1 17 4.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 15.5v-11z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                                            <path d="M7.5 10.5l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                                        </svg>
+                                        <span className="um_icon">
+                                            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+                                                <path d="M3 4.5A1.5 1.5 0 0 1 4.5 3h11A1.5 1.5 0 0 1 17 4.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 3 15.5v-11z" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                                                <path d="M7.5 10.5l2 2 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                                            </svg>
+                                        </span>
                                         My votes
                                     </Dropdown.Item>
-                                    {/* <Dropdown.Item href="/summary">
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path fillRule="evenodd" clipRule="evenodd" d="M2 3a1 1 0 011-1h10a1 1 0 011 1v10a1 1 0 01-1 1H3a1 1 0 01-1-1V3zm9 3H5v1h6V6zm0 3H5v1h6V9z" fill="currentColor" />
-                                        </svg>
-                                        Summary page
-                                    </Dropdown.Item> */}
+                                    <Dropdown.Item onClick={() => setShowGroupsModal(true)}>
+                                        <span className="um_icon">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                                                <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                                                <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                                                <path d="M17.5 14v7M14 17.5h7" />
+                                            </svg>
+                                        </span>
+                                        Grouped polls
+                                    </Dropdown.Item>
+
+                                    <Dropdown.Divider />
+
                                     <Dropdown.Item onClick={() => switchAccount(window?.location?.href)}>
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" fill="currentColor"/>
-                                            <path d="M3 14C3 11.7909 4.79086 10 7 10H9C11.2091 10 13 11.7909 13 14V15H3V14Z" fill="currentColor"/>
-                                            <path d="M13.5 4C14.3284 4 15 3.32843 15 2.5C15 1.67157 14.3284 1 13.5 1C12.6716 1 12 1.67157 12 2.5C12 3.32843 12.6716 4 13.5 4Z" fill="currentColor"/>
-                                            <path d="M14 6H13C12.4477 6 12 6.44772 12 7V8H16V7C16 6.44772 15.5523 6 15 6H14Z" fill="currentColor"/>
-                                        </svg>
+                                        <span className="um_icon">
+                                            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                                                <path d="M8 8C9.65685 8 11 6.65685 11 5C11 3.34315 9.65685 2 8 2C6.34315 2 5 3.34315 5 5C5 6.65685 6.34315 8 8 8Z" fill="currentColor"/>
+                                                <path d="M3 14C3 11.7909 4.79086 10 7 10H9C11.2091 10 13 11.7909 13 14V15H3V14Z" fill="currentColor"/>
+                                                <path d="M13.5 4C14.3284 4 15 3.32843 15 2.5C15 1.67157 14.3284 1 13.5 1C12.6716 1 12 1.67157 12 2.5C12 3.32843 12.6716 4 13.5 4Z" fill="currentColor"/>
+                                                <path d="M14 6H13C12.4477 6 12 6.44772 12 7V8H16V7C16 6.44772 15.5523 6 15 6H14Z" fill="currentColor"/>
+                                            </svg>
+                                        </span>
                                         Switch account
                                     </Dropdown.Item>
                                     <Dropdown.Item onClick={() => setShowBurnAddressPopup(true)}>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                                            <path d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-                                        </svg>
+                                        <span className="um_icon">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                                <path d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                                                <path d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                                            </svg>
+                                        </span>
                                         Burn Address Generator
                                     </Dropdown.Item>
+
                                     <Dropdown.Divider />
+
                                     <Dropdown.Item href="https://github.com/BlockSurvey/ballot/issues" target="_blank">
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path fillRule="evenodd" clipRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" fill="currentColor" />
-                                        </svg>
+                                        <span className="um_icon">
+                                            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                                                <path fillRule="evenodd" clipRule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" fill="currentColor" />
+                                            </svg>
+                                        </span>
                                         Share feedback
                                     </Dropdown.Item>
                                     <Dropdown.Item onClick={() => signOut(isPollPage ? window?.location?.href : undefined)}>
-                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '8px' }}>
-                                            <path fillRule="evenodd" clipRule="evenodd" d="M10 2.5a.5.5 0 00-.5-.5h-7a.5.5 0 00-.5.5v11a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V12a1 1 0 112 0v1.5A2.5 2.5 0 019.5 16h-7A2.5 2.5 0 010 13.5v-11A2.5 2.5 0 012.5 0h7A2.5 2.5 0 0112 2.5V4a1 1 0 11-2 0V2.5zM15.854 7.146a.5.5 0 010 .708l-3 3a.5.5 0 01-.708-.708L14.293 8H5a.5.5 0 010-1h9.293l-2.147-2.146a.5.5 0 01.708-.708l3 3z" fill="currentColor" />
-                                        </svg>
+                                        <span className="um_icon">
+                                            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                                                <path fillRule="evenodd" clipRule="evenodd" d="M10 2.5a.5.5 0 00-.5-.5h-7a.5.5 0 00-.5.5v11a.5.5 0 00.5.5h7a.5.5 0 00.5-.5V12a1 1 0 112 0v1.5A2.5 2.5 0 019.5 16h-7A2.5 2.5 0 010 13.5v-11A2.5 2.5 0 012.5 0h7A2.5 2.5 0 0112 2.5V4a1 1 0 11-2 0V2.5zM15.854 7.146a.5.5 0 010 .708l-3 3a.5.5 0 01-.708-.708L14.293 8H5a.5.5 0 010-1h9.293l-2.147-2.146a.5.5 0 01.708-.708l3 3z" fill="currentColor" />
+                                            </svg>
+                                        </span>
                                         Logout
                                     </Dropdown.Item>
                                 </DropdownButton>
@@ -244,6 +299,12 @@ export function DashboardNavBarComponent({ isPollPage = false }) {
                 show={showProfilePopup}
                 onHide={() => setShowProfilePopup(false)}
                 displayUsername={displayUsername}
+            />
+
+            {/* Grouped polls manager */}
+            <GroupsModal
+                show={showGroupsModal}
+                onClose={() => setShowGroupsModal(false)}
             />
         </>
     );

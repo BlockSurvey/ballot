@@ -45,6 +45,9 @@ export default function PollComponent(props) {
         btcVotingLoading,
         recountLoading,
         allRecountedResultsByPosition,
+        onVoteSuccess,
+        embedded,
+        onVoteClose,
     } = props;
 
     const [txId, setTxId] = useState();
@@ -69,6 +72,12 @@ export default function PollComponent(props) {
     const handleShow = () => setShow(true);
     const handleClose = () => {
         setShow(false);
+        // In the grouped-poll wizard we must not reload (it would reset the wizard).
+        // Instead let the host advance to the next poll.
+        if (embedded) {
+            if (onVoteClose) onVoteClose();
+            return;
+        }
         // Refresh the page to show latest voting data
         window.location.reload();
     };
@@ -79,6 +88,11 @@ export default function PollComponent(props) {
             setVoteObject(selectedOptions);
             processMyVote(data, selectedOptions);
             handleShow();
+
+            // Notify parent container (e.g. grouped polls wizard) of a successful vote
+            if (onVoteSuccess) {
+                onVoteSuccess(data, selectedOptions);
+            }
         }
     };
 
