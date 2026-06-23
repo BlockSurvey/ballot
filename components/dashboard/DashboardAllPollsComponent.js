@@ -969,6 +969,7 @@ export default function DashboardAllPollsComponent() {
                 poll={pollToDelete}
                 onDeleteSuccess={handleDraftDeleted}
             />
+
         </div>
     );
 }
