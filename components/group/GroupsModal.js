@@ -301,6 +301,12 @@ export default function GroupsModal({ show, onClose }) {
                                 <div className={styles.loadingBlock}><Spinner animation="border" variant="secondary" size="sm" /><span>Loading your polls…</span></div>
                             ) : publishedIds.length === 0 ? (
                                 <div className={styles.emptyBlock}>
+                                    <div className={styles.emptyBadge} aria-hidden="true">
+                                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                                            <rect x="4" y="3" width="16" height="18" rx="2" />
+                                            <path d="M8 8h8M8 12h8M8 16h5" />
+                                        </svg>
+                                    </div>
                                     <div className={styles.emptyTitle}>No published polls yet</div>
                                     <div className={styles.emptyText}>Only published polls can be grouped. Publish a poll, then come back to bundle it.</div>
                                 </div>
