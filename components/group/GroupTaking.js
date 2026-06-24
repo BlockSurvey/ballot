@@ -67,6 +67,12 @@ export default function GroupTaking({ groupObject, pollObjects, currentBitcoinBl
         return () => { cancelled = true; };
     }, [polls]);
 
+    // Advancing/jumping swaps the visible poll in place, so the viewport stays where
+    // it was — start each poll (and the finish screen) from the top.
+    useEffect(() => {
+        if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
+    }, [activeIndex, showFinish]);
+
     const setStatus = (pollId, status) => {
         setCompletion((prev) => {
             if (prev[pollId] === "done" && status !== "done") return prev; // never downgrade a vote
@@ -81,6 +87,7 @@ export default function GroupTaking({ groupObject, pollObjects, currentBitcoinBl
     const closedCount = polls.filter((p) => statusOf(p) === "closed").length;
     const votedCount = polls.filter((p) => statusOf(p) === "done").length;
     const votable = polls.length - closedCount;
+    const skippedCount = Math.max(0, votable - votedCount); // votable polls left unvoted at finish
     const isLastIndex = activeIndex >= polls.length - 1;
 
     const goNext = () => {

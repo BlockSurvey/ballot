@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Modal, Spinner } from "react-bootstrap";
 import QRCode from "qrcode.react";
 import { getFileFromGaia } from "../../services/auth";
+import { enrichPollIndexBlockHeights, getCurrentBlockHeights, getPollLifecycleStatus } from "../../services/utils";
 import {
     createGroup, deleteGroup, getGroupIndex, getGroupPublicUrl, getOwnGaiaAddress, getOwnGroup, updateGroup
 } from "../../services/group-storage";
@@ -16,9 +17,6 @@ function CheckIcon({ size = 12 }) {
     );
 }
 
-function isClosed(ref) {
-    return ref?.endAt && new Date(ref.endAt) < new Date();
-}
 function recency(ref) {
     return new Date(ref?.updatedAt || ref?.createdAt || 0).getTime();
 }
@@ -41,6 +39,8 @@ export default function GroupsModal({ show, onClose }) {
     const [allPolls, setAllPolls] = useState(null);
     const [ownGaia, setOwnGaia] = useState("");
     const [loading, setLoading] = useState(false);
+    // Current Bitcoin height drives the same height-based status the dashboard uses.
+    const [currentBitcoinBlockHeight, setCurrentBitcoinBlockHeight] = useState(0);
 
     // list interactions
     const [deletingId, setDeletingId] = useState(null);
@@ -62,9 +62,14 @@ export default function GroupsModal({ show, onClose }) {
     const loadList = async () => {
         setLoading(true);
         try {
-            const [idx, gaia] = await Promise.all([getGroupIndex(), getOwnGaiaAddress()]);
+            const [idx, gaia, heights] = await Promise.all([
+                getGroupIndex(),
+                getOwnGaiaAddress(),
+                getCurrentBlockHeights().catch(() => null),
+            ]);
             setGroupIndex(idx);
             setOwnGaia(gaia);
+            if (heights?.bitcoinHeight) setCurrentBitcoinBlockHeight(heights.bitcoinHeight);
         } catch (e) {
             setGroupIndex({ list: [], ref: {} });
         } finally {
@@ -76,7 +81,11 @@ export default function GroupsModal({ show, onClose }) {
         if (allPolls?.list) return;
         try {
             const res = await getFileFromGaia("pollIndex.json", {});
-            setAllPolls(res ? JSON.parse(res) : { list: [], ref: {} });
+            const parsed = res ? JSON.parse(res) : { list: [], ref: {} };
+            // Enrich with block heights (read-only) so status matches the dashboard,
+            // even if the dashboard's persisted backfill hasn't completed yet.
+            const { index } = await enrichPollIndexBlockHeights(parsed);
+            setAllPolls({ ...index });
         } catch (e) {
             setAllPolls({ list: [], ref: {} });
         }
@@ -96,7 +105,12 @@ export default function GroupsModal({ show, onClose }) {
     const publishedIds = useMemo(() => {
         if (!allPolls?.list) return [];
         return allPolls.list
-            .filter((id) => allPolls.ref?.[id] && allPolls.ref[id].status !== "draft")
+            .filter((id) => {
+                const ref = allPolls.ref?.[id];
+                // Match the dashboard: only published, non-archived polls. Drafts can't
+                // be grouped; archived polls are hidden there, so exclude them here too.
+                return ref && ref.status !== "draft" && ref.archived !== true;
+            })
             .sort((a, b) => recency(allPolls.ref[b]) - recency(allPolls.ref[a]));
     }, [allPolls]);
 
@@ -317,7 +331,11 @@ export default function GroupsModal({ show, onClose }) {
                                     {visibleIds.map((pollId) => {
                                         const ref = allPolls.ref[pollId];
                                         const on = selected.includes(pollId);
-                                        const closed = isClosed(ref);
+                                        // Same height-based source of truth as the dashboard.
+                                        const status = getPollLifecycleStatus(ref, currentBitcoinBlockHeight);
+                                        const closed = status === "closed";
+                                        const statusLabel = status === "closed" ? "Closed"
+                                            : status === "not_started" ? "Not started" : "Active";
                                         return (
                                             <div key={pollId} className={`${styles.pollRow} ${on ? styles.selected : ""}`}
                                                 role="checkbox" aria-checked={on} tabIndex={0}
@@ -327,7 +345,7 @@ export default function GroupsModal({ show, onClose }) {
                                                 <span className={styles.pollMeta}><span className={styles.pollTitle}>{ref?.title || "Untitled poll"}</span></span>
                                                 <span className={styles.statusPill}>
                                                     <span className={`${styles.statusDot} ${closed ? styles.statusDotClosed : ""}`} aria-hidden="true" />
-                                                    {closed ? "Closed" : "Active"}
+                                                    {statusLabel}
                                                 </span>
                                             </div>
                                         );

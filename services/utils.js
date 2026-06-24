@@ -1,5 +1,5 @@
 import { Constants } from "../common/constants";
-import { getMyStxAddress, getStacksAPIPrefix, getStacksAPIHeaders, getUserData, userSession } from "../services/auth";
+import { getFileFromGaia, getMyStxAddress, getStacksAPIPrefix, getStacksAPIHeaders, getUserData, userSession } from "../services/auth";
 
 /**
  * Formats a number with comma separators for better readability
@@ -359,4 +359,43 @@ export const getPollLifecycleStatus = (poll, currentBitcoinBlockHeight) => {
     if (poll?.endAt && new Date(poll.endAt) < now) return "closed";
     if (poll?.startAt && new Date(poll.startAt) > now) return "not_started";
     return "active";
+};
+
+// Read-only enrichment: legacy pollIndex entries predate block heights being stored.
+// Fetch each missing poll's full JSON and copy its heights into the index in place, so
+// height-based status (getPollLifecycleStatus) works consistently everywhere — without
+// relying on a prior persisted backfill. Returns { index, changed }; the caller decides
+// whether to persist (dashboard does, the group modal does not).
+export const enrichPollIndexBlockHeights = async (pollIndex) => {
+    if (!pollIndex?.ref) return { index: pollIndex, changed: false };
+
+    const missing = Object.values(pollIndex.ref).filter(
+        (poll) => poll && poll.id && (poll.endAtBlock === undefined || poll.endAtBlock === null)
+    );
+    if (missing.length === 0) return { index: pollIndex, changed: false };
+
+    let changed = false;
+    await Promise.all(
+        missing.map(async (entry) => {
+            try {
+                const raw = await getFileFromGaia(entry.id + ".json", {});
+                if (!raw) return;
+                const fullPoll = JSON.parse(raw);
+                if (fullPoll?.endAtBlock) {
+                    pollIndex.ref[entry.id].endAtBlock = fullPoll.endAtBlock;
+                    if (fullPoll?.startAtBlock) {
+                        pollIndex.ref[entry.id].startAtBlock = fullPoll.startAtBlock;
+                    }
+                    changed = true;
+                }
+            } catch (error) {
+                // Missing/unreadable poll file — leave it on the date fallback
+                if (!(error && error.code === "does_not_exist")) {
+                    console.error("enrichPollIndexBlockHeights: failed for poll", entry.id, error);
+                }
+            }
+        })
+    );
+
+    return { index: pollIndex, changed };
 };

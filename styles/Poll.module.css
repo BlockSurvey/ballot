@@ -901,6 +901,13 @@
     animation: fadeIn 0.3s ease;
 }
 
+/* In the grouped-poll wizard polls are pre-mounted and switched instantly, so the
+   per-section slide-up entrance is inappropriate — and replays (StrictMode remount /
+   display toggle) as a double bottom-to-top flicker. Suppress it in embedded mode. */
+.embedded .fade_in {
+    animation: none;
+}
+
 @keyframes pulse {
     0%, 100% {
         transform: scale(1);

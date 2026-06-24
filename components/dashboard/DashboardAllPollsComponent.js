@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "react-bootstrap";
 import { getFileFromGaia, getGaiaAddressFromPublicKey, putFileToGaia } from "../../services/auth.js";
-import { convertToDisplayDateFormat, getCurrentBlockHeights, getPollLifecycleStatus } from "../../services/utils";
+import { convertToDisplayDateFormat, enrichPollIndexBlockHeights, getCurrentBlockHeights, getPollLifecycleStatus } from "../../services/utils";
 import styles from "../../styles/Dashboard.module.css";
 import ArchiveConfirmationModal from "../common/ArchiveConfirmationModal";
 import DeleteDraftConfirmationModal from "../common/DeleteDraftConfirmationModal";
@@ -239,38 +239,10 @@ export default function DashboardAllPollsComponent() {
             });
     }, []);
 
-    // Backfill block heights into legacy pollIndex entries that predate them.
+    // Backfill block heights into legacy pollIndex entries that predate them, then
+    // persist once. Enrichment logic is shared with the group modal (read-only there).
     async function backfillBlockHeights(pollIndex) {
-        if (!pollIndex?.ref) return;
-
-        const missing = Object.values(pollIndex.ref).filter(
-            (poll) => poll && poll.id && (poll.endAtBlock === undefined || poll.endAtBlock === null)
-        );
-        if (missing.length === 0) return;
-
-        let changed = false;
-        await Promise.all(
-            missing.map(async (entry) => {
-                try {
-                    const raw = await getFileFromGaia(entry.id + ".json", {});
-                    if (!raw) return;
-                    const fullPoll = JSON.parse(raw);
-                    if (fullPoll?.endAtBlock) {
-                        pollIndex.ref[entry.id].endAtBlock = fullPoll.endAtBlock;
-                        if (fullPoll?.startAtBlock) {
-                            pollIndex.ref[entry.id].startAtBlock = fullPoll.startAtBlock;
-                        }
-                        changed = true;
-                    }
-                } catch (error) {
-                    // Missing/unreadable poll file — leave it on the date fallback
-                    if (!(error && error.code === "does_not_exist")) {
-                        console.error("Backfill: failed for poll", entry.id, error);
-                    }
-                }
-            })
-        );
-
+        const { changed } = await enrichPollIndexBlockHeights(pollIndex);
         if (changed) {
             // Refresh the UI with the enriched index, then persist it once
             setAllPolls({ ...pollIndex });

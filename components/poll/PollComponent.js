@@ -135,7 +135,7 @@ export default function PollComponent(props) {
 
     return (
         <>
-            <div className={styles.poll_container}>
+            <div className={`${styles.poll_container} ${embedded ? styles.embedded : ""}`}>
                 {pollObject && pollObject.id ? (
                     <div className={styles.poll_layout}>
                         {/* Main Content */}
