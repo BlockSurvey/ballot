@@ -1,7 +1,9 @@
-import { request } from '@stacks/connect-v8';
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
 import { getMyStxAddress, getNetworkString } from '../../services/auth';
+// Use the shared helper so the dust transfer also establishes/refreshes the
+// connect-v8 wallet connection (avoids repeated prompts / "wallet no longer available").
+import { walletRequest } from '../../services/contract';
 import ModalCloseButton from './ModalCloseButton';
 import styles from '../../styles/Builder.module.css';
 
@@ -94,7 +96,7 @@ export default function SendTxModal({
 
             // @stacks/connect v8: `openSTXTransfer` was dropped by current wallets.
             // Use `request()`; the wallet handles nonce and fee. Resolves with { txid }.
-            const response = await request('stx_transferStx', {
+            const response = await walletRequest('stx_transferStx', {
                 recipient: dustTx.address,
                 amount: Math.floor(dustTx.amount * 1000000), // Convert to microSTX
                 network: networkString,

@@ -1,6 +1,6 @@
 // v8 `request()` (aliased) — the new wallet protocol for signing transactions.
 // Auth still uses v7 `@stacks/connect` (see services/auth.js) for appPrivateKey.
-import { request } from "@stacks/connect-v8";
+import { connect, disconnect, isConnected, request } from "@stacks/connect-v8";
 import { bufferCV, cvToHex, listCV, stringAsciiCV, uintCV } from "@stacks/transactions";
 import { Constants } from "../common/constants";
 import { getNetworkString } from "../services/auth";
@@ -9,13 +9,40 @@ const cancelCallbackFunction = (data) => {
     window.location.reload();
 }
 
+// v7 `showConnect` (auth) does NOT register a wallet with connect-v8, so v8's
+// `request()` has no connected wallet: it either re-prompts a wallet selector on
+// every call, or (with multiple wallet extensions fighting over the provider)
+// resolves a stale wallet and throws "Wallet no longer available". Establish a
+// v8 connection once (cached in localStorage → subsequent calls are silent), and
+// transparently reconnect + retry once if the cached wallet has gone stale.
+const WALLET_STALE_RE = /no longer available|reconnect|not connected|no wallet|wallet.*unavailable/i;
+
+export async function walletRequest(method, params) {
+    if (!isConnected()) {
+        await connect(); // one-time wallet selection; caches the choice
+    }
+
+    try {
+        return await request(method, params);
+    } catch (error) {
+        if (WALLET_STALE_RE.test(error?.message || "")) {
+            // Cached wallet is stale (e.g. another extension took the provider).
+            // Force a fresh selection and retry the request once.
+            try { disconnect(); } catch (_) { /* ignore */ }
+            await connect();
+            return await request(method, params);
+        }
+        throw error;
+    }
+}
+
 export async function deployContract(pollObject, contractName, callbackFunction) {
     const contract = getContract(pollObject);
 
     try {
         // @stacks/connect v8: the legacy `openContractDeploy` protocol was dropped
         // by current wallets (Leather/Xverse). Use the SIP-030 `request()` API.
-        const response = await request("stx_deployContract", {
+        const response = await walletRequest("stx_deployContract", {
             name: contractName,
             clarityCode: contract,
             network: getNetworkString(), // "mainnet" | "testnet"
@@ -670,7 +697,7 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
 
     try {
         // @stacks/connect v8 `request()` replaces the legacy `openContractCall`.
-        const response = await request("stx_callContract", {
+        const response = await walletRequest("stx_callContract", {
             contract: `${contractAddress}.${contractName}`,
             functionName: "cast-my-vote",
             // Pass hex-serialized args, not CV objects: connect-v8's internal
@@ -703,7 +730,7 @@ export async function updatePollConfigContractCall(contractAddress, contractName
     ];
 
     try {
-        const response = await request("stx_callContract", {
+        const response = await walletRequest("stx_callContract", {
             contract: `${contractAddress}.${contractName}`,
             functionName: "update-config",
             functionArgs: functionArgs.map(cvToHex), // hex wire format (see cast-my-vote note)
