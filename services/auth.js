@@ -1,4 +1,8 @@
 import { utf8ToBytes } from "@stacks/common";
+// Auth stays on @stacks/connect v7: its legacy `showConnect` handshake returns
+// the Gaia `appPrivateKey` that all storage encryption / BlockSurvey API auth
+// depends on. (v8's auth only returns addresses — no appPrivateKey.)
+// Transaction signing uses v8's `request()` from "@stacks/connect-v8" instead.
 import { AppConfig, showConnect, UserSession } from "@stacks/connect";
 import {
   decryptECIES,
@@ -10,6 +14,31 @@ import { StacksMainnet, StacksTestnet } from "@stacks/network";
 import { Constants } from "../common/constants";
 
 const appConfig = new AppConfig(["store_write", "publish_data"]);
+
+// A session written by a different @stacks/connect major version can be
+// unreadable by this one. v7's UserSession throws
+// "JSON data version undefined not supported by SessionData" when it finds a
+// session without the expected version (e.g. one written by a v8 auth attempt).
+// Detect and drop that stale blob at startup so a fresh sign-in can proceed —
+// no manual localStorage editing required. A valid v7 session (version "1.0.0",
+// carrying the appPrivateKey) is left untouched.
+function purgeIncompatibleSession() {
+  if (typeof window === "undefined" || !window.localStorage) return;
+  const SESSION_KEY = "blockstack-session";
+  try {
+    const raw = window.localStorage.getItem(SESSION_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw);
+    if (!parsed || parsed.version !== "1.0.0") {
+      window.localStorage.removeItem(SESSION_KEY);
+    }
+  } catch (e) {
+    // Unparseable session blob — remove it.
+    window.localStorage.removeItem(SESSION_KEY);
+  }
+}
+
+purgeIncompatibleSession();
 
 export const userSession = new UserSession({ appConfig });
 
@@ -252,6 +281,15 @@ export function getNetworkType() {
   } else {
     return new StacksTestnet();
   }
+}
+
+/**
+ * Network as a plain string ("mainnet" | "testnet").
+ * Required by @stacks/connect v8 `request()` wallet calls, which take a
+ * network name string instead of a StacksNetwork object.
+ */
+export function getNetworkString() {
+  return stacksMainnetFlag ? "mainnet" : "testnet";
 }
 
 export function getMyStxAddress() {

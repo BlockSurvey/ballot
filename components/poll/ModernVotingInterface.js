@@ -194,7 +194,10 @@ export default function ModernVotingInterface({
                 snapshotSignatureHex
             );
         } catch (error) {
-            setErrorMessage("Failed to cast vote. Please try again.");
+            console.error("Vote failed:", error);
+            // Show the real reason so wallet/serialization issues are diagnosable.
+            const detail = error?.message || String(error);
+            setErrorMessage(`Failed to cast vote: ${detail}`);
             setIsProcessing(false);
         }
     };

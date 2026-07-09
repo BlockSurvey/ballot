@@ -1,8 +1,7 @@
-import { openSTXTransfer } from '@stacks/connect';
-import { getNonce } from '@stacks/transactions';
+import { request } from '@stacks/connect-v8';
 import React, { useEffect, useState } from 'react';
 import { Button, Modal } from 'react-bootstrap';
-import { getMyStxAddress, getNetworkType } from '../../services/auth';
+import { getMyStxAddress, getNetworkString } from '../../services/auth';
 import ModalCloseButton from './ModalCloseButton';
 import styles from '../../styles/Builder.module.css';
 
@@ -77,12 +76,11 @@ export default function SendTxModal({
             // Since it's always one transaction, get the first (and only) transaction
             const dustTx = dustTransactions[0];
 
-            // Fetch the current nonce for the user's address
-            const network = getNetworkType();
+            const networkString = getNetworkString(); // "mainnet" | "testnet"
 
-            let senderAddress;
+            // Validate the user is logged in and surface extension errors early.
             try {
-                senderAddress = getMyStxAddress();
+                getMyStxAddress();
             } catch (addressError) {
                 console.error('Failed to get sender address:', addressError);
                 clearTimeout(timeout);
@@ -94,67 +92,48 @@ export default function SendTxModal({
                 throw new Error('Could not retrieve wallet address. Please make sure you are logged in.');
             }
 
-            let nonce;
-            try {
-                const fetchedNonce = await getNonce(senderAddress, network);
-                // Convert BigInt to Number
-                nonce = Number(fetchedNonce);
-            } catch (nonceError) {
-                console.warn('Failed to fetch nonce, letting Stacks Connect handle it:', nonceError);
-                // If nonce fetch fails, let Stacks Connect handle it
-            }
-
-            const txOptions = {
+            // @stacks/connect v8: `openSTXTransfer` was dropped by current wallets.
+            // Use `request()`; the wallet handles nonce and fee. Resolves with { txid }.
+            const response = await request('stx_transferStx', {
                 recipient: dustTx.address,
                 amount: Math.floor(dustTx.amount * 1000000), // Convert to microSTX
-                network: network,
-                appDetails: {
-                    name: "Ballot",
-                    icon: window.location.origin + "/images/logo/ballot.png"
-                },
-                onFinish: (data) => {
-                    console.log('Transaction successfully sent:', data);
-                    clearTimeout(timeout);
+                network: networkString,
+            });
 
-                    // Create completed transaction with proper ID and URL
-                    const completedTx = {
-                        ...dustTx,
-                        txId: data.txId,
-                        explorerUrl: network.coreApiUrl.includes('testnet')
-                            ? `https://explorer.stacks.co/txid/${data.txId}?chain=testnet`
-                            : `https://explorer.stacks.co/txid/${data.txId}?chain=mainnet`
-                    };
+            console.log('Transaction successfully sent:', response);
+            clearTimeout(timeout);
 
-                    setIsProcessing(false);
-                    onHide();
-
-                    // Call success callback after modal is closed
-                    setTimeout(() => {
-                        if (onTransactionSuccess) {
-                            onTransactionSuccess(completedTx);
-                        }
-                    }, 100);
-                },
-                onCancel: () => {
-                    console.log('Transaction cancelled by user');
-                    clearTimeout(timeout);
-                    setIsProcessing(false);
-                    setErrorMessage('Transaction was cancelled. You can try again or cast your vote directly without dust transactions.');
-                }
+            // Create completed transaction with proper ID and URL
+            const completedTx = {
+                ...dustTx,
+                txId: response?.txid,
+                explorerUrl: networkString === 'testnet'
+                    ? `https://explorer.stacks.co/txid/${response?.txid}?chain=testnet`
+                    : `https://explorer.stacks.co/txid/${response?.txid}?chain=mainnet`
             };
 
-            // 3. Only set nonce if you are *sure* it's correct (no pending TXs, network state is up to date)
-            if (nonce !== undefined) {
-                console.log('Setting nonce:', nonce);
-                txOptions.nonce = nonce;
-            }
+            setIsProcessing(false);
+            onHide();
 
-            console.log('Initiating STX transfer with options:', txOptions);
-
-            // Initialize the transaction
-            await openSTXTransfer(txOptions);
+            // Call success callback after modal is closed
+            setTimeout(() => {
+                if (onTransactionSuccess) {
+                    onTransactionSuccess(completedTx);
+                }
+            }, 100);
         } catch (error) {
             console.error('Error sending dust voting transaction:', error);
+
+            // User rejected / closed the wallet popup — mirror the old onCancel UX.
+            const rejectedByUser =
+                error?.code === 4001 ||
+                /reject|denied|cancel|closed/i.test(error?.message || '');
+            if (rejectedByUser) {
+                clearTimeout(timeout);
+                setIsProcessing(false);
+                setErrorMessage('Transaction was cancelled. You can try again or cast your vote directly without dust transactions.');
+                return;
+            }
             console.error('Error details:', {
                 message: error.message,
                 stack: error.stack,

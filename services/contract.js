@@ -1,7 +1,9 @@
-import { openContractCall, openContractDeploy } from "@stacks/connect";
-import { AnchorMode, bufferCV, FungibleConditionCode, listCV, makeStandardSTXPostCondition, PostConditionMode, stringAsciiCV, uintCV } from "@stacks/transactions";
+// v8 `request()` (aliased) — the new wallet protocol for signing transactions.
+// Auth still uses v7 `@stacks/connect` (see services/auth.js) for appPrivateKey.
+import { request } from "@stacks/connect-v8";
+import { bufferCV, cvToHex, listCV, stringAsciiCV, uintCV } from "@stacks/transactions";
 import { Constants } from "../common/constants";
-import { getNetworkType } from "../services/auth";
+import { getNetworkString } from "../services/auth";
 
 const cancelCallbackFunction = (data) => {
     window.location.reload();
@@ -10,28 +12,22 @@ const cancelCallbackFunction = (data) => {
 export async function deployContract(pollObject, contractName, callbackFunction) {
     const contract = getContract(pollObject);
 
-    // Transaction options
-    const txOptions = {
-        network: getNetworkType(), // Testnet or Mainnet
-        anchorMode: AnchorMode.Any, // which type of block the tx should be mined in
+    try {
+        // @stacks/connect v8: the legacy `openContractDeploy` protocol was dropped
+        // by current wallets (Leather/Xverse). Use the SIP-030 `request()` API.
+        const response = await request("stx_deployContract", {
+            name: contractName,
+            clarityCode: contract,
+            network: getNetworkString(), // "mainnet" | "testnet"
+        });
 
-        contractName: contractName,
-        codeBody: contract,
-
-        appDetails: {
-            name: "Ballot",
-            icon: window.location.origin + "/images/logo/ballot.png"
-        },
-
-        postConditionMode: PostConditionMode.Deny, // whether the tx should fail when unexpected assets are transferred
-        postConditions: [], // for an example using post-conditions, see next example
-
-        onFinish: callbackFunction,
-        onCancel: cancelCallbackFunction
-    };
-
-    // Call contract function
-    await openContractDeploy(txOptions);
+        // v8 resolves with { txid }; keep the { txId } shape the callbacks expect.
+        callbackFunction?.({ txId: response?.txid });
+    } catch (error) {
+        // Thrown when the user rejects/closes the wallet or the request fails.
+        console.error("Contract deploy failed or was cancelled:", error);
+        cancelCallbackFunction(error);
+    }
 }
 
 function getContract(pollObject) {
@@ -672,24 +668,26 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
         functionArgs.push(bufferCV(Buffer.from(snapshotSignatureHex, "hex")));
     }
 
-    // Contract function details to be called
-    const options = {
-        contractAddress: contractAddress,
-        contractName: contractName,
-        functionName: "cast-my-vote",
-        functionArgs: functionArgs,
-        postConditions: [],
-        network: getNetworkType(),
-        appDetails: {
-            name: "Ballot",
-            icon: window.location.origin + "/images/logo/ballot.png",
-        },
-        onFinish: callbackFunction,
-        onCancel: cancelCallbackFunction
-    };
+    try {
+        // @stacks/connect v8 `request()` replaces the legacy `openContractCall`.
+        const response = await request("stx_callContract", {
+            contract: `${contractAddress}.${contractName}`,
+            functionName: "cast-my-vote",
+            // Pass hex-serialized args, not CV objects: connect-v8's internal
+            // v6->v7 ClarityValue conversion breaks across webpack module
+            // instances ("Unable to serialize. Invalid Clarity Value."). The
+            // hex wire format is version-stable and deserialized by the wallet.
+            functionArgs: functionArgs.map(cvToHex),
+            network: getNetworkString(),
+        });
 
-    // Call contract function
-    await openContractCall(options);
+        callbackFunction?.({ txId: response?.txid });
+    } catch (error) {
+        // Surface the real error to the caller (ModernVotingInterface shows a
+        // message) instead of silently reloading the page, which hid failures.
+        console.error("cast-my-vote request failed:", error);
+        throw error;
+    }
 }
 
 /**
@@ -704,20 +702,21 @@ export async function updatePollConfigContractCall(contractAddress, contractName
         uintCV(parseInt(newSnapshot) || 0)
     ];
 
-    const options = {
-        contractAddress: contractAddress,
-        contractName: contractName,
-        functionName: "update-config",
-        functionArgs: functionArgs,
-        postConditions: [],
-        network: getNetworkType(),
-        appDetails: {
-            name: "Ballot",
-            icon: window.location.origin + "/images/logo/ballot.png",
-        },
-        onFinish: callbackFunction,
-        onCancel: onCancelFunction || cancelCallbackFunction
-    };
+    try {
+        const response = await request("stx_callContract", {
+            contract: `${contractAddress}.${contractName}`,
+            functionName: "update-config",
+            functionArgs: functionArgs.map(cvToHex), // hex wire format (see cast-my-vote note)
+            network: getNetworkString(),
+        });
 
-    await openContractCall(options);
+        callbackFunction?.({ txId: response?.txid });
+    } catch (error) {
+        console.error("update-config request failed:", error);
+        if (onCancelFunction) {
+            onCancelFunction(error);
+        } else {
+            throw error;
+        }
+    }
 }
