@@ -85,6 +85,12 @@ const fetchWithRetry = async (url, retries = RETRY_LIMIT) => {
         const { data } = await axios.get(url, { headers: getStacksAPIHeaders() });
         return data;
     } catch (err) {
+        // 4xx (except 429) is a permanent answer — e.g. 404 for a PoX cycle
+        // that doesn't exist yet. Retrying just spams the API and the console.
+        const status = err?.response?.status;
+        if (status && status >= 400 && status < 500 && status !== 429) {
+            throw err;
+        }
         if (retries > 0) {
             await sleep(RETRY_DELAY_MS);
             return fetchWithRetry(url, retries - 1);

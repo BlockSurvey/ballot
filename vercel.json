@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "pages/api/snapshot/sign.js": {
+      "maxDuration": 60
+    }
+  }
+}

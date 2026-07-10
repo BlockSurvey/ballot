@@ -200,6 +200,32 @@ export default function PollContainer(props) {
             }
 
             const responseObject = await response.json();
+
+            // Self-heal corrupted publishedInfo: the deploy tx on-chain is the
+            // AUTHORITATIVE record of where the contract lives. Polls created
+            // with the pre-v8-migration account desync stored the wrong
+            // deployer address (session account ≠ wallet's actual signing
+            // account), so every vote targeted a nonexistent contract and the
+            // wallet showed "Not a valid contract". When the chain disagrees
+            // with the stored metadata, trust the chain and re-fetch results.
+            const actualContractId = responseObject?.smart_contract?.contract_id;
+            if (actualContractId && responseObject?.tx_status === "success") {
+                const [actualAddress, actualName] = actualContractId.split(".");
+                const stored = pollObject?.publishedInfo;
+                if (actualAddress && actualName && stored &&
+                    (stored.contractAddress !== actualAddress || stored.contractName !== actualName)) {
+                    console.warn(
+                        `Poll metadata points to ${stored.contractAddress}.${stored.contractName} ` +
+                        `but the deploy tx created ${actualContractId} — healing to the on-chain contract.`
+                    );
+                    stored.contractAddress = actualAddress;
+                    stored.contractName = actualName;
+                    // Earlier reads (results, my-vote, holdings) ran against the
+                    // wrong contract — redo them against the real one.
+                    refreshPollData(pollObject);
+                }
+            }
+
             setTxStatus(responseObject?.tx_status);
         } catch (error) {
             console.error("Error fetching contract transaction status:", error);

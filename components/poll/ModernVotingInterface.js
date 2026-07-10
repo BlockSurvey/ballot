@@ -163,11 +163,19 @@ export default function ModernVotingInterface({
             }
             if (!voterAddress || !resolvedGaia) return null;
 
-            const resp = await fetch("/api/snapshot/sign", {
+            // One retry on failure: the sign endpoint depends on upstream Stacks
+            // APIs, and a transient 5xx (e.g. gateway timeout) shouldn't block
+            // the vote when a second attempt would succeed.
+            const requestSign = () => fetch("/api/snapshot/sign", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ pollId: pollObject?.id, gaiaAddress: resolvedGaia, voterAddress })
             });
+            let resp = await requestSign();
+            if (!resp.ok && resp.status >= 500) {
+                await new Promise((resolve) => setTimeout(resolve, 1500));
+                resp = await requestSign();
+            }
             if (!resp.ok) return null;
             const data = await resp.json();
             if (!data?.signature) return null;
