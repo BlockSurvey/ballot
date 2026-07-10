@@ -73,9 +73,13 @@ export default function GroupTaking({ groupObject, pollObjects, currentBitcoinBl
         if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
     }, [activeIndex, showFinish]);
 
-    const setStatus = (pollId, status) => {
+    // `force` is used only when we have definite knowledge a vote reverted (its
+    // tx aborted on-chain) — that legitimately downgrades "done" back to "todo".
+    // Without it we never downgrade, so the async participation seeding race
+    // can't wipe a known vote.
+    const setStatus = (pollId, status, force = false) => {
         setCompletion((prev) => {
-            if (prev[pollId] === "done" && status !== "done") return prev; // never downgrade a vote
+            if (!force && prev[pollId] === "done" && status !== "done") return prev; // never downgrade a vote
             if (prev[pollId] === status) return prev;
             return { ...prev, [pollId]: status };
         });
@@ -94,6 +98,13 @@ export default function GroupTaking({ groupObject, pollObjects, currentBitcoinBl
         if (isLastIndex) setShowFinish(true);
         else setActiveIndex((i) => Math.min(i + 1, polls.length - 1));
     };
+
+    // Step back to the previous poll; from the finish screen, return to the last poll.
+    const goBack = () => {
+        if (showFinish) { setShowFinish(false); return; }
+        setActiveIndex((i) => Math.max(i - 1, 0));
+    };
+    const canGoBack = showFinish || activeIndex > 0;
 
     const jumpTo = (i) => { setShowFinish(false); setActiveIndex(i); };
 
@@ -209,6 +220,8 @@ export default function GroupTaking({ groupObject, pollObjects, currentBitcoinBl
                 completion={completion}
                 onJump={jumpTo}
                 onNext={goNext}
+                onBack={goBack}
+                canGoBack={canGoBack}
                 statusEyebrow={statusEyebrow}
             />
         </>

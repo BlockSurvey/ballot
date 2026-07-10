@@ -1,6 +1,6 @@
 /* Sticky dark progress toolbar for grouped-poll taking.
-   Numbered stepper, green voted accent. Softer slate than pure navy so it reads
-   as a toolbar without being too heavy. */
+   Numbered stepper, Stacks-orange voted accent (matches the Next CTA). Softer
+   slate than pure navy so it reads as a toolbar without being too heavy. */
 
 .bar {
     position: fixed;
@@ -54,7 +54,7 @@
 }
 
 .countVoted {
-    color: #5bd98c;
+    color: var(--color-stacks-orange);
 }
 
 /* ---- Center: horizontal stepper ---- */
@@ -90,7 +90,7 @@
 }
 
 .connectorDone {
-    background: #5bd98c;
+    background: var(--color-stacks-orange);
 }
 
 .nodeCol {
@@ -130,8 +130,8 @@
 }
 
 .nodeDone {
-    background: #4fd389;
-    color: #0e1218;
+    background: var(--color-stacks-orange);
+    color: #ffffff;
 }
 
 .nodeClosed {
@@ -146,7 +146,7 @@
 }
 
 .node:focus-visible {
-    outline: 2px solid #5bd98c;
+    outline: 2px solid var(--color-stacks-orange);
     outline-offset: 3px;
 }
 
@@ -198,7 +198,7 @@
 .progressFill {
     height: 100%;
     border-radius: 999px;
-    background: #5bd98c;
+    background: var(--color-stacks-orange);
     transition: width 0.3s ease;
 }
 
@@ -206,6 +206,50 @@
     font-size: 11px;
     color: #9aa1b4;
     white-space: nowrap;
+}
+
+/* Back + Next travel together so the pair never reflows */
+.navGroup {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* Quiet ghost so the orange Next stays the one clear action */
+.backBtn {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 38px;
+    padding: 0 16px;
+    border-radius: 11px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: transparent;
+    color: #d7dbe6;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.backBtn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.32);
+    color: #ffffff;
+}
+
+.backBtn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.backBtn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
 }
 
 .nextBtn {
@@ -219,7 +263,7 @@
     padding: 0 18px;
     border-radius: 11px;
     border: none;
-    background: #515b76;
+    background: var(--color-stacks-orange);
     color: #ffffff;
     font-size: 14px;
     font-weight: 600;
@@ -229,7 +273,12 @@
 }
 
 .nextBtn:hover {
-    background: #5c6688;
+    background: var(--color-stacks-orange-hover);
+}
+
+.nextBtn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
 }
 
 /* ---- Responsive ---- */
@@ -283,5 +332,25 @@
         min-width: 104px;
         padding: 0 14px;
         font-size: 13px;
+    }
+
+    /* Collapse Back to an icon-only control to keep the bar one compact row */
+    .backBtn {
+        height: 36px;
+        padding: 0;
+        width: 36px;
+        gap: 0;
+    }
+
+    .backLabel {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
     }
 }

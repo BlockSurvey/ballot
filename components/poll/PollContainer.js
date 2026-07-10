@@ -10,6 +10,7 @@ import { getIndividualResultByStartAndEndPosition } from "./PollService";
 import { getMyStxAddress, getStacksAPIHeaders, getStacksAPIPrefix, userSession } from "../../services/auth";
 import { checkUserBtcVotingStatus, processBtcVotesForPoll } from "../../services/btc-vote-utils";
 import { processDustVotingBalancesWithCache } from "../../services/stx-dust-vote-utils";
+import { waitForVoteConfirmation } from "../../services/vote-confirmation";
 
 export default function PollContainer(props) {
     // Variables
@@ -1131,10 +1132,78 @@ export default function PollContainer(props) {
         }
     };
 
+    // Re-fetch this poll's on-chain results and the connected user's vote.
+    // Neither getResultByUser nor getPollResults ever downgrades state (they only
+    // set "voted"/totals when the chain confirms), so calling this repeatedly is
+    // safe and simply reconciles the optimistic update below once the tx lands.
+    const refreshPollData = (poll) => {
+        if (!poll) return;
+        if (poll?.recountRequired) {
+            getRecountedResultsForPoll(poll);
+        } else {
+            getPollResults(poll);
+        }
+        getResultByUser(poll);
+    };
+
+    // A freshly broadcast vote is not on-chain until its tx confirms, so an
+    // immediate re-fetch returns the OLD tally (this was the bug: the aggregate
+    // results never reflected the new vote). Poll the tx status and refresh the
+    // poll's results only once it lands — or revert on abort / stop on timeout.
+    const reconcileVoteWhenConfirmed = (txId, poll) => {
+        if (!txId || !poll) return;
+        waitForVoteConfirmation({
+            fetchTxStatus: async () => {
+                const response = await fetch(
+                    getStacksAPIPrefix() + "/extended/v1/tx/" + txId,
+                    { headers: getStacksAPIHeaders() }
+                );
+                return response.ok ? (await response.json())?.tx_status : undefined;
+            },
+            wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+        }).then((outcome) => {
+            if (outcome === "confirmed") {
+                refreshPollData(poll); // tally now includes the vote
+            } else if (outcome === "aborted") {
+                // Undo the optimistic "voted" state so the voting form reopens
+                // and the user can retry, and force the wizard progress dot back
+                // to "todo" (force=true is required because setStatus never
+                // downgrades a vote on its own).
+                setAlreadyVoted(false);
+                setUserVoteData(null);
+                if (onParticipationChange) onParticipationChange(pollId, "todo", true);
+            }
+        });
+    };
+
+    // Successful vote from the voting interface. In the grouped-poll wizard we
+    // cannot reload the page (it would reset the wizard), so instead of the
+    // standalone reload we (1) optimistically flip this poll to its "voted"
+    // state so it reflects the vote immediately — even before the tx confirms
+    // and even after the wizard auto-advances — and (2) refresh the tallies from
+    // chain once the vote transaction actually confirms.
+    const handleVoteCast = (voteData, selectedOptions) => {
+        // Optimistic: show "Your Vote" + the user's selections right away.
+        setAlreadyVoted(true);
+        if (selectedOptions && Object.keys(selectedOptions).length > 0) {
+            setUserVoteData(selectedOptions);
+        }
+
+        // Notify the grouped-poll wizard host (marks the progress dot "done").
+        if (onVoteSuccess) onVoteSuccess(pollId);
+
+        // Standalone reloads on modal close, so only the embedded wizard needs an
+        // in-place refresh; wait for confirmation so the tally isn't stale.
+        if (embedded) {
+            reconcileVoteWhenConfirmed(voteData?.txId, pollObject);
+        }
+    };
+
     // Shared poll content rendered in both embedded and standalone modes
     const pollContent = (
         <PollComponent
             pollObject={pollObject}
+            gaiaAddress={gaiaAddress}
             optionsMap={optionsMap}
             resultsByOption={resultsByOption}
             resultsByPosition={resultsByPosition}
@@ -1166,7 +1235,7 @@ export default function PollContainer(props) {
             btcVotingLoading={btcVotingLoading}
             recountLoading={recountLoading}
             allRecountedResultsByPosition={allRecountedResultsByPosition}
-            onVoteSuccess={() => { if (onVoteSuccess) onVoteSuccess(pollId); }}
+            onVoteSuccess={handleVoteCast}
             embedded={embedded}
             onVoteClose={() => { if (onVoteClose) onVoteClose(pollId); }}
         />

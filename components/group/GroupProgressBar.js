@@ -27,7 +27,7 @@ const STATUS_WORD = {
  * @param {Object<string,'done'|'closed'|'skipped'|'todo'>} completion
  * @param {string} statusEyebrow - e.g. "Voting window · Open now"
  */
-export default function GroupProgressBar({ polls, activeIndex, completion, onJump, onNext, statusEyebrow }) {
+export default function GroupProgressBar({ polls, activeIndex, completion, onJump, onNext, onBack, canGoBack, statusEyebrow }) {
     const total = polls.length;
     const stepperRef = useRef(null);
     const activeNodeRef = useRef(null);
@@ -114,9 +114,21 @@ export default function GroupProgressBar({ polls, activeIndex, completion, onJum
                         </div>
                         <div className={styles.progressText}>{handledCount} of {total} complete</div>
                     </div>
-                    <button type="button" className={styles.nextBtn} onClick={onNext}>
-                        {isLast ? "Finish" : "Next vote"} <span aria-hidden="true">→</span>
-                    </button>
+                    <div className={styles.navGroup}>
+                        <button
+                            type="button"
+                            className={styles.backBtn}
+                            onClick={onBack}
+                            disabled={!canGoBack}
+                            aria-label="Back to previous poll"
+                        >
+                            <span aria-hidden="true">←</span>
+                            <span className={styles.backLabel}>Back</span>
+                        </button>
+                        <button type="button" className={styles.nextBtn} onClick={onNext}>
+                            {isLast ? "Finish" : "Next vote"} <span aria-hidden="true">→</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

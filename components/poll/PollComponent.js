@@ -13,6 +13,7 @@ import ModernVotingInterface from "./ModernVotingInterface";
 export default function PollComponent(props) {
     const {
         pollObject,
+        gaiaAddress,
         isPreview,
         optionsMap,
         resultsByOption,
@@ -151,6 +152,7 @@ export default function PollComponent(props) {
                             {/* Modern Voting Interface */}
                             <ModernVotingInterface
                                 pollObject={pollObject}
+                                gaiaAddress={gaiaAddress}
                                 isPreview={isPreview}
                                 alreadyVoted={alreadyVoted}
                                 userVoteData={userVoteData}

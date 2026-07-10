@@ -1,5 +1,7 @@
 import { useState } from "react";
-import QRCode from "qrcode.react";
+// qrcode.react v4: default export removed — use the named canvas component
+// (the download flow reads the rendered <canvas> by id).
+import { QRCodeCanvas } from "qrcode.react";
 import { Modal } from "react-bootstrap";
 import ModalCloseButton from "../common/ModalCloseButton";
 import styles from "../../styles/QRCodePopup.module.css";
@@ -204,25 +206,23 @@ export default function QRCodePopup(props) {
 
                     {/* QR Code */}
                     <div className={styles.qr_code_box}>
-                        <QRCode
+                        <QRCodeCanvas
                             id="qrCodeCanvas"
                             value={publicUrl}
                             size={232}
                             level="H"
-                            includeMargin={true}
-                            renderAs="canvas"
+                            marginSize={4}
                         />
                     </div>
 
                     {/* Hi-res QR (off-screen) used only for a crisp printable download */}
                     <div className={styles.offscreen} aria-hidden="true">
-                        <QRCode
+                        <QRCodeCanvas
                             id="qrCodeCanvasHiRes"
                             value={publicUrl}
                             size={560}
                             level="H"
-                            includeMargin={true}
-                            renderAs="canvas"
+                            marginSize={4}
                         />
                     </div>
 

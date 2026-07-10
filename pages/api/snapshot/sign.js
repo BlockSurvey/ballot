@@ -1,6 +1,5 @@
 import { createHash } from "crypto";
 import {
-    createStacksPrivateKey,
     signWithKey,
     serializeCV,
     tupleCV,
@@ -99,31 +98,80 @@ export default async function handler(req, res) {
             unlocked = decimals > 0n ? bal / (10n ** decimals) : bal;
         }
 
-        // 4) Build the exact message the contract reconstructs and verifies.
-        //    (serializeCV sorts tuple keys alphabetically: locked, poll, unlocked, voter —
-        //     matching the contract's to-consensus-buff?.)
-        const message = tupleCV({
-            locked: uintCV(locked),
-            poll: bufferCV(Buffer.from(String(pollId))),
-            unlocked: uintCV(unlocked),
-            voter: standardPrincipalCV(voterAddress),
-        });
-        const serialized = Buffer.from(serializeCV(message));
+        // 4) Detect which snapshot scheme the DEPLOYED contract verifies, so we
+        //    sign the matching message. Legacy contracts take a single combined
+        //    `snapshot-power` and verify {poll, power, voter}; current contracts
+        //    take `snapshot-locked` + `snapshot-unlocked` and verify
+        //    {poll, locked, unlocked, voter}. Signing the wrong shape would fail
+        //    on-chain (and sending the wrong arg count crashes the wallet UI).
+        const power = locked + unlocked;
+        const usesPowerScheme = await deployedUsesPowerScheme(poll, apiBase, headers);
+
+        // 5) Build the exact message the contract reconstructs and verifies.
+        //    (serializeCV sorts tuple keys alphabetically, matching the contract's
+        //     to-consensus-buff?.)
+        const message = usesPowerScheme
+            ? tupleCV({
+                poll: bufferCV(Buffer.from(String(pollId))),
+                power: uintCV(power),
+                voter: standardPrincipalCV(voterAddress),
+            })
+            : tupleCV({
+                locked: uintCV(locked),
+                poll: bufferCV(Buffer.from(String(pollId))),
+                unlocked: uintCV(unlocked),
+                voter: standardPrincipalCV(voterAddress),
+            });
+        // @stacks/transactions v7: serializeCV returns a hex STRING (v6 returned
+        // bytes) — decode it as hex or we'd hash the ASCII characters instead.
+        const serialized = Buffer.from(serializeCV(message), "hex");
         const msgHashHex = createHash("sha256").update(serialized).digest("hex");
 
-        // 5) Sign, then reorder VRS -> RSV (Stacks signs V||R||S; Clarity's
+        // 6) Sign, then reorder VRS -> RSV (Stacks signs V||R||S; Clarity's
         //    secp256k1-verify expects R||S||V).
-        const sig = signWithKey(createStacksPrivateKey(privKeyHex), msgHashHex);
-        const vrs = Buffer.from(sig.data, "hex"); // 65 bytes
+        //    v7: signWithKey takes the hex key directly (createStacksPrivateKey
+        //    was removed) and returns the VRS signature as a hex string.
+        const sig = signWithKey(privKeyHex, msgHashHex);
+        const vrs = Buffer.from(sig, "hex"); // 65 bytes
         const rsv = Buffer.concat([vrs.subarray(1), vrs.subarray(0, 1)]);
 
         return res.status(200).json({
+            scheme: usesPowerScheme ? "power" : "split",
             locked: locked.toString(),
             unlocked: unlocked.toString(),
+            power: power.toString(),
             signature: rsv.toString("hex"),
         });
     } catch (error) {
         console.error("snapshot/sign error:", error);
         return res.status(500).json({ error: "Internal error" });
+    }
+}
+
+/**
+ * Returns true when the poll's DEPLOYED contract uses the legacy single-arg
+ * `snapshot-power` signature scheme, false for the current
+ * `snapshot-locked` + `snapshot-unlocked` scheme. Reads the on-chain ABI so the
+ * signature we produce always matches what the deployed contract verifies.
+ * Defaults to the current (split) scheme if the ABI can't be read.
+ */
+async function deployedUsesPowerScheme(poll, apiBase, headers) {
+    try {
+        const address = poll?.publishedInfo?.contractAddress;
+        const name = poll?.publishedInfo?.contractName;
+        if (!address || !name) return false;
+
+        const resp = await fetch(`${apiBase}/v2/contracts/interface/${address}/${name}`, { headers });
+        if (!resp.ok) return false;
+
+        const abi = await resp.json();
+        const castFn = (abi?.functions || []).find((f) => f.name === "cast-my-vote");
+        if (!castFn) return false;
+
+        const argNames = (castFn.args || []).map((a) => a.name);
+        return argNames.includes("snapshot-power");
+    } catch (error) {
+        console.warn("Could not read deployed contract ABI; defaulting to split scheme:", error?.message);
+        return false;
     }
 }

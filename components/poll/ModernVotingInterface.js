@@ -9,6 +9,7 @@ import CountdownTimer from "../common/CountdownTimer";
 
 export default function ModernVotingInterface({
     pollObject,
+    gaiaAddress,
     isPreview,
     alreadyVoted,
     userVoteData,
@@ -132,20 +133,34 @@ export default function ModernVotingInterface({
     const fetchSnapshotSignature = async () => {
         try {
             const voterAddress = getMyStxAddress();
-            const parts = (typeof window !== "undefined" ? window.location.pathname : "")
-                .split("/").filter(Boolean);
-            const gaiaAddress = parts[1];
-            if (!voterAddress || !gaiaAddress) return null;
+            // Prefer the gaiaAddress passed down as a prop — it's the poll's own
+            // storage address and is correct in every context. Only fall back to
+            // deriving it from a single-poll URL (/{pollId}/{gaiaAddress}); that
+            // path parse is WRONG inside a grouped poll (/group/{groupId}/{gaia}),
+            // where segment [1] is the groupId, not the gaia.
+            let resolvedGaia = gaiaAddress;
+            if (!resolvedGaia && typeof window !== "undefined") {
+                resolvedGaia = window.location.pathname.split("/").filter(Boolean)[1];
+            }
+            if (!voterAddress || !resolvedGaia) return null;
 
             const resp = await fetch("/api/snapshot/sign", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ pollId: pollObject?.id, gaiaAddress, voterAddress })
+                body: JSON.stringify({ pollId: pollObject?.id, gaiaAddress: resolvedGaia, voterAddress })
             });
             if (!resp.ok) return null;
             const data = await resp.json();
-            if (data?.locked === undefined || data?.unlocked === undefined || !data?.signature) return null;
-            return { locked: data.locked, unlocked: data.unlocked, signature: data.signature };
+            if (!data?.signature) return null;
+            // `scheme` tells the contract call which args the deployed contract
+            // expects: "power" (legacy, single arg) or "split" (locked+unlocked).
+            return {
+                scheme: data.scheme || "split",
+                locked: data.locked,
+                unlocked: data.unlocked,
+                power: data.power,
+                signature: data.signature,
+            };
         } catch (error) {
             console.error("Snapshot signature fetch failed:", error);
             return null;
@@ -162,19 +177,14 @@ export default function ModernVotingInterface({
             const contractAddress = pollObject?.publishedInfo?.contractAddress;
             const contractName = pollObject?.publishedInfo?.contractName;
 
-            let snapshotLocked;
-            let snapshotUnlocked;
-            let snapshotSignatureHex;
+            let snapshot;
             if (pollObject?.usesSnapshotOracle) {
-                const signed = await fetchSnapshotSignature();
-                if (!signed) {
+                snapshot = await fetchSnapshotSignature();
+                if (!snapshot) {
                     setErrorMessage("Could not verify your snapshot voting power. Please try again.");
                     setIsProcessing(false);
                     return;
                 }
-                snapshotLocked = signed.locked;
-                snapshotUnlocked = signed.unlocked;
-                snapshotSignatureHex = signed.signature;
             }
 
             await castMyVoteContractCall(
@@ -189,9 +199,7 @@ export default function ModernVotingInterface({
                     }
                     setIsProcessing(false);
                 },
-                snapshotLocked,
-                snapshotUnlocked,
-                snapshotSignatureHex
+                snapshot
             );
         } catch (error) {
             console.error("Vote failed:", error);

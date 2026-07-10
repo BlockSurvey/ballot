@@ -19,27 +19,46 @@ const RichTextEditor = ({
     const quillRef = useRef(null);
     const containerRef = useRef(null);
 
-    // Keep the formatting toolbar out of the keyboard tab order so that
-    // Tab from the previous field (e.g. the title) lands directly in the
-    // editable text area instead of cycling through every toolbar control.
-    // The editor mounts asynchronously (dynamic import), so we retry briefly.
+    // After the editor mounts (it loads asynchronously via dynamic import), run
+    // two one-time setup steps, retrying briefly until Quill is ready:
+    //   1. Demote the toolbar out of the keyboard tab order, so Tab from the
+    //      previous field lands in the text area instead of cycling every
+    //      toolbar control.
+    //   2. Bound the link "add URL" popup to the editor container. By default
+    //      Quill positions the popup against document.body, so it could render
+    //      outside the editor and get clipped by the wrapper's overflow, or
+    //      detach when the editor scrolled. Bounding it to .ql-container makes
+    //      Quill keep the popup inside the editor and flip it above the caret
+    //      when it would overflow the bottom.
     useEffect(() => {
         const root = containerRef.current;
         if (!root) return undefined;
 
-        const demoteToolbar = () => {
+        const setup = () => {
             const toolbar = root.querySelector('.ql-toolbar');
-            if (!toolbar) return false;
+            const container = root.querySelector('.ql-container');
+            if (!toolbar || !container) return false;
+
             toolbar
                 .querySelectorAll('button, .ql-picker-label, [tabindex]')
                 .forEach((el) => el.setAttribute('tabindex', '-1'));
-            return true;
+
+            // next/dynamic does not forward refs, so quillRef.current has no
+            // getEditor(). Read the Quill instance straight off the container
+            // node (Quill stores itself there as `__quill`) instead.
+            const editor = container.__quill;
+            if (editor?.theme?.tooltip) {
+                editor.theme.tooltip.boundsContainer = container;
+                return true;
+            }
+            // Toolbar is ready but Quill hasn't attached yet — keep retrying.
+            return false;
         };
 
-        if (demoteToolbar()) return undefined;
+        if (setup()) return undefined;
 
         const intervalId = setInterval(() => {
-            if (demoteToolbar()) clearInterval(intervalId);
+            if (setup()) clearInterval(intervalId);
         }, 100);
         const timeoutId = setTimeout(() => clearInterval(intervalId), 3000);
 
@@ -281,6 +300,11 @@ const RichTextEditor = ({
                     border: none !important;
                 }
 
+                /* Link "add URL" popup styling. Its positioning (pinned to the
+                   top-left of the editor so it's never clipped by the wrapper's
+                   overflow:hidden) lives in the globally-imported
+                   styles/quill-overrides.css so it applies reliably regardless
+                   of when this dynamically-imported editor mounts. */
                 .rich-text-editor .ql-snow .ql-tooltip {
                     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                     border: 1px solid #e5e7eb;

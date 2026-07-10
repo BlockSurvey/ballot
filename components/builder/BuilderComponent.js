@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button, Form, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { v4 as uuidv4 } from "uuid";
 import { Constants } from '../../common/constants.js';
-import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getUserData, putFileToGaia } from "../../services/auth.js";
+import { getFileFromGaia, getGaiaAddressFromPublicKey, getMyStxAddress, getUserData, putFileToGaia, userSession } from "../../services/auth.js";
 import { deployContract } from "../../services/contract";
 import { getCurrentBlockHeights, isValidUtf8, calculateDateFromBitcoinBlockHeight, formatLocalDateTime } from "../../services/utils";
 import styles from "../../styles/Builder.module.css";
@@ -98,9 +98,27 @@ export default function BuilderComponent(props) {
         handleShow();
     };
 
+    // Guard: the builder requires a signed-in user (initializeNewPoll reads the
+    // user's identity/STX address). Without a session, @stacks/auth's
+    // loadUserData() throws, which previously crashed the page. Redirect
+    // unauthenticated visitors to the home page instead.
+    useEffect(() => {
+        if (!userSession.isUserSignedIn() && !userSession.isSignInPending()) {
+            Router.replace("/");
+        }
+    }, []);
+
     // Functions
     useEffect(() => {
         let isCancelled = false;
+
+        // Don't touch user data until we know a session exists — otherwise
+        // initializeNewPoll()/getFileFromGaia would throw. The guard effect
+        // above handles the redirect.
+        if (!userSession.isUserSignedIn()) {
+            return () => { isCancelled = true; };
+        }
+
         if (pathParams && pathParams?.[0]) {
             setPollId(pathParams[0]);
         }

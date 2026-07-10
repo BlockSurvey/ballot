@@ -1,6 +1,6 @@
-// v8 `request()` (aliased) — the new wallet protocol for signing transactions.
-// Auth still uses v7 `@stacks/connect` (see services/auth.js) for appPrivateKey.
-import { connect, disconnect, isConnected, request } from "@stacks/connect-v8";
+// @stacks/connect v8 `request()` — the SIP-030 wallet protocol used for both
+// auth (see services/auth.js) and transaction signing. Single package now.
+import { connect, disconnect, isConnected, request } from "@stacks/connect";
 import { bufferCV, cvToHex, listCV, stringAsciiCV, uintCV } from "@stacks/transactions";
 import { Constants } from "../common/constants";
 import { getNetworkString } from "../services/auth";
@@ -9,15 +9,24 @@ const cancelCallbackFunction = (data) => {
     window.location.reload();
 }
 
-// v7 `showConnect` (auth) does NOT register a wallet with connect-v8, so v8's
-// `request()` has no connected wallet: it either re-prompts a wallet selector on
-// every call, or (with multiple wallet extensions fighting over the provider)
-// resolves a stale wallet and throws "Wallet no longer available". Establish a
-// v8 connection once (cached in localStorage → subsequent calls are silent), and
-// transparently reconnect + retry once if the cached wallet has gone stale.
+// The wallet connection is normally established at login (services/auth.js).
+// If it's missing here (e.g. a session that predates that flow), connect once
+// (cached in localStorage → subsequent calls are silent), and transparently
+// reconnect + retry once if the cached wallet has gone stale (another extension
+// took the provider → "Wallet no longer available").
 const WALLET_STALE_RE = /no longer available|reconnect|not connected|no wallet|wallet.*unavailable/i;
 
 export async function walletRequest(method, params) {
+    // Auth (v7) and transaction signing (v8) keep SEPARATE connection state. v8's
+    // grant persists across v7 account switches, which is why a stale account
+    // could sign ("signed in as wallet 2 but the popup shows wallet 1"). The fix
+    // lives in auth.js: switching account / signing out clears the v8 grant, so
+    // the next request re-connects to the now-current account exactly once.
+    //
+    // We intentionally do NOT compare the v7 auth address to v8's stored address
+    // to decide whether to reconnect: the same account is encoded differently per
+    // network (testnet ST… vs mainnet SP…), so a raw comparison always "mismatches"
+    // and would re-prompt the wallet selector on every single deploy/vote.
     if (!isConnected()) {
         await connect(); // one-time wallet selection; caches the choice
     }
@@ -657,7 +666,7 @@ function getRegisterStxWithLockedAndUnlockedWithUserFunction(snapshotBlockHeight
     return `, locked-stx: u0, unlocked-stx: u0`;
 }
 
-export async function castMyVoteContractCall(contractAddress, contractName, voteObj, dns, tokenIdsArray, callbackFunction, snapshotLocked, snapshotUnlocked, snapshotSignatureHex) {
+export async function castMyVoteContractCall(contractAddress, contractName, voteObj, dns, tokenIdsArray, callbackFunction, snapshot) {
     // Parse vote
     let voteStringAsciiArray = [], volumeUIntArray = [];
     for (let key in voteObj) {
@@ -688,11 +697,20 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
         listCV(tokenIdsUintArray)
     ];
 
-    // Snapshot polls take three extra args: signed locked + unlocked + signature
-    if (snapshotSignatureHex && snapshotLocked !== undefined && snapshotLocked !== null) {
-        functionArgs.push(uintCV(snapshotLocked));
-        functionArgs.push(uintCV(snapshotUnlocked));
-        functionArgs.push(bufferCV(Buffer.from(snapshotSignatureHex, "hex")));
+    // Snapshot polls take extra signed args. The shape MUST match the deployed
+    // contract or the wallet crashes on the arg-count mismatch, so we follow the
+    // scheme the server derived from the on-chain ABI:
+    //   "power" (legacy): snapshot-power + signature        → 2 extra args
+    //   "split" (current): snapshot-locked + -unlocked + sig → 3 extra args
+    if (snapshot?.signature) {
+        if (snapshot.scheme === "power") {
+            functionArgs.push(uintCV(snapshot.power));
+            functionArgs.push(bufferCV(Buffer.from(snapshot.signature, "hex")));
+        } else {
+            functionArgs.push(uintCV(snapshot.locked));
+            functionArgs.push(uintCV(snapshot.unlocked));
+            functionArgs.push(bufferCV(Buffer.from(snapshot.signature, "hex")));
+        }
     }
 
     try {

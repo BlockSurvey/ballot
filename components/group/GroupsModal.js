@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Modal, Spinner } from "react-bootstrap";
-import QRCode from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react"; // v4: default export removed
 import { getFileFromGaia } from "../../services/auth";
 import { enrichPollIndexBlockHeights, getCurrentBlockHeights, getPollLifecycleStatus } from "../../services/utils";
 import {
@@ -391,7 +391,7 @@ export default function GroupsModal({ show, onClose }) {
                     <p className={styles.shareSub}>Share one link — respondents complete all {selected.length} poll{selected.length === 1 ? "" : "s"} in order, on a single page.</p>
 
                     <div className={styles.qrWrap} role="img" aria-label="QR code for the group link">
-                        <QRCode value={shareUrl} size={160} level="M" />
+                        <QRCodeCanvas value={shareUrl} size={160} level="M" />
                     </div>
 
                     <div className={styles.linkRow}>

@@ -54,6 +54,33 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 
+/* Link "add URL" popup. Its POSITION is handled by Quill itself via the
+   `bounds` container wired up in RichTextEditor.js: caret-anchored, clamped
+   inside the editor, and flipped above the line when it would overflow the
+   bottom. We deliberately do NOT pin it with static left/top offsets — that
+   broke as soon as the editor scrolled (the popup detached and hid above the
+   viewport). Here we only keep it readable and above content. */
+.rich-text-editor .ql-snow .ql-tooltip {
+    max-width: calc(100% - 24px);
+    white-space: normal;
+    z-index: 20;
+}
+
+.rich-text-editor .ql-snow .ql-tooltip input[type=text] {
+    width: 220px;
+    max-width: 100%;
+}
+
+/* Editor sizing lives in this globally-imported stylesheet (not only the
+   dynamically-imported component's styled-jsx) so max-height/scroll applies
+   reliably. Otherwise the editor grows unbounded and the whole page — instead
+   of the editor — scrolls, which is what pushed the link popup out of view. */
+.rich-text-editor .ql-editor {
+    min-height: 120px;
+    max-height: 320px;
+    overflow-y: auto;
+}
+
 .ql-snow .ql-picker.ql-expanded .ql-picker-options {
     border: 1px solid #e5e7eb !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;

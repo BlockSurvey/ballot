@@ -93,6 +93,9 @@ div {
     --color-surface: #fafafa;
     --color-border: #e6e6e6;
     --color-border-light: #f0f0f0;
+    /* Stacks brand accent — used sparingly for primary calls to action */
+    --color-stacks-orange: #fc6432;
+    --color-stacks-orange-hover: #e9531f;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);

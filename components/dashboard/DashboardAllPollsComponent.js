@@ -278,8 +278,9 @@ export default function DashboardAllPollsComponent() {
             const poll = polls.ref[pollId];
             if (!poll) return false;
 
-            // Filter out archived polls from main dashboard
-            if (poll.archived === true) return false;
+            // Archived polls only show under the dedicated "Archived" filter —
+            // otherwise they'd be counted in stats yet unreachable in the list.
+            if (poll.archived === true && statusFilter !== "archived") return false;
 
             // Search filter
             const matchesSearch = searchQuery === "" ||
@@ -705,6 +706,7 @@ export default function DashboardAllPollsComponent() {
                                             <option value="active">Active</option>
                                             <option value="draft">Draft</option>
                                             <option value="closed">Closed</option>
+                                            <option value="archived">Archived</option>
                                         </select>
                                     </div>
 
