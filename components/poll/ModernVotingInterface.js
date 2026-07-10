@@ -10,6 +10,7 @@ import CountdownTimer from "../common/CountdownTimer";
 export default function ModernVotingInterface({
     pollObject,
     gaiaAddress,
+    deployTxStatus,
     isPreview,
     alreadyVoted,
     userVoteData,
@@ -84,6 +85,13 @@ export default function ModernVotingInterface({
         setSelectedOptions(newSelectedOptions);
     };
 
+    // The poll's contract only exists on-chain once its deploy tx confirms.
+    // Until then any vote is rejected by the wallet ("Not a valid contract"),
+    // so voting must stay gated. Undefined status (legacy polls without a
+    // txId) is NOT gated — only a known-unconfirmed deploy is.
+    const isDeployUnconfirmed = () =>
+        deployTxStatus && deployTxStatus !== "success";
+
     const isDisabled = () => {
         return (
             isPreview ||
@@ -92,6 +100,7 @@ export default function ModernVotingInterface({
             dustTransactionsCompleted || // Disable after dust voting is completed
             isProcessing ||
             noHoldingToken ||
+            isDeployUnconfirmed() ||
             (!currentBitcoinBlockHeight || currentBitcoinBlockHeight < pollObject?.startAtBlock) ||
             (!currentBitcoinBlockHeight || currentBitcoinBlockHeight > pollObject?.endAtBlock)
         );
@@ -103,14 +112,24 @@ export default function ModernVotingInterface({
             return false;
         }
 
-        // For quadratic and weighted voting, check if total votes don't exceed voting power
+        // Mirror the contract's exact cost assertion so a vote the UI accepts
+        // can't abort on-chain with ERR-FAILED-STRATEGY:
+        //   weighted:  voting-power >= (fold + volume)        — linear cost
+        //   quadratic: voting-power >= (fold + (map pow² …))  — SQUARED cost
         if (pollObject?.votingSystem === "quadratic" || pollObject?.votingSystem === "weighted") {
-            const totalVotes = Object.values(selectedOptions).reduce((sum, votes) => {
-                return sum + (parseInt(votes) || 0);
-            }, 0);
+            const isQuadratic = pollObject?.votingSystem === "quadratic";
+            const votes = Object.values(selectedOptions).map((v) => parseInt(v) || 0);
+            const totalVotes = votes.reduce((sum, v) => sum + v, 0);
+            const totalCost = isQuadratic
+                ? votes.reduce((sum, v) => sum + v * v, 0)
+                : totalVotes;
 
-            if (totalVotes > (votingPower || 1)) {
-                setErrorMessage(`Total votes (${totalVotes}) cannot exceed your voting power (${votingPower || 1})`);
+            if (totalCost > (votingPower || 1)) {
+                setErrorMessage(
+                    isQuadratic
+                        ? `Quadratic cost of your votes (${totalCost} = sum of votes²) cannot exceed your voting power (${votingPower || 1})`
+                        : `Total votes (${totalVotes}) cannot exceed your voting power (${votingPower || 1})`
+                );
                 return false;
             }
         }
@@ -778,6 +797,17 @@ export default function ModernVotingInterface({
                     {noHoldingToken && !alreadyVoted && (
                         <div className={styles.error_message}>
                             You must hold {pollObject?.strategyTokenName || "the required tokens"} to vote in this poll.
+                        </div>
+                    )}
+
+                    {/* Deploy status: the contract must confirm on-chain before votes can be cast */}
+                    {isDeployUnconfirmed() && !alreadyVoted && (
+                        <div className={styles.warning_message}>
+                            {deployTxStatus === "pending" ? (
+                                <><strong>Poll is being deployed:</strong> the poll&apos;s contract is confirming on the blockchain. Voting opens automatically in a few minutes.</>
+                            ) : (
+                                <><strong>Poll deployment failed:</strong> the poll&apos;s contract could not be deployed, so voting is unavailable.</>
+                            )}
                         </div>
                     )}
 

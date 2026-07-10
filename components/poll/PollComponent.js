@@ -153,6 +153,7 @@ export default function PollComponent(props) {
                             <ModernVotingInterface
                                 pollObject={pollObject}
                                 gaiaAddress={gaiaAddress}
+                                deployTxStatus={txStatus}
                                 isPreview={isPreview}
                                 alreadyVoted={alreadyVoted}
                                 userVoteData={userVoteData}

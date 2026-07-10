@@ -89,9 +89,15 @@ function encodeAddressForNetwork(address, network) {
 
 // Shape downstream code (getUserData/getMyStxAddress/encryption) expects, mapping
 // the wallet's gaiaAppKey onto the historical `appPrivateKey` field.
+// Populate BOTH network encodings (SP…/ST… are the same key, different version
+// byte): a session created while the app pointed at one network must not make
+// getMyStxAddress() return undefined after the flag/env changes — that
+// undefined used to crash eligibility checks and vote-arg derivation.
 function userDataFromSession(s) {
-  const stxAddress = {};
-  stxAddress[s.network] = s.address; // app operates on one network at a time
+  const stxAddress = {
+    mainnet: encodeAddressForNetwork(s.address, "mainnet"),
+    testnet: encodeAddressForNetwork(s.address, "testnet"),
+  };
   return { appPrivateKey: s.appPrivateKey, profile: { stxAddress } };
 }
 
@@ -555,10 +561,6 @@ export async function getGaiaAddressFromPublicKey() {
 
   // Derive the gaia address from the app private key
   const gaiaAddress = await publicKeyToBtcAddress(publicKey);
-
-  console.log(userData?.appPrivateKey);
-  console.log(publicKey);
-  console.log(gaiaAddress);
 
   return gaiaAddress;
 }

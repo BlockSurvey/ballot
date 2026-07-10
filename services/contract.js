@@ -703,12 +703,21 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
     //   "power" (legacy): snapshot-power + signature        → 2 extra args
     //   "split" (current): snapshot-locked + -unlocked + sig → 3 extra args
     if (snapshot?.signature) {
+        // Validate the uint fields up front: uintCV(undefined) throws a cryptic
+        // "intToBigInt: Invalid value type" — surface which field is missing
+        // instead. (0 is a legitimate balance, so only null/undefined is bad.)
+        const requireUint = (value, name) => {
+            if (value === undefined || value === null || value === "") {
+                throw new Error(`Snapshot signature response is missing "${name}" — cannot cast a snapshot vote`);
+            }
+            return uintCV(value);
+        };
         if (snapshot.scheme === "power") {
-            functionArgs.push(uintCV(snapshot.power));
+            functionArgs.push(requireUint(snapshot.power, "power"));
             functionArgs.push(bufferCV(Buffer.from(snapshot.signature, "hex")));
         } else {
-            functionArgs.push(uintCV(snapshot.locked));
-            functionArgs.push(uintCV(snapshot.unlocked));
+            functionArgs.push(requireUint(snapshot.locked, "locked"));
+            functionArgs.push(requireUint(snapshot.unlocked, "unlocked"));
             functionArgs.push(bufferCV(Buffer.from(snapshot.signature, "hex")));
         }
     }

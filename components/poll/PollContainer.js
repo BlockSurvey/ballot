@@ -160,16 +160,39 @@ export default function PollContainer(props) {
         }
     }, [pollObject, pollId, gaiaAddress]);
 
+    // While the poll's deploy tx is unconfirmed, voting is gated (the contract
+    // doesn't exist on-chain yet). Re-check every 10s so the page unlocks by
+    // itself the moment the deploy confirms — no manual reload needed.
+    useEffect(() => {
+        if (txStatus !== "pending") return;
+        const timer = setTimeout(() => getContractTransactionStatus(pollObject), 10000);
+        return () => clearTimeout(timer);
+    }, [txStatus, pollObject]);
+
     const getContractTransactionStatus = async (pollObject) => {
         if (!pollObject?.publishedInfo?.txId) {
             return;
         }
 
         try {
+            // Normalize: a txId stored without the 0x prefix causes a 302
+            // redirect on the API; request the canonical form directly.
+            const txId = pollObject.publishedInfo.txId.startsWith("0x")
+                ? pollObject.publishedInfo.txId
+                : "0x" + pollObject.publishedInfo.txId;
             const response = await fetch(
-                getStacksAPIPrefix() + "/extended/v1/tx/" + pollObject?.publishedInfo?.txId,
+                getStacksAPIPrefix() + "/extended/v1/tx/" + txId,
                 { headers: getStacksAPIHeaders() }
             );
+
+            if (response.status === 404) {
+                // Deploy tx broadcast moments ago — the API hasn't indexed it
+                // yet. It IS unconfirmed, so report "pending" (leaving it
+                // undefined used to let people vote against a contract that
+                // doesn't exist on-chain yet → wallet: "Not a valid contract").
+                setTxStatus("pending");
+                return;
+            }
 
             if (!response.ok) {
                 console.error(`Failed to fetch transaction status: ${response.status} ${response.statusText}`);
@@ -1042,15 +1065,18 @@ export default function PollContainer(props) {
                     const total = parseInt(results?.["total-votes"]?.value ? (results?.["total-votes"]?.value) : (results?.total?.value));
                     setTotalVotes(total);
 
-                    // Total unique vote
-                    totalUniqueVotes = results?.total?.value;
-                    setTotalUniqueVotes(results?.total?.value);
+                    // Total unique vote — @stacks/transactions v7 returns uints
+                    // as STRINGS; normalize to a number at the boundary.
+                    totalUniqueVotes = parseInt(results?.total?.value) || 0;
+                    setTotalUniqueVotes(totalUniqueVotes);
 
                     let resultsObj = {};
                     results?.options?.value.forEach((option, index) => {
+                        const optionTotal = parseInt(results?.results?.value?.[index]?.value) || 0;
                         resultsObj[option?.value] = {
-                            total: results?.results?.value?.[index]?.value,
-                            percentage: results?.results?.value?.[index]?.value === 0 ? 0 : ((results?.results?.value?.[index]?.value / total) * 100).toFixed(2),
+                            total: optionTotal,
+                            // Guard total too: 0/0 would render "NaN%".
+                            percentage: (optionTotal === 0 || !total) ? 0 : ((optionTotal / total) * 100).toFixed(2),
                             lockedStx: results?.["results-with-locked-and-unlocked-stx"]?.value?.[index]?.value?.["locked-stx"]?.value || "0",
                             unlockedStx: results?.["results-with-locked-and-unlocked-stx"]?.value?.[index]?.value?.["unlocked-stx"]?.value || "0"
                         };
@@ -1058,7 +1084,7 @@ export default function PollContainer(props) {
                     setResultsByOption(resultsObj);
 
                     // Get list of individual vote
-                    getIndividualResultByStartAndEndPosition(results?.total?.value, (results?.total?.value > 10 ? (results?.total?.value - 10) : 0), totalUniqueVotes,
+                    getIndividualResultByStartAndEndPosition(totalUniqueVotes, (totalUniqueVotes > 10 ? (totalUniqueVotes - 10) : 0), totalUniqueVotes,
                         contractAddress, contractName, resultsByPosition, setResultsByPosition, noOfResultsLoaded, setNoOfResultsLoaded);
                 } else {
                     setTotalVotes(0);
@@ -1161,9 +1187,14 @@ export default function PollContainer(props) {
                 return response.ok ? (await response.json())?.tx_status : undefined;
             },
             wait: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+            // Mainnet votes regularly take >2.5min to confirm; 45 × 8s = 6min.
+            maxAttempts: 45,
         }).then((outcome) => {
-            if (outcome === "confirmed") {
-                refreshPollData(poll); // tally now includes the vote
+            if (outcome === "confirmed" || outcome === "timeout") {
+                // On timeout the tx is usually still pending, not failed — do a
+                // final refresh anyway; refreshPollData never downgrades state,
+                // so this is safe whether or not the vote has landed yet.
+                refreshPollData(poll);
             } else if (outcome === "aborted") {
                 // Undo the optimistic "voted" state so the voting form reopens
                 // and the user can retry, and force the wizard progress dot back
