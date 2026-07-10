@@ -885,6 +885,21 @@
     margin-top: var(--space-3);
 }
 
+/* Eligibility "checking your voting power" loading state — monochrome, reuses
+   the design tokens so it reads as a neutral in-progress hint (not an error). */
+.checking_eligibility {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-2, #f7f7f8);
+    border: 1px solid var(--color-border, #e5e7eb);
+    color: var(--color-secondary, #4b5563);
+    font-size: 0.875rem;
+    margin-top: var(--space-3);
+}
+
 /* Animations */
 @keyframes fadeIn {
     from {

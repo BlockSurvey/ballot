@@ -7,6 +7,19 @@ import styles from "../../styles/Poll.module.css";
 import SendTxModal from "../common/SendTxModal";
 import CountdownTimer from "../common/CountdownTimer";
 
+// Small reusable loading glyph — reuses the same pulse animation as the
+// in-flight "Processing Vote" state so all async feedback looks consistent.
+function InlineSpinner() {
+    return (
+        <span className={styles.pulse} aria-hidden="true" style={{ display: "inline-flex" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="10" opacity="0.3" />
+                <path d="M12 2C17.523 2 22 6.477 22 12s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2z" opacity="0.6" />
+            </svg>
+        </span>
+    );
+}
+
 export default function ModernVotingInterface({
     pollObject,
     gaiaAddress,
@@ -91,6 +104,21 @@ export default function ModernVotingInterface({
     // txId) is NOT gated — only a known-unconfirmed deploy is.
     const isDeployUnconfirmed = () =>
         deployTxStatus && deployTxStatus !== "success";
+
+    // True while we're still reading the voter's on-chain balance to determine
+    // eligibility. Only token-gated polls do this async fetch; open polls
+    // resolve holdings synchronously. While true, the options + button are
+    // disabled — so we surface a clear "checking…" state instead of leaving the
+    // user staring at dead grayed-out boxes. It always resolves: the balance
+    // fetch ends by setting either votingPower or noHoldingToken (even on error).
+    const isCheckingEligibility = () =>
+        isUserSignedIn &&
+        !isPreview &&
+        !alreadyVoted &&
+        !isDeployUnconfirmed() &&
+        pollObject?.votingStrategyFlag &&
+        holdingTokenIdsArray === undefined &&
+        !noHoldingToken;
 
     const isDisabled = () => {
         return (
@@ -808,6 +836,15 @@ export default function ModernVotingInterface({
                         </div>
                     )}
 
+                    {/* Eligibility check: shown while we read the voter's balance so the
+                        disabled options/button aren't a silent, ambiguous grey box */}
+                    {isCheckingEligibility() && (
+                        <div className={styles.checking_eligibility} role="status" aria-live="polite">
+                            <InlineSpinner />
+                            <span>Checking your voting power…</span>
+                        </div>
+                    )}
+
                     {/* Deploy status: the contract must confirm on-chain before votes can be cast */}
                     {isDeployUnconfirmed() && !alreadyVoted && (
                         <div className={styles.warning_message}>
@@ -837,6 +874,11 @@ export default function ModernVotingInterface({
                                             </svg>
                                         </div>
                                         Processing Vote...
+                                    </>
+                                ) : isCheckingEligibility() ? (
+                                    <>
+                                        <InlineSpinner />
+                                        Checking eligibility…
                                     </>
                                 ) : (
                                     <>

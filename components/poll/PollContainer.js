@@ -454,22 +454,32 @@ export default function PollContainer(props) {
 
     const getSTXHolding = async () => {
         try {
-            const isMainnet = Constants.STACKS_MAINNET_FLAG;
-            const baseUrl = isMainnet
-                ? Constants.STACKS_QUICKNODE_API_URL
-                : getStacksAPIPrefix();
-            const headers = isMainnet ? { "Accept": "application/json" } : getStacksAPIHeaders();
-            const response = await fetch(`${baseUrl}/extended/v1/address/${getMyStxAddress()}/stx` +
-                (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : ""),
-                { headers });
+            const path = `/extended/v1/address/${getMyStxAddress()}/stx` +
+                (pollObject?.snapshotBlockHeight ? "?until_block=" + pollObject?.snapshotBlockHeight : "");
 
-            if (!response.ok) {
-                console.error(`Failed to fetch STX holdings: ${response.status} ${response.statusText}`);
-                setNoHoldingToken(true);
-                return;
+            // Read the balance Hiro-first (~30ms, keyed) with a hard timeout, and
+            // only fall back to QuickNode on mainnet if Hiro errors/times out.
+            // QuickNode was previously the SOLE mainnet source and had degraded to
+            // ~9.5s/call — that single request was the 5+ second wait before the
+            // Vote button enabled. The eligibility gate must resolve fast, so it
+            // can't hang on a slow provider.
+            const fetchJson = async (baseUrl, headers, ms) => {
+                const resp = await fetch(baseUrl + path, { headers, signal: AbortSignal.timeout(ms) });
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                return resp.json();
+            };
+
+            let responseObject;
+            try {
+                responseObject = await fetchJson(getStacksAPIPrefix(), getStacksAPIHeaders(), 6000);
+            } catch (primaryError) {
+                if (Constants.STACKS_MAINNET_FLAG) {
+                    console.warn("Hiro STX balance read failed, falling back to QuickNode:", primaryError?.message);
+                    responseObject = await fetchJson(Constants.STACKS_QUICKNODE_API_URL, { "Accept": "application/json" }, 12000);
+                } else {
+                    throw primaryError;
+                }
             }
-
-            const responseObject = await response.json();
 
             if (responseObject?.balance !== "0") {
                 // Convert STX balance to integer with out decimal places
