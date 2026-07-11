@@ -143,7 +143,19 @@ function withTimeout(promise, ms, message) {
 // One wallet connection: select+approve the provider (populates the v8 address
 // store so contract.js sees isConnected()), then read the full account incl.
 // gaiaAppKey. Persists a Ballot session. Returns null if the user dismisses it.
+// The STX account out of a v8 connect() response (current network's list).
+function pickStxAccount(connectResponse) {
+  return connectResponse?.addresses?.find(
+    (entry) => entry?.symbol === "STX" || entry?.address?.startsWith("S")
+  );
+}
+
 async function connectAndLoadAccount() {
+  // Per-step timing so a slow login can be pinpointed to an exact boundary
+  // (connect popup vs stx_getAccounts vs signMessage) from the console.
+  const t0 = Date.now();
+  const elapsed = () => `${Date.now() - t0}ms`;
+
   // ALWAYS force wallet selection at login. A cached connection may point at a
   // different wallet than the user wants to sign in with (e.g. Leather cached,
   // user wants Xverse) — silently reusing it both hides the selector AND binds
@@ -153,33 +165,54 @@ async function connectAndLoadAccount() {
     if (v8IsConnected()) v8Disconnect();
   } catch (_) { /* proceed to a fresh connect regardless */ }
   // Wallet selector + approval; caches provider + addresses. The response holds
-  // the current network's addresses — keep it for the Leather key-derivation
-  // path so we don't need another wallet round-trip.
+  // the current network's addresses — keep it for the key-derivation paths so we
+  // don't need another wallet round-trip. This is the actual "launch the wallet"
+  // step: if the multi-minute delay is HERE, it's the wallet/relay itself (e.g.
+  // Xverse mobile over WalletConnect), not our code.
   const connectResponse = await v8Connect();
+  console.log("[ballot-auth] step 2: connect() resolved in", elapsed());
 
   const network = getNetworkString();
 
-  // Preferred path (Xverse & SIP-030 wallets): one call returns address,
-  // publicKey and the gaiaAppKey used as the app private key.
-  //
-  // stx_getAccounts returns the SENSITIVE gaiaAppKey, so wallets gate it behind
-  // an approval popup. Some Xverse builds accept the request but never surface
-  // that popup — and because request() has no timeout, login hangs forever with
-  // the wallet "not opening" (exactly the reported symptom). So cap the wait: on
-  // timeout we fall through to signatureDerivedSession, which reuses the already
-  // fetched connect() addresses + stx_signMessage (the proven Leather path) so
-  // login always completes. Voting never needs the gaiaAppKey; only reading a
-  // user's OWN older encrypted drafts does, and that still works whenever the
-  // wallet answers stx_getAccounts within the window.
+  // FAST PATH — no extra wallet round-trip. If we already hold the user's
+  // original Gaia app key (recovered from a pre-migration localStorage session,
+  // backed up on first page view), build the session straight from the addresses
+  // connect() already returned. This is the SAME key stx_getAccounts would give
+  // for Xverse (both are the historical Gaia key), so data stays readable — but
+  // we skip the slow/flaky stx_getAccounts popup AND the signMessage popup, so
+  // the common returning-user login completes with a single wallet approval
+  // instead of waiting on (or timing out) two more prompts.
+  const legacyKey = recoverPreMigrationAppKey();
+  const cachedStxAccount = pickStxAccount(connectResponse);
+  if (legacyKey && cachedStxAccount?.address) {
+    const session = {
+      address: encodeAddressForNetwork(cachedStxAccount.address, network),
+      publicKey: cachedStxAccount.publicKey || null,
+      appPrivateKey: legacyKey,
+      gaiaHubUrl: null,
+      network,
+    };
+    saveSession(session);
+    console.log("[ballot-auth] step 3: fast path (pre-migration key), session saved in", elapsed());
+    return session;
+  }
+
+  // No stored key — ask the wallet. stx_getAccounts returns the SENSITIVE
+  // gaiaAppKey, so wallets gate it behind an approval popup. Some Xverse builds
+  // accept the request but never surface that popup, and request() has no
+  // timeout, so login would hang forever ("wallet not opening"). Cap the wait
+  // and fall through to signatureDerivedSession (connect() addresses +
+  // stx_signMessage, the proven path) so login always completes. Voting never
+  // needs the gaiaAppKey; only reading a user's OWN older encrypted drafts does.
   try {
-    console.log("[ballot-auth] step 2: connected, requesting stx_getAccounts…");
+    console.log("[ballot-auth] step 3: no stored key, requesting stx_getAccounts… (", elapsed(), ")");
     const res = await withTimeout(
       v8Request("stx_getAccounts", { network }),
       10000,
       "stx_getAccounts timed out (wallet did not respond)"
     );
     const account = res?.accounts?.[0];
-    console.log("[ballot-auth] step 3: accounts =", res?.accounts?.length, "| gaiaAppKey present =", !!account?.gaiaAppKey);
+    console.log("[ballot-auth] step 4: accounts =", res?.accounts?.length, "| gaiaAppKey present =", !!account?.gaiaAppKey, "(", elapsed(), ")");
     if (account?.gaiaAppKey) {
       const session = {
         address: encodeAddressForNetwork(account.address, network),
@@ -189,17 +222,19 @@ async function connectAndLoadAccount() {
         network,
       };
       saveSession(session);
-      console.log("[ballot-auth] step 4: session saved for", account.address);
+      console.log("[ballot-auth] step 5: session saved for", account.address, "in", elapsed());
       return session;
     }
     // Account came back without the key — fall through to signature derivation.
   } catch (error) {
     // e.g. Leather: JsonRpcError '"stx_getAccounts" is not supported', or the
     // 10s timeout above when a wallet (some Xverse builds) never responds.
-    console.warn("[ballot-auth] stx_getAccounts unavailable/timed out, deriving app key from signature:", error?.message);
+    console.warn("[ballot-auth] stx_getAccounts unavailable/timed out, deriving app key from signature:", error?.message, "(", elapsed(), ")");
   }
 
-  return signatureDerivedSession(network, connectResponse);
+  const session = await signatureDerivedSession(network, connectResponse);
+  console.log("[ballot-auth] signature-derived login complete in", elapsed());
+  return session;
 }
 
 // Fixed message signed at login to derive the app key. NEVER change this text:
@@ -213,9 +248,7 @@ const APP_KEY_MESSAGE =
 // stays readable; otherwise derive a stable key from a message signature.
 async function signatureDerivedSession(network, connectResponse) {
   // The connect() response is the current network's account list.
-  const stxAccount = connectResponse?.addresses?.find(
-    (entry) => entry?.symbol === "STX" || entry?.address?.startsWith("S")
-  );
+  const stxAccount = pickStxAccount(connectResponse);
   if (!stxAccount?.address) {
     throw new Error("Wallet did not return a Stacks address");
   }
