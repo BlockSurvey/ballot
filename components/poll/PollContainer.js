@@ -426,16 +426,24 @@ export default function PollContainer(props) {
                     if (responseObject?.fungible_tokens && responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName]) {
                         const tokenInfo = responseObject?.fungible_tokens?.[pollObject?.strategyContractName + "::" + pollObject?.strategyTokenName];
 
-                        if (tokenInfo?.balance !== "0") {
-                            // Default value
-                            let tokenDecimalsPowerOfTen = 1000000;
-                            if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) >= 0) {
-                                tokenDecimalsPowerOfTen = Math.pow(10, parseInt(pollObject?.strategyTokenDecimals));
-                            } else if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) === 0) {
-                                tokenDecimalsPowerOfTen = 1;
-                            }
+                        // Default value
+                        let tokenDecimalsPowerOfTen = 1000000;
+                        if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) >= 0) {
+                            tokenDecimalsPowerOfTen = Math.pow(10, parseInt(pollObject?.strategyTokenDecimals));
+                        } else if (pollObject?.strategyTokenDecimals && parseInt(pollObject?.strategyTokenDecimals) === 0) {
+                            tokenDecimalsPowerOfTen = 1;
+                        }
 
-                            const tokenBalance = Math.floor((parseInt(tokenInfo?.balance) / tokenDecimalsPowerOfTen));
+                        // Gate on whole-token voting power, not the raw balance
+                        // string: a sub-1-token (dust) balance floors to 0 power,
+                        // and the contract counts whole tokens, so a 0-power vote
+                        // can't be cast. Require power >= 1 to enable the button.
+                        const rawTokenBalance = parseInt(tokenInfo?.balance);
+                        const tokenBalance = Number.isFinite(rawTokenBalance)
+                            ? Math.floor(rawTokenBalance / tokenDecimalsPowerOfTen)
+                            : 0;
+
+                        if (tokenBalance > 0) {
                             setHoldingTokenIdsArray([]);
                             setVotingPower(tokenBalance);
                         } else {
@@ -481,14 +489,23 @@ export default function PollContainer(props) {
                 }
             }
 
-            if (responseObject?.balance !== "0") {
-                // Convert STX balance to integer with out decimal places
-                const stxBalance = Math.floor((parseInt(responseObject?.balance) / 1000000));
+            // Gate on whole-STX voting power, NOT the raw micro-STX balance.
+            // 1 STX = 1,000,000 µSTX and voting power is floored to whole STX, so
+            // a wallet holding dust (<1 STX) floors to 0 power — the contract
+            // counts whole STX, so a 0-power vote can't be cast. A raw-string
+            // `balance !== "0"` check would enable the button at 0 power (and a
+            // missing balance would yield NaN); require power >= 1 instead.
+            const rawMicroStx = parseInt(responseObject?.balance);
+            const stxBalance = Number.isFinite(rawMicroStx)
+                ? Math.floor(rawMicroStx / 1000000)
+                : 0;
+
+            if (stxBalance > 0) {
                 setHoldingTokenIdsArray([]);
                 setVotingPower(stxBalance);
 
                 // Store the full STX balance
-                setStacksBalance(parseInt(responseObject?.balance));
+                setStacksBalance(rawMicroStx);
             } else {
                 setNoHoldingToken(true);
             }
