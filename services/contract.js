@@ -688,12 +688,23 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
         namespace = splittedDns.join(".");
     }
 
+    // The Ledger Stacks app's on-device UI cannot render EMPTY (length-0)
+    // string/buffer arguments and rejects the whole payload as "Data Invalid"
+    // (Zondax/ledger-stacks#177, leather-io/extension#5890). bns/domain/namespace
+    // are only read by the btcholders strategy — which always supplies a real
+    // .btc name — so for every other poll they're inert in the deployed contract.
+    // Send a 1-char / 1-byte placeholder instead of "" so Ledger can display it;
+    // this can never affect a vote result. (token-ids stays empty on purpose:
+    // the NFT strategy folds ownership over it, and empty lists aren't the bug.)
+    const LEDGER_SAFE_ASCII = "-";        // non-empty, inert for non-BNS polls
+    const LEDGER_SAFE_BUFF = Buffer.from([0]); // single zero byte
+
     const functionArgs = [
         listCV(voteStringAsciiArray),
         listCV(volumeUIntArray),
-        stringAsciiCV(dns ? dns : ""),
-        bufferCV(Buffer.from(domain ? domain : "")),
-        bufferCV(Buffer.from(namespace ? namespace : "")),
+        stringAsciiCV(dns ? dns : LEDGER_SAFE_ASCII),
+        bufferCV(domain ? Buffer.from(domain) : LEDGER_SAFE_BUFF),
+        bufferCV(namespace ? Buffer.from(namespace) : LEDGER_SAFE_BUFF),
         listCV(tokenIdsUintArray)
     ];
 
@@ -712,13 +723,31 @@ export async function castMyVoteContractCall(contractAddress, contractName, vote
             }
             return uintCV(value);
         };
+
+        // The signature is the one remaining arg built from a raw string rather
+        // than a Ledger-safe placeholder. `Buffer.from(str, "hex")` silently stops
+        // at the first non-hex char and returns a SHORTER or EMPTY buffer — e.g. a
+        // "0x…"-prefixed value decodes to length 0. An empty buffer re-triggers the
+        // exact Ledger "Data Invalid" rejection this whole function guards against
+        // (see the bns/domain/namespace note above), and it surfaces on the user's
+        // device, not here. So normalize (strip an optional 0x) and validate the
+        // hex up front, failing loudly with an actionable message instead.
+        const sigHex = String(snapshot.signature).replace(/^0x/i, "");
+        if (!/^[0-9a-fA-F]+$/.test(sigHex) || sigHex.length % 2 !== 0) {
+            throw new Error("Snapshot signature is not valid hex — cannot cast a snapshot vote");
+        }
+        const signatureBuff = Buffer.from(sigHex, "hex");
+        if (signatureBuff.length === 0) {
+            throw new Error("Snapshot signature is empty — cannot cast a snapshot vote");
+        }
+
         if (snapshot.scheme === "power") {
             functionArgs.push(requireUint(snapshot.power, "power"));
-            functionArgs.push(bufferCV(Buffer.from(snapshot.signature, "hex")));
+            functionArgs.push(bufferCV(signatureBuff));
         } else {
             functionArgs.push(requireUint(snapshot.locked, "locked"));
             functionArgs.push(requireUint(snapshot.unlocked, "unlocked"));
-            functionArgs.push(bufferCV(Buffer.from(snapshot.signature, "hex")));
+            functionArgs.push(bufferCV(signatureBuff));
         }
     }
 
