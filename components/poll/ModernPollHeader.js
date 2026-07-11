@@ -368,6 +368,22 @@ export default function ModernPollHeader({ pollObject, publicUrl, txStatus, curr
                             )}
                         </div>
                     )}
+
+                    {/* Poll Note — a short, always-visible notice to voters, shown
+                        directly below the description so an important message isn't
+                        buried under the description's "show more" collapse. Kept mild
+                        (soft amber, no icon/accent) so it reads as a gentle heads-up,
+                        not a warning. Plain text with safe auto-linkification. */}
+                    {pollObject?.note && pollObject.note.trim() && (
+                        <div className={styles.poll_note} role="note" aria-label="Poll note">
+                            <RichTextDisplay
+                                content={pollObject.note}
+                                className={styles.poll_note_text}
+                                isPlainText={true}
+                                convertLinks={true}
+                            />
+                        </div>
+                    )}
                 </div>
             </div>
 

@@ -157,6 +157,7 @@ export default function BuilderComponent(props) {
         return {
             title: "",
             description: "",
+            note: "",
             votingSystem: "fptp",
             options: [
                 {
@@ -274,6 +275,15 @@ export default function BuilderComponent(props) {
             delete newErrors.description;
             setFieldErrors(newErrors);
         }
+    };
+
+    // The optional poll note: a short plain-text notice shown to voters as a
+    // highlighted banner above the options. Hard-capped so it stays a scannable
+    // notice; the whole pollObject is serialized by savePollToGaia, so no extra
+    // save wiring is needed.
+    const handleNoteChange = (e) => {
+        const value = e.target.value.slice(0, Constants.POLL_NOTE_MAX_LENGTH);
+        setPollObject({ ...pollObject, note: value });
     };
 
     const addOption = () => {
@@ -455,6 +465,7 @@ export default function BuilderComponent(props) {
                 "id": pollObject.id,
                 "title": pollObject.title,
                 "description": pollObject.description,
+                "note": pollObject.note || "",
                 "username": pollObject.username,
                 "createdAt": pollObject.createdAt,
                 "updatedAt": new Date(),
@@ -986,6 +997,23 @@ export default function BuilderComponent(props) {
                                                         {fieldErrors.description}
                                                     </small>
                                                 )}
+                                            </Form.Group>
+
+                                            <Form.Group className={styles.form_group}>
+                                                <Form.Label className={styles.form_label}>Note (optional)</Form.Label>
+                                                <Form.Control
+                                                    as="textarea"
+                                                    rows={2}
+                                                    name="note"
+                                                    value={pollObject.note || ''}
+                                                    onChange={handleNoteChange}
+                                                    maxLength={Constants.POLL_NOTE_MAX_LENGTH}
+                                                    placeholder="A short, important message shown to voters as a highlighted banner above the options (e.g. voting instructions or a deadline reminder)."
+                                                    className={styles.form_textarea}
+                                                />
+                                                <div className={styles.note_counter}>
+                                                    {(pollObject.note || '').length}/{Constants.POLL_NOTE_MAX_LENGTH}
+                                                </div>
                                             </Form.Group>
                                         </div>
                                     </div>

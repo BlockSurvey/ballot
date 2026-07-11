@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal } from 'react-bootstrap';
 import { getFileFromGaia, putFileToGaia } from '../../services/auth';
+import { Constants } from '../../common/constants';
 import { updatePollConfigContractCall } from '../../services/contract';
 import { calculateDateFromBitcoinBlockHeight } from '../../services/utils';
 import styles from '../../styles/EditPollModal.module.css';
@@ -10,6 +11,7 @@ import ModalCloseButton from './ModalCloseButton';
 const EditPollModal = ({ show, onHide, poll, currentBitcoinBlockHeight, onUpdated }) => {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [note, setNote] = useState('');
     const [startAtBlock, setStartAtBlock] = useState('');
     const [endAtBlock, setEndAtBlock] = useState('');
     const [snapshotBlockHeight, setSnapshotBlockHeight] = useState('');
@@ -26,11 +28,29 @@ const EditPollModal = ({ show, onHide, poll, currentBitcoinBlockHeight, onUpdate
         if (show && poll) {
             setTitle(poll.title || '');
             setDescription(poll.description || '');
+            // Seed the note from the (possibly curated) index entry first…
+            setNote(poll.note || '');
             setStartAtBlock(poll.startAtBlock ?? '');
             setEndAtBlock(poll.endAtBlock ?? '');
             setSnapshotBlockHeight(poll.snapshotBlockHeight ?? '');
             setError('');
             setStatusText('');
+
+            // …then reconcile against the authoritative poll JSON. The dashboard
+            // passes the index `ref` entry, which can lag the stored file (e.g. a
+            // note added by an older build). Loading the true value here prevents
+            // the save path from deleting a note the index simply didn't carry.
+            // Guarded by `cancelled` so a slow fetch can't clobber the user's typing
+            // after they've started editing or closed the modal.
+            let cancelled = false;
+            getFileFromGaia(poll.id + '.json', {})
+                .then((raw) => {
+                    if (cancelled || !raw) return;
+                    const full = JSON.parse(raw);
+                    setNote((current) => (current === (poll.note || '') ? (full.note || '') : current));
+                })
+                .catch(() => { /* keep the index-seeded value on failure */ });
+            return () => { cancelled = true; };
         }
     }, [show, poll]);
 
@@ -56,6 +76,14 @@ const EditPollModal = ({ show, onHide, poll, currentBitcoinBlockHeight, onUpdate
 
         full.title = title.trim();
         full.description = description;
+        // Note is plain text; store trimmed, and drop the key entirely when empty
+        // so the poll screen banner doesn't render for a blank note.
+        const trimmedNote = (note || '').trim().slice(0, Constants.POLL_NOTE_MAX_LENGTH);
+        if (trimmedNote) {
+            full.note = trimmedNote;
+        } else {
+            delete full.note;
+        }
 
         if (canEditConfig) {
             const s = parseInt(startAtBlock);
@@ -84,6 +112,7 @@ const EditPollModal = ({ show, onHide, poll, currentBitcoinBlockHeight, onUpdate
             if (idx?.ref?.[poll.id]) {
                 idx.ref[poll.id].title = full.title;
                 idx.ref[poll.id].description = full.description;
+                idx.ref[poll.id].note = full.note || '';
                 idx.ref[poll.id].updatedAt = new Date().toISOString();
                 if (canEditConfig) {
                     idx.ref[poll.id].startAtBlock = full.startAtBlock;
@@ -218,6 +247,23 @@ const EditPollModal = ({ show, onHide, poll, currentBitcoinBlockHeight, onUpdate
                         error={!!error}
                         disabled={isLoading}
                     />
+                </div>
+
+                {/* Note — short plain-text notice shown to voters as a highlighted
+                    banner above the options. Off-chain metadata: saves instantly,
+                    no wallet transaction. Editable for every existing poll. */}
+                <div className={styles.group}>
+                    <label className={styles.label}>Note</label>
+                    <textarea
+                        className={styles.textarea}
+                        rows={2}
+                        value={note}
+                        onChange={(e) => { setNote(e.target.value.slice(0, Constants.POLL_NOTE_MAX_LENGTH)); if (error) setError(''); }}
+                        maxLength={Constants.POLL_NOTE_MAX_LENGTH}
+                        placeholder="A short, important message shown to voters as a highlighted banner above the options."
+                        disabled={isLoading}
+                    />
+                    <span className={styles.note_counter}>{note.length}/{Constants.POLL_NOTE_MAX_LENGTH}</span>
                 </div>
 
                 {/* On-chain config (only for polls deployed with the editable contract) */}

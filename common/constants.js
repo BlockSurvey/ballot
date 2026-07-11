@@ -13,6 +13,11 @@ export const Constants = {
 
   GAIA_HUB_PREFIX: "https://storage.ballot.gg/",
 
+  // Max length of a poll's optional "note" — the short, always-visible message
+  // shown to voters as a highlighted banner above the options (see poll screen).
+  // Kept short on purpose so it stays a scannable notice, not a second description.
+  POLL_NOTE_MAX_LENGTH: 300,
+
   // Stacks API URLs
   STACKS_MAINNET_API_URL: "https://api.mainnet.hiro.so",
   STACKS_TESTNET_API_URL: "https://api.testnet.hiro.so",
