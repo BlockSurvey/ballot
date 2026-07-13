@@ -129,30 +129,31 @@
     transition: transform 0.2s ease;
 }
 
-/* Poll note — a mild amber notice shown below the description. Kept soft (amber-50
-   fill, uniform light border, no accent stripe or icon) so it reads as a gentle
-   heads-up rather than a warning, close in weight to the "Verified creator" banner
-   above it. Always visible; no hover motion (per design). */
-.poll_note {
+/* Poll note — a mild amber notice shown directly below the "Vote Now" button so
+   voters see it as they cast a vote. Mirrors the "Poll is being deployed" notice
+   (.warning_message) in spacing (--space-3/--space-4 padding, --radius-md) and font
+   size (0.875rem) so the two heads-ups read consistently. No hover motion (per
+   design). */
+.voting_note {
     margin-top: var(--space-4);
-    padding: var(--space-4);
-    background: #fffbeb;
-    border: 1px solid #fceec4;
-    border-radius: var(--radius-lg);
+    padding: var(--space-3) var(--space-4);
+    background: #fefbf2;
+    border: 1px solid #fed7aa;
+    border-radius: var(--radius-md);
     color: #92400e;
+    font-size: 0.875rem;
 }
 
-.poll_note_text {
-    font-size: 0.9375rem;
+.voting_note_text {
+    font-size: 0.875rem;
     line-height: 1.55;
-    font-weight: 450;
-    color: #7c4a11;
+    color: #92400e;
     word-break: break-word;
     overflow-wrap: anywhere;
 }
 
 /* Links inside the note stay legible on the soft amber background */
-.poll_note_text :global(a) {
+.voting_note_text :global(a) {
     color: #92400e;
     font-weight: 600;
     text-decoration: underline;

@@ -6,6 +6,7 @@ import { formatNumber } from "../../services/utils";
 import styles from "../../styles/Poll.module.css";
 import SendTxModal from "../common/SendTxModal";
 import CountdownTimer from "../common/CountdownTimer";
+import RichTextDisplay from "../common/RichTextDisplay";
 
 // Small reusable loading glyph — reuses the same pulse animation as the
 // in-flight "Processing Vote" state so all async feedback looks consistent.
@@ -901,6 +902,24 @@ export default function ModernVotingInterface({
                             </Button>
                         )}
                     </div>
+                    )}
+
+                    {/* Poll Note — a short, always-visible notice to voters, shown
+                        directly below the "Vote Now" button (moved here from below the
+                        description, where it risked being missed) so voters see it right
+                        as they cast a vote. Styled to match the "Poll is being deployed"
+                        notice (.warning_message) in spacing and font size for a
+                        consistent, gentle amber heads-up. Plain text with safe
+                        auto-linkification. */}
+                    {pollObject?.note && pollObject.note.trim() && (
+                        <div className={styles.voting_note} role="note" aria-label="Poll note">
+                            <RichTextDisplay
+                                content={pollObject.note}
+                                className={styles.voting_note_text}
+                                isPlainText={true}
+                                convertLinks={true}
+                            />
+                        </div>
                     )}
                 </div>
             </div>

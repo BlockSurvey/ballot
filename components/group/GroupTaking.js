@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/router";
 import { userSession } from "../../services/auth";
 import { getUserVoteForPoll } from "../../services/participation";
 import { DashboardNavBarComponent } from "../common/DashboardNavBarComponent";
@@ -36,6 +37,38 @@ export default function GroupTaking({ groupObject, pollObjects, currentBitcoinBl
     const [showFinish, setShowFinish] = useState(false);
 
     const steps = useMemo(() => polls.map((p) => ({ pollId: p.id, title: p.title })), [polls]);
+
+    // Give each ballot in the group its own returnable URL. The wizard swaps polls
+    // purely in client state, so on its own the address bar never moves and a voter
+    // reopening the group link is always dumped on the first poll. We mirror the
+    // active poll's id into a `?poll=<id>` query param (shallow — no SSR re-run, no
+    // remount) so Next/Back produces a unique, bookmarkable URL per vote, and a
+    // shared/revisited link reopens the group on that exact poll.
+    const router = useRouter();
+    const didInitFromUrl = useRef(false);
+
+    // On first load, jump to the poll named in the URL (if any) before syncing back.
+    useEffect(() => {
+        if (!router.isReady || didInitFromUrl.current || polls.length === 0) return;
+        didInitFromUrl.current = true;
+        const pollParam = router.query.poll;
+        if (pollParam) {
+            const idx = polls.findIndex((p) => p.id === pollParam);
+            if (idx >= 0) setActiveIndex(idx);
+        }
+    }, [router.isReady, router.query.poll, polls]);
+
+    // Keep the URL pointed at the active poll as the voter moves through the wizard.
+    useEffect(() => {
+        if (!router.isReady || !didInitFromUrl.current || showFinish) return;
+        const activePoll = polls[activeIndex];
+        if (!activePoll || router.query.poll === activePoll.id) return;
+        router.replace(
+            { pathname: router.pathname, query: { ...router.query, poll: activePoll.id } },
+            undefined,
+            { shallow: true, scroll: false }
+        );
+    }, [activeIndex, showFinish, router.isReady, polls]);
 
     const gaiaByPollId = useMemo(() => {
         const map = {};
