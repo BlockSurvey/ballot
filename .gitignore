@@ -42,3 +42,6 @@ docs/*
 
 # Playwright
 .playwright-mcp
+
+# Scratchpad (local audit artifacts, reports, temp data — not for check-in)
+scratchpad/
