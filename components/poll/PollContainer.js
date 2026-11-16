@@ -298,8 +298,7 @@ export default function PollContainer(props) {
                         });
                     }
 
-                    holdingTokenIdsArray = _holdingTokenIdsArray;
-                    setHoldingTokenIdsArray(holdingTokenIdsArray);
+                    setHoldingTokenIdsArray(_holdingTokenIdsArray);
                 } else {
                     // No holdings to vote
                     setNoHoldingToken(true);
@@ -1120,8 +1119,10 @@ export default function PollContainer(props) {
 
                     // Total unique vote — @stacks/transactions v7 returns uints
                     // as STRINGS; normalize to a number at the boundary.
-                    totalUniqueVotes = parseInt(results?.total?.value) || 0;
-                    setTotalUniqueVotes(totalUniqueVotes);
+                    // Local const: reassigning the `const` state binding threw
+                    // "Assignment to constant variable" once compiled natively.
+                    const uniqueVotes = parseInt(results?.total?.value) || 0;
+                    setTotalUniqueVotes(uniqueVotes);
 
                     let resultsObj = {};
                     results?.options?.value.forEach((option, index) => {
@@ -1137,7 +1138,7 @@ export default function PollContainer(props) {
                     setResultsByOption(resultsObj);
 
                     // Get list of individual vote
-                    getIndividualResultByStartAndEndPosition(totalUniqueVotes, (totalUniqueVotes > 10 ? (totalUniqueVotes - 10) : 0), totalUniqueVotes,
+                    getIndividualResultByStartAndEndPosition(uniqueVotes, (uniqueVotes > 10 ? (uniqueVotes - 10) : 0), uniqueVotes,
                         contractAddress, contractName, resultsByPosition, setResultsByPosition, noOfResultsLoaded, setNoOfResultsLoaded);
                 } else {
                     setTotalVotes(0);

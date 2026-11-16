@@ -1,5 +1,6 @@
 import Head from 'next/head'
 import { SSRProvider } from 'react-bootstrap'
+import AuthErrorNotice from '../components/common/AuthErrorNotice'
 import '../styles/globals.css'
 import '../styles/quill-overrides.css'
 
@@ -17,6 +18,9 @@ function MyApp({ Component, pageProps }) {
 
       {/* Body */}
       <Component {...pageProps} />
+
+      {/* Wallet sign-in failures (fired by services/auth.js) */}
+      <AuthErrorNotice />
     </SSRProvider>
   </>
 }

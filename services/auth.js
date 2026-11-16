@@ -30,6 +30,11 @@ import {
 } from "@stacks/encryption";
 import { c32address, c32addressDecode } from "c32check";
 import { Constants } from "../common/constants";
+import {
+  isUnsupportedMethodError,
+  legacySignMessage,
+  supportsLegacySignature,
+} from "./legacy-wallet";
 
 // Set this to true if you want to use Mainnet
 const stacksMainnetFlag = Constants.STACKS_MAINNET_FLAG;
@@ -258,7 +263,30 @@ async function signatureDerivedSession(network, connectResponse) {
     console.log("[ballot-auth] reusing app key from pre-migration session");
   } else {
     console.log("[ballot-auth] requesting stx_signMessage to derive app key…");
-    const res = await v8Request("stx_signMessage", { message: APP_KEY_MESSAGE });
+    let res;
+    try {
+      res = await v8Request("stx_signMessage", { message: APP_KEY_MESSAGE });
+    } catch (error) {
+      if (!isUnsupportedMethodError(error)) throw error;
+      // Old Leather (Firefox add-on, frozen at v6.0–6.8) has no stx_signMessage
+      // RPC but signs via the legacy signatureRequest API with the IDENTICAL
+      // hash + RFC6979 scheme — same signature, same app key, same Gaia address
+      // as Chrome Leather (see services/legacy-wallet.js). Never fall back to a
+      // DIFFERENT signing scheme: that would mint a second Gaia identity.
+      if (supportsLegacySignature()) {
+        console.log("[ballot-auth] stx_signMessage unsupported; using legacy signatureRequest");
+        res = await legacySignMessage({
+          message: APP_KEY_MESSAGE,
+          network,
+          stxAddress: stxAccount.address, // wallet-network encoding picks the account
+        });
+      } else {
+        throw new AuthUserError(
+          "This wallet version can't sign the Ballot login message. Update your wallet extension, or sign in with Xverse or Leather on Chrome.",
+          error
+        );
+      }
+    }
     if (!res?.signature) {
       throw new Error("Wallet did not return a signature for key derivation");
     }
@@ -339,7 +367,45 @@ export async function authenticate(redirectTo) {
     // Self-heal: drop the (possibly wrong/stale) connection so the next login
     // click always starts from a clean wallet selector instead of wedging.
     disconnectWallet();
+    // Previously failures were console-only, so the login button just "did
+    // nothing". Surface it (AuthErrorNotice in _app listens). A user dismissing
+    // the wallet is a choice, not an error — stay quiet for that.
+    if (!isUserCancelError(error)) {
+      notifyAuthError(
+        error instanceof AuthUserError
+          ? error.message
+          : "Couldn't sign in with your wallet. Please try again."
+      );
+    }
   }
+}
+
+// ---------------------------------------------------------------------------
+// Login error plumbing
+// ---------------------------------------------------------------------------
+export const AUTH_ERROR_EVENT = "ballot:auth-error";
+
+class AuthUserError extends Error {
+  constructor(message, cause) {
+    super(message);
+    this.name = "AuthUserError";
+    this.cause = cause;
+  }
+}
+
+// @stacks/connect uses -31001 for a dismissed selector; wallets use 4001
+// (EIP-1193 style) or plain "User rejected/canceled/denied" messages.
+function isUserCancelError(error) {
+  return (
+    error?.code === -31001 ||
+    error?.code === 4001 ||
+    /user (canceled|cancelled|rejected|denied)/i.test(error?.message || "")
+  );
+}
+
+function notifyAuthError(message) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent(AUTH_ERROR_EVENT, { detail: { message } }));
 }
 
 export async function switchAccount(redirectTo) {

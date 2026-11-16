@@ -4,6 +4,7 @@ import { connect, disconnect, isConnected, request } from "@stacks/connect";
 import { bufferCV, cvToHex, listCV, stringAsciiCV, uintCV } from "@stacks/transactions";
 import { Constants } from "../common/constants";
 import { getNetworkString } from "../services/auth";
+import { isUnsupportedMethodError, legacyTransactionRequest } from "./legacy-wallet";
 
 const cancelCallbackFunction = (data) => {
     window.location.reload();
@@ -34,6 +35,12 @@ export async function walletRequest(method, params) {
     try {
         return await request(method, params);
     } catch (error) {
+        // Old Leather (Firefox add-on, frozen at v6.0–6.8) has no stx_* RPC
+        // methods but still serves the legacy JWT transactionRequest API.
+        if (isUnsupportedMethodError(error)) {
+            const legacy = await legacyTransactionRequest(method, params);
+            if (legacy) return legacy;
+        }
         if (WALLET_STALE_RE.test(error?.message || "")) {
             // Cached wallet is stale (e.g. another extension took the provider).
             // Force a fresh selection and retry the request once.
