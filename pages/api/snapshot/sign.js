@@ -96,14 +96,17 @@ export default async function handler(req, res) {
             let locked = 0n;
             let unlocked = 0n;
             if (poll?.votingStrategyTemplate === "stx") {
-                // STX: `/stx` returns the total micro-STX balance + locked at the snapshot block
-                const stx = await fetchStacksJson(
-                    `/extended/v1/address/${voterAddress}/stx?until_block=${snapshot}`
+                // STX: read the account from the node's consensus state AT the
+                // snapshot block (`/v2/accounts?tip=`). Replaces the deprecated
+                // v1 `/stx?until_block=` (Hiro now 429s it; the QuickNode fallback
+                // reports locked=0 for PoX-5 stakes). The node's `balance` is the
+                // UNLOCKED part (hex µSTX) — do not subtract `locked` from it.
+                const tip = await getIndexBlockHash(snapshot);
+                const acct = await fetchStacksJson(
+                    `/v2/accounts/${voterAddress}?proof=0&tip=${tip}`
                 );
-                const totalMicro = BigInt(stx?.balance || "0");
-                const lockedMicro = BigInt(stx?.locked || "0");
-                locked = lockedMicro / 1000000n;
-                unlocked = (totalMicro - lockedMicro) / 1000000n;
+                locked = BigInt(acct?.locked || "0") / 1000000n;
+                unlocked = BigInt(acct?.balance || "0") / 1000000n;
             } else {
                 // FT: no locking concept — treat the whole balance as unlocked
                 const balances = await fetchStacksJson(
@@ -175,6 +178,21 @@ export default async function handler(req, res) {
         console.error("snapshot/sign error:", error);
         return res.status(500).json({ error: "Internal error" });
     }
+}
+
+// Stacks block height -> index_block_hash (without 0x). A confirmed block's
+// hash never changes, so warm lambdas resolve the snapshot tip once per poll.
+const indexBlockHashCache = new Map();
+
+async function getIndexBlockHash(height) {
+    if (indexBlockHashCache.has(height)) return indexBlockHashCache.get(height);
+    const block = await fetchStacksJson(`/extended/v2/blocks/${height}`);
+    const hash = String(block?.index_block_hash || "").replace(/^0x/, "");
+    if (!/^[0-9a-f]{64}$/i.test(hash)) {
+        throw new Error(`No index_block_hash for snapshot block ${height}`);
+    }
+    indexBlockHashCache.set(height, hash);
+    return hash;
 }
 
 // Cache ABI scheme lookups: the scheme is a property of the DEPLOYED contract

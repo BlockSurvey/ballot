@@ -1,7 +1,8 @@
 import axios from 'axios';
 import { Constants } from '../common/constants';
-import { getApiKey, getStacksAPIHeaders, getStacksAPIPrefix } from './auth';
+import { getApiKey } from './auth';
 import { getStxDustVotingSnapshotUrl } from './r2-storage';
+import { getStxBalanceAtBlock } from './stacks-balance';
 
 /**
  * Try to fetch cached STX dust voting snapshot from CloudFlare R2
@@ -59,36 +60,13 @@ const storeStxDustVotingSnapshotToR2 = async (pollId, snapshotHeight, walletBala
 };
 
 /**
- * Fetch STX balance at snapshot height for a given address
- * Uses QuikNode API for mainnet, falls back to Hiro API for testnet
+ * Fetch STX balance (whole STX: total / locked / unlocked) at the snapshot
+ * height for a given address, from the node's state at that block. Returns
+ * null on failure so callers never cache a failed read as a zero balance.
  */
 export const fetchStxBalanceAtSnapshot = async (address, snapshotHeight) => {
     try {
-        const isMainnet = Constants.STACKS_MAINNET_FLAG;
-        const baseUrl = isMainnet
-            ? Constants.STACKS_QUICKNODE_API_URL
-            : getStacksAPIPrefix();
-        const url = `${baseUrl}/extended/v1/address/${address}/stx` +
-            (snapshotHeight ? `?until_block=${snapshotHeight}` : "");
-        const headers = isMainnet ? { "Accept": "application/json" } : getStacksAPIHeaders();
-        const response = await fetch(url, { headers });
-
-        if (!response.ok) {
-            console.warn(`Failed to fetch STX balance for ${address}: ${response.status} ${response.statusText}`);
-            return null;
-        }
-
-        const responseObject = await response.json();
-
-        // Extract locked and unlocked balances
-        const lockedBalance = responseObject?.locked ? parseInt(responseObject.locked) : 0;
-        const totalBalance = responseObject?.balance ? parseInt(responseObject.balance) : 0;
-
-        return {
-            total: Math.floor(totalBalance / 1000000),
-            locked: Math.floor(lockedBalance / 1000000),
-            unlocked: ((Math.floor(totalBalance / 1000000)) - (Math.floor(lockedBalance / 1000000)))
-        };
+        return await getStxBalanceAtBlock(address, snapshotHeight);
     } catch (error) {
         console.warn(`Error fetching STX balance for ${address}:`, error);
         return null;

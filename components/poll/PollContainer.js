@@ -682,9 +682,15 @@ export default function PollContainer(props) {
             console.log(`  Found ${allTransactions.length} total transactions for contract`);
 
             // Step 2: Filter for cast-my-vote calls (including failed transactions)
+            // Snapshot-oracle polls: the on-chain votes are valid, so count only
+            // the ones the contract accepted (a failed call never registered a
+            // vote). Legacy recounts keep failed calls — there the deployed
+            // snapshot height was wrong and valid votes were rejected on-chain.
+            const successOnly = !!pollObject?.usesSnapshotOracle;
             const voteTransactions = allTransactions.filter(tx =>
                 tx.tx_type === 'contract_call' &&
-                tx.contract_call?.function_name === 'cast-my-vote'
+                tx.contract_call?.function_name === 'cast-my-vote' &&
+                (!successOnly || tx.tx_status === 'success')
             );
 
             console.log(`  Found ${voteTransactions.length} vote transactions (success + failed)`);
@@ -725,12 +731,23 @@ export default function PollContainer(props) {
                     }
                 }
 
+                // Snapshot-oracle votes carry the server-signed, contract-verified
+                // snapshot balance. Their sum is the voting power recorded on-chain.
+                const lockedArg = tx.contract_call?.function_args?.find(arg => arg.name === 'snapshot-locked');
+                const unlockedArg = tx.contract_call?.function_args?.find(arg => arg.name === 'snapshot-unlocked');
+                const onChainLocked = parseInt(String(lockedArg?.repr || '').slice(1));
+                const onChainUnlocked = parseInt(String(unlockedArg?.repr || '').slice(1));
+                const onChain = successOnly && Number.isFinite(onChainLocked) && Number.isFinite(onChainUnlocked)
+                    ? { locked: onChainLocked, unlocked: onChainUnlocked }
+                    : null;
+
                 if (voteOptions.length > 0) {
                     voterData.push({
                         address: tx.sender_address,
                         voteOptions,
                         voteVolumes,
-                        txId: tx.tx_id
+                        txId: tx.tx_id,
+                        onChain
                     });
                 }
             }
@@ -797,7 +814,20 @@ export default function PollContainer(props) {
             let voteIndex = 0;
 
             for (const voter of uniqueVoterData) {
-                const balance = balanceMap[voter.address];
+                let balance = balanceMap[voter.address];
+                if (voter.onChain) {
+                    // The contract's recorded power is authoritative: the recount
+                    // may only correct the locked/unlocked SPLIT, never the weight.
+                    // If the re-read balance is missing or doesn't add up to the
+                    // on-chain power, show the vote exactly as recorded on-chain.
+                    const onChainPower = voter.onChain.locked + voter.onChain.unlocked;
+                    const splitMatches = balance && (balance.locked + balance.unlocked) === onChainPower;
+                    balance = {
+                        total: onChainPower,
+                        locked: splitMatches ? balance.locked : voter.onChain.locked,
+                        unlocked: splitMatches ? balance.unlocked : voter.onChain.unlocked
+                    };
+                }
                 if (!balance || balance.total <= 0) continue;
 
                 const votingPower = balance.total;
